@@ -62,3 +62,4 @@ Publish Directory: .
 ## Important security note
 
 Never publish a real `.env` file. Use Render Environment Variables instead.
+# it-school-platform
