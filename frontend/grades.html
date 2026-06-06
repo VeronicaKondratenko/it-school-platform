@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <script>(function(){try{var t=localStorage.getItem('it-school-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/logo-code-mark-128.png">
+    <title>Оцінки — IT School</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+    [data-theme='dark'] select{color-scheme:dark;}
+    [data-theme='dark'] select option{background-color:#151b2e;color:#fff;}
+    [data-theme='light'] select{color-scheme:light;}
+
+
+    body{font-family:'Manrope',sans-serif;background:var(--ink);color:#fff;margin:0;}
+    .app{display:flex;min-height:100vh;}
+    .sidebar{width:260px;background:var(--ink-soft);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200;transition:transform .3s;}
+    .sidebar-logo{display:flex;align-items:center;gap:.65rem;padding:1.5rem;border-bottom:1px solid var(--border);}
+    .sidebar-logo img{height:32px;}
+    .sidebar-logo span{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:-.02em;}
+    .sidebar-logo span b{color:#3b82f6;font-weight:900;}
+    .sidebar-nav{flex:1;padding:1rem .75rem;overflow-y:auto;}
+    .sidebar-nav a{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500;margin-bottom:.2rem;transition:all .2s;}
+    .sidebar-nav a:hover{background:rgba(255,255,255,.05);color:#fff;}
+    .sidebar-nav a.active{background:rgba(37,99,235,.12);color:#3b82f6;border:1px solid rgba(37,99,235,.2);}
+    .sidebar-nav a svg{flex-shrink:0;opacity:.7;}
+    .sidebar-nav a.active svg{opacity:1;}
+    .sidebar-bottom{padding:.75rem;border-top:1px solid var(--border);}
+    .sidebar-bottom a{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500;transition:all .2s;}
+    .sidebar-bottom a:hover{background:rgba(239,68,68,.1);color:#ef4444;}
+    .main-wrap{flex:1;margin-left:260px;min-height:100vh;display:flex;flex-direction:column;}
+    .page-banner{background:linear-gradient(135deg,#0d1b4b 0%,#1a1040 60%,var(--ink) 100%);padding:2.5rem 2rem;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+    .page-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 120% at 40% 0%,rgba(37,99,235,.2),transparent);pointer-events:none;}
+    .page-banner h1{font-family:'Unbounded',sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:900;letter-spacing:-.03em;position:relative;z-index:1;color:#fff;}
+    .page-banner p{color:var(--muted);font-size:.95rem;margin-top:.35rem;position:relative;z-index:1;}
+    .page-body{padding:2rem;flex:1;}
+    .mobile-toggle{display:none;position:fixed;top:1rem;left:1rem;z-index:300;background:var(--blue);border:none;border-radius:10px;padding:.65rem;cursor:pointer;color:#fff;}
+    @media(max-width:768px){
+        .sidebar{transform:translateX(-100%);}
+        .sidebar.active{transform:translateX(0);}
+        .main-wrap{margin-left:0;}
+        .page-body{padding:1rem;}
+        .mobile-toggle{display:flex;}
+    }
+
+
+    .grades-layout{display:grid;grid-template-columns:240px 1fr;gap:1.5rem;}
+    .course-sidebar-list{background:var(--ink-soft);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .course-sidebar-list h3{padding:1.1rem 1.25rem;font-size:.85rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);}
+    .course-list{list-style:none;padding:.5rem;}
+    .course-item{display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:10px;cursor:pointer;transition:all .2s;margin-bottom:.15rem;}
+    .course-item:hover{background:rgba(255,255,255,.05);}
+    .course-item.active{background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.2);}
+    .course-item .ci-name{font-size:.88rem;font-weight:600;color:#fff;}
+    .course-item.active .ci-name{color:#3b82f6;}
+    .grades-panel{background:var(--ink-soft);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .grades-panel-header{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+    .grades-panel-header h2{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;}
+    .grade-badge{display:inline-flex;align-items:center;justify-content:center;padding:.25rem .75rem;border-radius:999px;font-size:.8rem;font-weight:700;border:1px solid transparent;}
+    .grade-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-weight:900;font-size:1.2rem;border:2px solid;}
+    .grade-excellent{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.35);color:#10b981;}
+    .grade-good{background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.35);color:#3b82f6;}
+    .grade-average{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#f59e0b;}
+    .grade-poor{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#ef4444;}
+    .grade-satisfactory{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#f59e0b;}
+    .grade-val-text{font-family:'Unbounded',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:-.03em;}
+    .grade-lbl-text{font-size:.8rem;color:var(--muted);}
+    .info-note{margin:1rem 1.5rem;padding:.85rem 1.1rem;background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.15);border-radius:10px;font-size:.85rem;color:var(--muted);line-height:1.55;}
+    .grades-table-wrap{padding:0 1.5rem 1.5rem;}
+    .grades-table{width:100%;border-collapse:collapse;}
+    .grades-table th{padding:.75rem .9rem;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);}
+    .grades-table td{padding:.85rem .9rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.88rem;}
+    .grades-table tr:last-child td{border-bottom:none;}
+    .grades-table tr:hover td{background:rgba(255,255,255,.02);}
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;padding:1.5rem;border-top:1px solid var(--border);}
+    .stat-mini{text-align:center;}
+    .stat-mini-val{font-family:'Unbounded',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:#3b82f6;}
+    .stat-mini-lbl{font-size:.78rem;color:var(--muted);margin-top:.2rem;}
+    @media(max-width:900px){.grades-layout{grid-template-columns:1fr;}}
+
+    .gradebook-table{width:100%;border-collapse:collapse;font-size:.85rem;}
+    .gradebook-table th{padding:.7rem .85rem;text-align:center;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--ink-card);border-bottom:1px solid var(--border);white-space:nowrap;}
+    .gradebook-table td{padding:.6rem .85rem;text-align:center;border-bottom:1px solid var(--border);color:var(--white);}
+    .gradebook-table tr:hover td{background:rgba(127,127,127,.05);}
+    .grade-none{background:rgba(127,127,127,.1);color:var(--muted);border:1px solid var(--border);}
+    
+    /* Gradebook cards (teacher) */
+    #gbContent{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.1rem;}
+    .gb-card{background:var(--ink-soft);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .gb-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding:1.1rem 1.3rem;border-bottom:1px solid var(--border);background:rgba(37,99,235,.04);}
+    .gb-card-title{font-weight:700;font-size:.98rem;color:var(--white);margin-bottom:.25rem;line-height:1.3;}
+    .gb-card-meta{font-size:.76rem;color:var(--muted);line-height:1.4;}
+    .gb-card-avg{text-align:center;flex-shrink:0;}
+    .gb-avg-num{font-family:'Unbounded',sans-serif;font-size:1.6rem;font-weight:900;color:#3b82f6;line-height:1;}
+    .gb-avg-lbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:.2rem;}
+    .gb-students{padding:.5rem .8rem;}
+    .gb-student-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem .5rem;border-bottom:1px solid var(--border);}
+    .gb-student-row:last-child{border-bottom:none;}
+    .gb-student-name{display:flex;align-items:center;gap:.65rem;font-size:.88rem;font-weight:500;color:var(--white);}
+    .gb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;}
+    .gb-status{font-size:.78rem;font-weight:600;padding:.25rem .7rem;border-radius:999px;white-space:nowrap;}
+    .gb-status.submitted{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);}
+    .gb-status.none{background:rgba(127,127,127,.08);color:var(--muted);border:1px solid var(--border);}
+    .grade-badge{padding:.3rem .75rem;border-radius:999px;font-size:.82rem;font-weight:700;white-space:nowrap;}
+    #gbCourseSelect{min-width:280px;}
+
+    </style>
+    <link rel="stylesheet" href="professional-ui.css">
+    <link rel="stylesheet" href="theme-light.css">
+    <script defer src="professional-ui.js"></script>
+    <link rel="stylesheet" href="ui-system.css">
+</head>
+<body>
+<button class="mobile-toggle" id="mobileToggle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="assets/logo-code-mark.png" alt="IT School">
+            <span>IT&nbsp;<b>School</b></span>
+        </div>
+        <nav class="sidebar-nav" id="sidebarNav">
+            <a href="dashboard.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Кабінет
+            </a>
+            <a href="courses.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Курси
+            </a>
+            <a href="schedule.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Розклад
+            </a>
+            <a href="grades.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Оцінки
+            </a>
+            <a href="assignments.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Завдання
+            </a>
+            <a href="materials.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                Матеріали
+            </a>
+            <a href="profile.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Профіль
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="#" onclick="logout(); return false;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Вийти
+            </a>
+        </div>
+    </aside>
+    <div class="main-wrap">
+        <div class="page-banner">
+            <h1>Мої оцінки</h1>
+            <p>Перегляньте успішність по кожному курсу</p>
+        </div>
+        <div class="page-body">
+
+            <div class="grades-layout">
+                <aside class="course-sidebar-list">
+                    <h3>Мої курси</h3>
+                    <ul class="course-list"><!-- populated by JS --></ul>
+                </aside>
+                <div class="grades-panel">
+                    <div class="grades-panel-header">
+                        <h2 class="course-title" id="gradesCourseTitle">Оберіть курс</h2>
+                        <div class="grade-badge">
+                            <div class="grade-circle grade-excellent" id="overallGradeCircle">A</div>
+                            <div>
+                                <div class="grade-val-text" id="overallGradeValue">92%</div>
+                                <div class="grade-lbl-text">Загальна успішність</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-note">Завдання оцінюються за 10-бальною шкалою, а тестова частина додає решту балів до максимуму 100 за курс.</div>
+                    <div class="grades-table-wrap">
+                        <table class="grades-table">
+                            <thead>
+                                <tr><th>Завдання</th><th>Дата</th><th>Оцінка /10</th><th>Статус</th></tr>
+                            </thead>
+                            <tbody id="gradesTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="stats-row" id="gradesStats" style="display:none;">
+                        <div class="stat-mini"><div class="stat-mini-val" id="statAvg">—</div><div class="stat-mini-lbl">Середній бал</div></div>
+                        <div class="stat-mini"><div class="stat-mini-val" id="statTotal">—</div><div class="stat-mini-lbl">Завдань оцінено</div></div>
+                        <div class="stat-mini"><div class="stat-mini-val" id="statBest">—</div><div class="stat-mini-lbl">Найвища оцінка</div></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+    <script>
+        (function(){
+            var toggle = document.getElementById('mobileToggle');
+            var sidebar = document.getElementById('sidebar');
+            if(toggle) toggle.addEventListener('click', function(){ sidebar.classList.toggle('active'); });
+            document.addEventListener('click', function(e){
+                if(window.innerWidth <= 768 && sidebar && !sidebar.contains(e.target) && toggle && !toggle.contains(e.target))
+                    sidebar.classList.remove('active');
+            });
+            // Mark active nav link
+            var cur = location.pathname.split('/').pop();
+            document.querySelectorAll('.sidebar-nav a').forEach(function(a){
+                if(a.getAttribute('href') === cur) a.classList.add('active');
+            });
+        })();
+    </script>
+    <script src="config.js"></script>
+    <script src="mockData.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+    <script>
+        let coursesData = [];
+        let currentCourseId = null;
+
+        function selectCourse(courseId, el) {
+            // Remove active class from all items
+            document.querySelectorAll('.course-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            // Add active class to selected item (el passed in, or find by data)
+            if (el) {
+                el.classList.add('active');
+            } else if (window.event && window.event.currentTarget) {
+                window.event.currentTarget.classList.add('active');
+            }
+            currentCourseId = courseId;
+            updateCourseDisplay(courseId);
+        }
+
+        function updateCourseDisplay(courseId) {
+            const course = coursesData.find(c => c.course_id === courseId);
+            if (!course) return;
+
+            // Update course title
+            const ct = document.getElementById('gradesCourseTitle'); if (ct) ct.textContent = course.course_title;
+
+            // Update overall grade
+            const gradeValue = document.getElementById('overallGradeValue');
+            const gradeCircle = document.getElementById('overallGradeCircle');
+            
+            if (gradeValue && gradeCircle) {
+                if (course.average_score !== null) {
+                    const avgScore = Math.round(course.average_score);
+                    const letter = avgScore >= 90 ? 'A' : avgScore >= 75 ? 'B' : avgScore >= 60 ? 'C' : 'D';
+                    gradeValue.textContent = avgScore + '%';
+                    gradeCircle.textContent = letter;
+                    gradeCircle.className = 'grade-circle ' +
+                        (avgScore >= 90 ? 'grade-excellent' :
+                         avgScore >= 75 ? 'grade-good' :
+                         avgScore >= 60 ? 'grade-satisfactory' : 'grade-poor');
+                } else {
+                    gradeValue.textContent = '—';
+                    gradeCircle.textContent = '—';
+                    gradeCircle.className = 'grade-circle grade-poor';
+                }
+            }
+
+            // Update grades table
+            const gradesTable = document.getElementById('gradesTableBody');
+            if (!gradesTable) return;
+
+            if (!course.grades || course.grades.length === 0) {
+                gradesTable.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-secondary)">Оцінок нема</td></tr>';
+            } else {
+                gradesTable.innerHTML = '';
+                course.grades.forEach((grade, idx) => {
+                    const pct = grade.score;
+                    const tenPoint = (pct / 10).toFixed(1).replace(/\.0$/, '');
+                    const letterClass = pct >= 90 ? 'grade-excellent' : 
+                                       pct >= 75 ? 'grade-good' : 
+                                       pct >= 60 ? 'grade-satisfactory' : 'grade-poor';
+                    const letter = pct >= 90 ? 'A' : pct >= 75 ? 'B' : pct >= 60 ? 'C' : 'D';
+                    const dateStr = grade.graded_at ? new Date(grade.graded_at).toLocaleDateString('uk-UA') : '-';
+                    
+                    const tr = document.createElement('tr');
+                    tr.style.opacity = '0';
+                    tr.innerHTML = `
+                        <td>${grade.assignment ? grade.assignment.title : 'Завдання'}</td>
+                        <td>${dateStr}</td>
+                        <td>
+                            <span class="grade-badge ${letterClass}">${tenPoint}/10</span>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">${pct}%</div>
+                        </td>
+                        <td>${grade.feedback || '-'}</td>
+                    `;
+                    gradesTable.appendChild(tr);
+                    setTimeout(() => { 
+                        tr.style.opacity = '1'; 
+                        tr.style.transition = 'opacity 0.4s ease'; 
+                    }, idx * 80);
+                });
+            }
+
+            updateStatsCard(course);
+        }
+
+        function updateStatsCard(course) {
+            // Use actual IDs present in the HTML
+            const avg = document.getElementById('statAvg');
+            const total = document.getElementById('statTotal');
+            const best = document.getElementById('statBest');
+            const statsRow = document.getElementById('gradesStats');
+            if (statsRow) statsRow.style.display = '';
+
+            if (avg) avg.textContent = course.average_score !== null ? Math.round(course.average_score) + '%' : '—';
+            if (total) total.textContent = course.grades_count || 0;
+            if (best && course.grades && course.grades.length) {
+                const maxScore = Math.max(...course.grades.map(g => g.score || 0));
+                best.textContent = maxScore + '%';
+            } else if (best) {
+                best.textContent = '—';
+            }
+        }
+
+        // Initialize - load from API
+        window.addEventListener('load', async () => {
+            if (!requireAuth()) return;
+            showDemoBanner();
+
+            const role = typeof getRole === 'function' ? getRole() : null;
+            if (role === 'teacher' || role === 'admin') {
+                document.querySelector('.page-banner h1').textContent = 'Журнал оцінок';
+                const sub = document.querySelector('.page-banner p');
+                if (sub) sub.textContent = 'Оцінки студентів по курсах та завданнях';
+                await loadTeacherGradebook();
+                return;
+            }
+
+            try {
+                // Load courses with grades
+                const courses = await apiGet('/api/student/courses');
+                
+                if (!courses || courses.length === 0) {
+                    document.querySelector('.course-sidebar-list').innerHTML = 
+                        '<h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Мої курси</h3><p style="color:var(--text-secondary);">Курсів не знайдено</p>';
+                    document.querySelector('.course-title').textContent = 'Курсів немає';
+                    document.getElementById('gradesTableBody').innerHTML = 
+                        '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-secondary)">Запишіться на курс щоб їх бачити</td></tr>';
+                    return;
+                }
+
+                coursesData = courses;
+
+                // Populate sidebar with courses
+                const courseList = document.querySelector('.course-list');
+                courseList.innerHTML = '';
+
+                courses.forEach((course, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'course-item' + (idx === 0 ? ' active' : '');
+                    li.onclick = function() { selectCourse(course.course_id, this); };
+                    
+                    const avgScore = course.average_score !== null ? Math.round(course.average_score) : '-';
+                    li.innerHTML = `
+                        <div class="course-name">${course.course_title}</div>
+                        <div class="course-grade">Середній бал: ${avgScore}</div>
+                    `;
+                    courseList.appendChild(li);
+                });
+
+                // Load first course by default
+                if (courses.length > 0) {
+                    currentCourseId = courses[0].course_id;
+                    updateCourseDisplay(courses[0].course_id);
+                }
+
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                showToast('Помилка завантаження даних', 'error');
+            }
+
+            // Animate stat cards 
+            document.querySelectorAll('.stat-card').forEach((card, index) => {
+                setTimeout(() => { 
+                    card.style.animation = 'fadeIn 0.6s ease forwards'; 
+                }, index * 100);
+            });
+        });
+
+        // ── TEACHER GRADEBOOK ───────────────────────────────────────
+        async function loadTeacherGradebook() {
+            // Replace the whole grades layout with a gradebook
+            const layout = document.querySelector('.grades-layout');
+            if (!layout) return;
+            layout.outerHTML = `
+                <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center;">
+                    <select id="gbCourseSelect" class="form-input" style="max-width:280px;" onchange="renderGradebook()">
+                        <option value="">Завантаження курсів...</option>
+                    </select>
+                    <div id="gbSummary" style="margin-left:auto;font-size:.85rem;color:var(--muted);"></div>
+                </div>
+                <div id="gbContent"><div class="loading"><div class="spinner"></div><p>Завантаження журналу...</p></div></div>`;
+
+            try {
+                gbCourses = await apiGet('/api/teacher/courses') || [];
+                const sel = document.getElementById('gbCourseSelect');
+                if (!gbCourses.length) {
+                    sel.innerHTML = '<option value="">Немає курсів</option>';
+                    document.getElementById('gbContent').innerHTML = '<div class="empty-state" style="padding:3rem;text-align:center;color:var(--muted);">У вас немає курсів</div>';
+                    return;
+                }
+                sel.innerHTML = gbCourses.map((c,i)=>`<option value="${c.id}">${c.title}</option>`).join('');
+                await renderGradebook();
+            } catch(e) {
+                document.getElementById('gbContent').innerHTML = `<div class="empty-state" style="padding:3rem;text-align:center;color:#ef4444;">Помилка: ${e.message}</div>`;
+            }
+        }
+
+        let gbCourses = [];
+        async function renderGradebook() {
+            const courseId = parseInt(document.getElementById('gbCourseSelect').value);
+            const content = document.getElementById('gbContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження журналу...</p></div>';
+            try {
+                const allAsg = await apiGet('/api/assignments') || [];
+                const assignments = allAsg.filter(a => a.course_id === courseId);
+                const students = await apiGet('/api/teacher/students') || [];
+
+                if (!assignments.length) {
+                    content.innerHTML = '<div class="empty-state" style="padding:3rem;text-align:center;color:var(--muted);">У цьому курсі ще немає завдань</div>';
+                    document.getElementById('gbSummary').textContent = '';
+                    return;
+                }
+
+                // Fetch submissions per assignment
+                const subsByAsg = {};
+                await Promise.all(assignments.map(async a => {
+                    try { subsByAsg[a.id] = await apiGet(`/api/assignments/${a.id}/submissions`) || []; }
+                    catch(e) { subsByAsg[a.id] = []; }
+                }));
+
+                // Summary
+                let totalGraded = 0, totalScore = 0;
+                Object.values(subsByAsg).forEach(subs => subs.forEach(s => { if(s.grade_score!=null){totalGraded++;totalScore+=s.grade_score;} }));
+                const avgAll = totalGraded ? Math.round(totalScore/totalGraded) : 0;
+                document.getElementById('gbSummary').textContent = `Студентів: ${students.length} · Завдань: ${assignments.length} · Середній бал: ${avgAll}%`;
+
+                const badge = (score, status) => {
+                    if (score != null) {
+                        const cls = score>=90?'grade-excellent':score>=75?'grade-good':score>=60?'grade-satisfactory':'grade-poor';
+                        return `<span class="grade-badge ${cls}">${score}/100</span>`;
+                    }
+                    if (status === 'submitted' || status === 'pending') return '<span class="gb-status submitted">Здано, не оцінено</span>';
+                    return '<span class="gb-status none">— Не здано</span>';
+                };
+
+                // Render one card per assignment, listing all students
+                content.innerHTML = assignments.map(a => {
+                    const subs = subsByAsg[a.id] || [];
+                    const subMap = {};
+                    subs.forEach(s => subMap[s.student_id] = s);
+                    const graded = subs.filter(s=>s.grade_score!=null);
+                    const asgAvg = graded.length ? Math.round(graded.reduce((x,s)=>x+s.grade_score,0)/graded.length) : null;
+                    const dueStr = a.due_date ? new Date(a.due_date).toLocaleDateString('uk-UA',{day:'numeric',month:'long'}) : '';
+
+                    return `
+                    <div class="gb-card">
+                        <div class="gb-card-head">
+                            <div>
+                                <div class="gb-card-title">${a.title}</div>
+                                <div class="gb-card-meta">${a.discipline_name || ''} ${dueStr ? '· до '+dueStr : ''} · макс. 100 балів</div>
+                            </div>
+                            <div class="gb-card-avg">
+                                ${asgAvg!=null ? `<div class="gb-avg-num">${asgAvg}</div><div class="gb-avg-lbl">середній бал</div>` : '<div class="gb-avg-lbl">ще не оцінено</div>'}
+                            </div>
+                        </div>
+                        <div class="gb-students">
+                            ${students.map(s => {
+                                const sub = subMap[s.id];
+                                return `<div class="gb-student-row">
+                                    <div class="gb-student-name">
+                                        <div class="gb-avatar">${(s.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+                                        ${s.full_name}
+                                    </div>
+                                    ${badge(sub?.grade_score, sub?.grade_status)}
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch(e) {
+                content.innerHTML = `<div class="empty-state" style="padding:3rem;text-align:center;color:#ef4444;">Помилка: ${e.message}</div>`;
+            }
+        }
+
+
+        function logout() {
+            if (typeof clearAuth === 'function') {
+                clearAuth();
+            }
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>

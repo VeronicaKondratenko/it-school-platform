@@ -1,0 +1,896 @@
+/* ══════════════════════════════════════════════════════════════════
+   IT School LMS — Light Theme  (v2)
+   Activated by <html data-theme="light">.
+   Two scopes:
+     1. Landing page (index.html) — uses its own inline :root vars
+        where --white = white TEXT, --ink = dark BG.
+     2. Internal pages — use professional-ui.css palette where
+        --white actually means the dark page background.
+   We override CSS variables per-scope and patch hardcoded colors.
+   Sidebar stays dark navy on internal pages for brand identity.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   SHARED VARIABLE OVERRIDES (apply to BOTH scopes)
+   On the landing page these flip the semantic palette to light.
+   ═══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+    --ink:             #eef2f7;   /* page background  */
+    --ink-soft:        #ffffff;   /* section / surface */
+    --ink-card:        #f8fafc;
+    --white:           #0f172a;   /* PRIMARY TEXT (was #fff) */
+    --off-white:       #1e293b;
+    --muted:           #5c6a82;   /* secondary text */
+    --border:          rgba(15,23,42,0.1);
+    --border-hover:    rgba(37,99,235,0.4);
+    --card-bg:         #ffffff;
+    --blue-subtle:     rgba(37,99,235,0.08);
+    --blue-glow:       rgba(37,99,235,0.18);
+
+    /* Internal-pages legacy compat */
+    --bg-primary:      #eef2f7;
+    --bg-secondary:    #ffffff;
+    --bg-tertiary:     #f0f4f8;
+    --text-primary:    #0f172a;
+    --text-secondary:  #5c6a82;
+    --text-light:      rgba(15,23,42,0.3);
+    --border-color:    rgba(15,23,42,0.1);
+    --border-dark:     rgba(15,23,42,0.16);
+    --ui-bg:           #eef2f7;
+    --ui-surface:      #ffffff;
+    --ui-surface-2:    #f5f8fc;
+    --ui-surface-3:    #edf2f7;
+    --ui-text:         #0f172a;
+    --ui-muted:        #5c6a82;
+    --ui-border:       rgba(15,23,42,0.1);
+    --ui-primary:      #2563eb;
+    --ui-primary-soft: rgba(37,99,235,0.08);
+    --ui-danger:       #ef4444;
+    --ui-danger-soft:  rgba(239,68,68,0.08);
+    --shadow-sm:       0 1px 4px rgba(15,23,42,0.08);
+    --shadow-md:       0 4px 14px rgba(15,23,42,0.1);
+    --shadow-lg:       0 10px 30px rgba(15,23,42,0.12);
+    --shadow-xl:       0 20px 48px rgba(15,23,42,0.14);
+    --gradient-hero:   linear-gradient(135deg,#f0f5ff 0%,#e8eeff 100%);
+}
+
+[data-theme="light"] body { background: #eef2f7; color: #0f172a; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   LANDING PAGE (index.html)
+   Most sections adapt via the variable flips above. These rules patch
+   the spots that hardcode rgba(255,255,255,…) or dark gradients.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Header */
+[data-theme="light"] .header.scrolled {
+    background: rgba(238,242,247,0.9) !important;
+    border-bottom-color: rgba(15,23,42,0.1) !important;
+}
+[data-theme="light"] .btn-ghost {
+    color: #0f172a;
+    border-color: rgba(15,23,42,0.15);
+}
+[data-theme="light"] .btn-ghost:hover { background: rgba(15,23,42,0.05); }
+
+/* Mobile nav */
+[data-theme="light"] .mobile-nav { background: rgba(238,242,247,0.98); }
+[data-theme="light"] .mobile-nav a,
+[data-theme="light"] .mobile-nav button { color: #0f172a; }
+
+/* Hero — keep dark gradient backdrop for contrast with bright title,
+   but it already uses var(--ink). Soften to a light gradient. */
+[data-theme="light"] .hero {
+    background:
+        radial-gradient(ellipse 70% 60% at 50% 0%, rgba(37,99,235,0.10), transparent 70%),
+        linear-gradient(180deg, #eef2f7 0%, #e6ecf6 100%);
+}
+[data-theme="light"] .hero-grid { opacity: 0.4; }
+[data-theme="light"] .orb { opacity: 0.25; }
+
+/* Outline button on hero — var(--white) flips to dark text, but the
+   border becomes invisible on light bg, so give it a visible border. */
+[data-theme="light"] .btn-outline-lg {
+    color: #0f172a;
+    border-color: rgba(15,23,42,0.25);
+}
+[data-theme="light"] .btn-outline-lg:hover {
+    border-color: rgba(37,99,235,0.5);
+    background: rgba(37,99,235,0.05);
+}
+
+/* Hero search */
+/* hero-search is just a positioning wrapper — DO NOT give it its own
+   background/border, or it doubles up with the input's pill. Style the
+   input only. */
+[data-theme="light"] .hero-search { background: transparent !important; border: none !important; box-shadow: none !important; }
+[data-theme="light"] .hero-search input {
+    background: #ffffff !important;
+    border: 1px solid rgba(15,23,42,0.12) !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 10px rgba(15,23,42,0.06) !important;
+}
+[data-theme="light"] .hero-search input:focus {
+    border-color: rgba(37,99,235,0.5) !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+}
+[data-theme="light"] .hero-search input::placeholder { color: rgba(15,23,42,0.4) !important; }
+[data-theme="light"] .hero-search .search-icon-inner { color: #5c6a82; }
+[data-theme="light"] .search-icon-inner { color: #5c6a82; }
+[data-theme="light"] .search-dropdown { background: #ffffff; border-color: rgba(15,23,42,0.12); }
+[data-theme="light"] .search-item:hover { background: rgba(37,99,235,0.05); }
+[data-theme="light"] .search-item-title { color: #0f172a; }
+[data-theme="light"] .search-item-desc { color: #5c6a82; }
+
+/* Stats bar */
+[data-theme="light"] .stats-bar { background: #f0f5ff; border-color: rgba(15,23,42,0.08); }
+[data-theme="light"] .stat-val { color: #0f172a; }
+[data-theme="light"] .stat-lbl { color: #5c6a82; }
+
+/* Section labels / titles */
+[data-theme="light"] .section-label { color: #2563eb; }
+[data-theme="light"] .section-title { color: #0f172a; }
+[data-theme="light"] .section-sub { color: #5c6a82; }
+
+/* Feature cards */
+[data-theme="light"] .features-section { background: #eef2f7; }
+[data-theme="light"] .feat-card { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .feat-card:hover { background: #f8fafc; }
+[data-theme="light"] .feat-title { color: #0f172a; }
+[data-theme="light"] .feat-desc { color: #5c6a82; }
+
+/* How / steps */
+[data-theme="light"] .how-section { background: #f0f5ff; }
+[data-theme="light"] .step-card { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .step-title { color: #0f172a; }
+[data-theme="light"] .step-desc { color: #5c6a82; }
+
+/* Teachers */
+[data-theme="light"] .teachers-section { background: #eef2f7; }
+[data-theme="light"] .teacher-card { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .teacher-img-placeholder { color: rgba(15,23,42,0.15); }
+[data-theme="light"] .teacher-name { color: #0f172a; }
+[data-theme="light"] .teacher-spec { color: #2563eb; }
+[data-theme="light"] .teacher-bio { color: #5c6a82; }
+
+/* Reviews */
+[data-theme="light"] .reviews-section { background: #f0f5ff; }
+[data-theme="light"] .review-card { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .review-text { color: #374151; }
+[data-theme="light"] .review-name { color: #0f172a; }
+[data-theme="light"] .review-role { color: #5c6a82; }
+
+/* CTA — keep it as a bold blue band */
+[data-theme="light"] .cta-section {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 60%, #3b82f6 100%);
+}
+[data-theme="light"] .cta-title { color: #ffffff; }
+[data-theme="light"] .cta-sub { color: rgba(255,255,255,0.85); }
+
+/* Footer — keep dark for contrast/brand */
+[data-theme="light"] footer { background: #0f172a; border-top-color: rgba(255,255,255,0.08); }
+[data-theme="light"] .footer-col ul a { color: rgba(255,255,255,0.6); }
+[data-theme="light"] .footer-col ul a:hover { color: #ffffff; }
+[data-theme="light"] .footer-brand p { color: rgba(255,255,255,0.55); }
+[data-theme="light"] .footer-col h4 { color: rgba(255,255,255,0.45); }
+[data-theme="light"] .footer-bottom { color: rgba(255,255,255,0.4); border-top-color: rgba(255,255,255,0.08); }
+
+/* Modals (login / register) */
+[data-theme="light"] .modal-box { background: #ffffff; border-color: rgba(15,23,42,0.12); }
+[data-theme="light"] .modal-head h2 { color: #0f172a; }
+[data-theme="light"] .modal-head p { color: #5c6a82; }
+[data-theme="light"] .modal-close { color: #5c6a82; }
+[data-theme="light"] .modal-close:hover { color: #0f172a; }
+[data-theme="light"] .form-label { color: rgba(15,23,42,0.7); }
+[data-theme="light"] .modal-footer-text { color: #5c6a82; }
+
+/* AI chat box */
+[data-theme="light"] .chat-box { background: #ffffff; border-color: rgba(15,23,42,0.12); }
+[data-theme="light"] .chat-messages { background: #f8fafc; }
+[data-theme="light"] .chat-msg-bot { background: rgba(15,23,42,0.05); color: #0f172a; }
+[data-theme="light"] .chat-input-row { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   INTERNAL PAGES  (dashboard, courses, schedule, etc.)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar (stays dark navy for identity) ──────────────────────── */
+[data-theme="light"] .sidebar { background: #1a2744; border-color: rgba(255,255,255,0.06); }
+[data-theme="light"] .sidebar-logo { border-color: rgba(255,255,255,0.08); }
+[data-theme="light"] .sidebar-logo span, [data-theme="light"] .sidebar-logo span b { color: #fff; }
+[data-theme="light"] .sidebar-nav a { color: rgba(255,255,255,0.6); }
+[data-theme="light"] .sidebar-nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+[data-theme="light"] .sidebar-nav a.active { background: rgba(59,130,246,0.2); color: #93c5fd; border-color: rgba(59,130,246,0.35); }
+[data-theme="light"] .sidebar-nav a svg { opacity: .6; }
+[data-theme="light"] .sidebar-nav a.active svg { opacity: 1; }
+[data-theme="light"] .sidebar-bottom { border-color: rgba(255,255,255,0.08); }
+[data-theme="light"] .sidebar-bottom a { color: rgba(255,255,255,0.45); }
+[data-theme="light"] .sidebar-bottom a:hover { background: rgba(239,68,68,0.15); color: #fca5a5; }
+[data-theme="light"] .sidebar-profile { border-color: rgba(255,255,255,0.08); }
+[data-theme="light"] .sidebar-pname { color: #fff; }
+[data-theme="light"] .nav-section-label { color: rgba(255,255,255,0.35); }
+[data-theme="light"] .nav-item { color: rgba(255,255,255,0.6); }
+[data-theme="light"] .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+[data-theme="light"] .nav-item.active { background: rgba(59,130,246,0.2); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
+
+/* Mobile toggle btn keeps blue bg, white icon — fine in both themes */
+
+/* ── Main area ───────────────────────────────────────────────────── */
+[data-theme="light"] .main-wrap { background: #eef2f7; }
+[data-theme="light"] .main { background: #eef2f7; }
+
+/* The internal pages set body{color:#fff} inline — override hard */
+[data-theme="light"] body { color: #0f172a !important; }
+
+/* ── Page banner ─────────────────────────────────────────────────── */
+[data-theme="light"] .page-banner {
+    background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 60%, #eef2f7 100%);
+    border-color: rgba(15,23,42,0.1);
+}
+[data-theme="light"] .page-banner::before { background: radial-gradient(ellipse 60% 120% at 40% 0%, rgba(37,99,235,0.08), transparent); }
+[data-theme="light"] .page-banner h1 { color: #0f172a; }
+[data-theme="light"] .page-banner p { color: #5c6a82; }
+
+/* ── Topbar (dashboard) ──────────────────────────────────────────── */
+[data-theme="light"] .topbar-greeting h1 { color: #0f172a; }
+[data-theme="light"] .topbar-greeting p { color: #5c6a82; }
+
+/* ── Cards & surfaces ────────────────────────────────────────────── */
+[data-theme="light"] .stat-card,
+[data-theme="light"] .course-card,
+[data-theme="light"] .notif-card,
+[data-theme="light"] .ov-card,
+[data-theme="light"] .ach-card,
+[data-theme="light"] .asgn-card,
+[data-theme="light"] .mat-card,
+[data-theme="light"] .pcourse-row,
+[data-theme="light"] .pstat,
+[data-theme="light"] .progress-section,
+[data-theme="light"] .psection,
+[data-theme="light"] .profile-card,
+[data-theme="light"] .grade-panel,
+[data-theme="light"] .grades-panel,
+[data-theme="light"] .course-sidebar-list,
+[data-theme="light"] .mat-sidebar,
+[data-theme="light"] .section-card,
+[data-theme="light"] .sidebar-card,
+[data-theme="light"] .mail-item,
+[data-theme="light"] .course-sidebar-card,
+[data-theme="light"] .user-card {
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.1);
+    color: #0f172a;
+}
+[data-theme="light"] .course-card:hover,
+[data-theme="light"] .stat-card:hover,
+[data-theme="light"] .mat-card:hover,
+[data-theme="light"] .ov-card:hover {
+    border-color: rgba(37,99,235,0.3);
+    box-shadow: 0 6px 20px rgba(15,23,42,0.1);
+}
+
+/* Course card header keeps its blue gradient (looks good in both) */
+[data-theme="light"] .course-body { color: #0f172a; }
+[data-theme="light"] .course-title-text { color: #0f172a; }
+[data-theme="light"] .course-desc-text { color: #5c6a82; }
+[data-theme="light"] .course-meta { color: #5c6a82; }
+
+[data-theme="light"] .stat-lbl,
+[data-theme="light"] .stat-label,
+[data-theme="light"] .ov-lbl,
+[data-theme="light"] .ach-desc,
+[data-theme="light"] .mat-meta,
+[data-theme="light"] .course-desc,
+[data-theme="light"] .notif-text,
+[data-theme="light"] .notif-meta,
+[data-theme="light"] .asgn-meta,
+[data-theme="light"] .asgn-desc,
+[data-theme="light"] .mail-question { color: #5c6a82; }
+[data-theme="light"] .stat-val,
+[data-theme="light"] .stat-value,
+[data-theme="light"] .ov-val,
+[data-theme="light"] .stat-mini-val { color: #2563eb; }
+[data-theme="light"] .course-title,
+[data-theme="light"] .notif-title, [data-theme="light"] .ach-title,
+[data-theme="light"] .mat-name, [data-theme="light"] .asgn-title,
+[data-theme="light"] .mail-from, [data-theme="light"] .pcourse-name { color: #0f172a; }
+
+/* Section titles & headers */
+[data-theme="light"] .section-header { border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .psection-header,
+[data-theme="light"] .grades-panel-header,
+[data-theme="light"] .progress-section-header,
+[data-theme="light"] .mat-sidebar h3,
+[data-theme="light"] .course-sidebar-list h3 { color: #0f172a; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .course-sidebar-card h3 { color: #5c6a82; }
+[data-theme="light"] .section-head h2 { color: #0f172a; }
+[data-theme="light"] .section-head p { color: #5c6a82; }
+
+/* ── Tables ──────────────────────────────────────────────────────── */
+[data-theme="light"] .table-wrap { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] th { background: rgba(15,23,42,0.025) !important; color: #5c6a82 !important; border-color: rgba(15,23,42,0.1) !important; }
+[data-theme="light"] td { color: #0f172a !important; border-color: rgba(15,23,42,0.05) !important; }
+[data-theme="light"] tr:hover td { background: rgba(37,99,235,0.03) !important; }
+[data-theme="light"] .grades-table th { color: #5c6a82 !important; }
+[data-theme="light"] .grades-table td { color: #0f172a !important; border-color: rgba(15,23,42,0.05) !important; }
+
+/* ── Forms & inputs ──────────────────────────────────────────────── */
+[data-theme="light"] .form-input,
+[data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea {
+    background: rgba(15,23,42,0.04) !important;
+    border-color: rgba(15,23,42,0.15) !important;
+    color: #0f172a !important;
+}
+[data-theme="light"] .form-input:focus,
+[data-theme="light"] input:focus, [data-theme="light"] select:focus, [data-theme="light"] textarea:focus {
+    border-color: rgba(37,99,235,0.5) !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.08) !important;
+}
+[data-theme="light"] input::placeholder, [data-theme="light"] textarea::placeholder { color: rgba(15,23,42,0.28) !important; }
+[data-theme="light"] select option { background: #ffffff; color: #0f172a; }
+[data-theme="light"] .form-textarea { background: rgba(15,23,42,0.04) !important; color: #0f172a !important; border-color: rgba(15,23,42,0.15) !important; }
+[data-theme="light"] .grade-input { background: rgba(15,23,42,0.04) !important; color: #0f172a !important; border-color: rgba(15,23,42,0.15) !important; }
+
+/* ── Modals ──────────────────────────────────────────────────────── */
+[data-theme="light"] .modal-content,
+[data-theme="light"] .meeting-box,
+[data-theme="light"] .attendance-box,
+[data-theme="light"] .event-detail-box {
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.12);
+}
+[data-theme="light"] .modal-title, [data-theme="light"] .meeting-title,
+[data-theme="light"] .attendance-title, [data-theme="light"] .edm-title { color: #0f172a; }
+[data-theme="light"] .modal-header, [data-theme="light"] .meeting-head,
+[data-theme="light"] .attendance-head, [data-theme="light"] .edm-head { border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .meeting-field-label, [data-theme="light"] .edm-label { color: #5c6a82; }
+[data-theme="light"] .meeting-field-value, [data-theme="light"] .edm-value { color: #0f172a; }
+
+/* ── Buttons (secondary/outline) ─────────────────────────────────── */
+[data-theme="light"] .btn-secondary {
+    background: rgba(15,23,42,0.06);
+    color: #0f172a;
+    border-color: rgba(15,23,42,0.12);
+}
+[data-theme="light"] .btn-secondary:hover { background: rgba(15,23,42,0.1); }
+[data-theme="light"] .btn-outline { border-color: rgba(15,23,42,0.2); color: #0f172a; }
+[data-theme="light"] .btn-outline:hover { background: rgba(15,23,42,0.05); border-color: rgba(15,23,42,0.3); }
+
+/* ── Filter / tabs / view buttons ────────────────────────────────── */
+[data-theme="light"] .filter-btn, [data-theme="light"] .mat-filter,
+[data-theme="light"] .view-btn, [data-theme="light"] .tab {
+    color: #5c6a82;
+    border-color: rgba(15,23,42,0.12);
+}
+[data-theme="light"] .filter-btn:hover { color: #2563eb; border-color: rgba(37,99,235,0.4); }
+[data-theme="light"] .filter-btn.active, [data-theme="light"] .mat-filter.active,
+[data-theme="light"] .view-btn.active, [data-theme="light"] .tab.active {
+    background: rgba(37,99,235,0.1);
+    color: #2563eb;
+    border-color: rgba(37,99,235,0.35);
+}
+[data-theme="light"] .view-toggle { background: rgba(15,23,42,0.04); border-color: rgba(15,23,42,0.12); }
+[data-theme="light"] .tabs { background: rgba(15,23,42,0.04); border-color: rgba(15,23,42,0.1); }
+
+/* ── Search rows ─────────────────────────────────────────────────── */
+[data-theme="light"] .search-row input, [data-theme="light"] .mat-search input,
+[data-theme="light"] .admin-search input { background: rgba(15,23,42,0.04) !important; border-color: rgba(15,23,42,0.15) !important; color: #0f172a !important; }
+[data-theme="light"] .search-wrap svg, [data-theme="light"] .mat-search svg { color: #5c6a82; }
+
+/* ── Schedule ────────────────────────────────────────────────────── */
+[data-theme="light"] #weekView { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .schedule-grid > .time-slot:nth-child(-n+6) { background: #f8fafc; color: #0f172a; border-color: rgba(37,99,235,0.15); }
+[data-theme="light"] .schedule-grid > .time-slot:first-child { color: #5c6a82; }
+[data-theme="light"] .time-slot { background: rgba(15,23,42,0.01); color: #5c6a82; border-color: rgba(15,23,42,0.07); }
+[data-theme="light"] .schedule-cell { border-color: rgba(15,23,42,0.06); background: transparent; }
+[data-theme="light"] .schedule-cell:hover { background: rgba(37,99,235,0.02); }
+[data-theme="light"] .week-label { background: #ffffff; border-color: rgba(15,23,42,0.15); color: #0f172a; }
+[data-theme="light"] .week-nav-btn { border-color: rgba(15,23,42,0.15); color: #5c6a82; background: #ffffff; }
+[data-theme="light"] .week-nav-btn:hover { border-color: rgba(37,99,235,0.4); color: #2563eb; background: rgba(37,99,235,0.05); }
+[data-theme="light"] .admin-panel { background: rgba(37,99,235,0.04); border-color: rgba(37,99,235,0.15); }
+[data-theme="light"] .admin-panel h3 { color: #1d4ed8; }
+
+/* ── Calendar ────────────────────────────────────────────────────── */
+[data-theme="light"] .calendar-header { color: #5c6a82; }
+[data-theme="light"] .calendar-day { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .calendar-day:hover { border-color: rgba(37,99,235,0.25); }
+[data-theme="light"] .calendar-day.today { background: rgba(37,99,235,0.04); border-color: rgba(37,99,235,0.4); }
+[data-theme="light"] .calendar-date { color: #0f172a; }
+[data-theme="light"] .calendar-day.today .calendar-date { color: #2563eb; }
+
+/* ── Profile ─────────────────────────────────────────────────────── */
+[data-theme="light"] .profile-name { color: #0f172a; }
+[data-theme="light"] .profile-email { color: #5c6a82; }
+[data-theme="light"] .pstat { background: rgba(15,23,42,0.03); }
+[data-theme="light"] .pstat-label { color: #5c6a82; }
+[data-theme="light"] .psection-header { background: transparent; }
+
+/* ── Grades ──────────────────────────────────────────────────────── */
+[data-theme="light"] .grades-panel-header { border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .info-note { background: rgba(37,99,235,0.05); border-color: rgba(37,99,235,0.12); color: #5c6a82; }
+[data-theme="light"] .grade-val-text { color: #0f172a; }
+[data-theme="light"] .grade-lbl-text { color: #5c6a82; }
+[data-theme="light"] .stat-mini-lbl { color: #5c6a82; }
+[data-theme="light"] .stats-row { border-color: rgba(15,23,42,0.1); }
+
+/* ── Sidebar course lists (inner content lists) ──────────────────── */
+[data-theme="light"] .course-item, [data-theme="light"] .mat-course-item { color: #0f172a; }
+[data-theme="light"] .course-item:hover, [data-theme="light"] .mat-course-item:hover { background: rgba(15,23,42,0.04); }
+[data-theme="light"] .course-item.active, [data-theme="light"] .mat-course-item.active {
+    background: rgba(37,99,235,0.08);
+    border-color: rgba(37,99,235,0.2);
+}
+[data-theme="light"] .ci-name, [data-theme="light"] .mat-course-name { color: #0f172a; }
+[data-theme="light"] .ci-count, [data-theme="light"] .mat-course-count { color: #5c6a82; }
+
+/* ── Progress page ───────────────────────────────────────────────── */
+[data-theme="light"] .prog-bar { background: rgba(15,23,42,0.08); }
+[data-theme="light"] .pcourse-info { color: #0f172a; }
+[data-theme="light"] .ach-card { border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .ach-card.earned { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.25); }
+[data-theme="light"] .progress-section-body { border: none; }
+
+/* ── Assignments ─────────────────────────────────────────────────── */
+[data-theme="light"] .assignment-card { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .assignment-card:hover { border-color: rgba(37,99,235,0.25); }
+[data-theme="light"] .assignment-card.pending { border-left-color: #f59e0b; }
+[data-theme="light"] .assignment-card.submitted { border-left-color: #10b981; }
+[data-theme="light"] .assignment-card.overdue { border-left-color: #ef4444; }
+
+/* ── Materials ───────────────────────────────────────────────────── */
+[data-theme="light"] .mat-sidebar { border-color: rgba(15,23,42,0.1); }
+
+/* ── Course view ─────────────────────────────────────────────────── */
+[data-theme="light"] .course-hero {
+    background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 60%, #eef2f7 100%);
+    border-color: rgba(15,23,42,0.1);
+}
+[data-theme="light"] .course-hero h1 { color: #0f172a; }
+[data-theme="light"] .course-hero-meta span { color: #5c6a82; }
+[data-theme="light"] #courseDescription { color: #5c6a82; }
+[data-theme="light"] .tab-btn { color: #5c6a82; border-color: transparent; }
+[data-theme="light"] .tab-btn.active { color: #2563eb; border-color: #2563eb; }
+[data-theme="light"] .tab-btn:hover { color: #0f172a; }
+[data-theme="light"] .asgn-item, [data-theme="light"] .mat-item {
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.1);
+    color: #0f172a;
+}
+[data-theme="light"] .asgn-item:hover, [data-theme="light"] .mat-item:hover { border-color: rgba(37,99,235,0.25); }
+[data-theme="light"] .asgn-item-meta { color: #5c6a82; }
+[data-theme="light"] .student-row { border-color: rgba(15,23,42,0.06); }
+
+/* ── App header (course-view) ────────────────────────────────────── */
+[data-theme="light"] .app-header {
+    background: rgba(238,242,247,0.95);
+    border-color: rgba(15,23,42,0.1);
+}
+[data-theme="light"] .app-header .logo-text { color: #0f172a; }
+[data-theme="light"] .header-nav a { color: #5c6a82; }
+[data-theme="light"] .header-nav a:hover { color: #0f172a; }
+
+/* ── Admin / Teacher specific ────────────────────────────────────── */
+[data-theme="light"] .notif-form { background: #f8fafc; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .mail-item.pending { border-left-color: #f59e0b; }
+[data-theme="light"] .mail-item.answered { border-left-color: #10b981; }
+[data-theme="light"] .mail-time { color: #5c6a82; }
+[data-theme="light"] .attendance-meta span { color: #5c6a82; }
+[data-theme="light"] .attendance-meta b { color: #0f172a; }
+[data-theme="light"] .roster-item { background: rgba(15,23,42,0.03); }
+[data-theme="light"] .student-name { color: #0f172a; }
+[data-theme="light"] .student-email { color: #5c6a82; }
+[data-theme="light"] .status-label { border-color: rgba(15,23,42,0.12); color: #5c6a82; }
+
+/* ── Badges ──────────────────────────────────────────────────────── */
+[data-theme="light"] .badge-muted { background: rgba(15,23,42,0.05); color: #5c6a82; border-color: rgba(15,23,42,0.12); }
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+[data-theme="light"] ::-webkit-scrollbar-track { background: rgba(15,23,42,0.03); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.25); }
+
+/* ── Loading / empty ─────────────────────────────────────────────── */
+[data-theme="light"] .loading { color: #5c6a82; }
+[data-theme="light"] .spinner { border-color: rgba(15,23,42,0.1); border-top-color: #2563eb; }
+[data-theme="light"] .empty-state { color: #5c6a82; }
+
+/* ── Demo banner ─────────────────────────────────────────────────── */
+[data-theme="light"] #demo-banner-bar { background: linear-gradient(90deg, #d97706, #b45309) !important; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   THEME TOGGLE BUTTONS (all variants)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Sidebar variant (internal pages) */
+.theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 100%;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    font-size: .9rem;
+    font-weight: 500;
+    font-family: 'Manrope', sans-serif;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: left;
+    margin-bottom: .2rem;
+    letter-spacing: 0;
+}
+.theme-toggle-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.85); }
+.theme-toggle-btn svg { flex-shrink: 0; opacity: .75; }
+
+/* Header icon variant (landing + headers without sidebar) */
+.theme-toggle-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: all .2s;
+    flex-shrink: 0;
+    padding: 0;
+}
+.theme-toggle-header:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-color: rgba(255,255,255,0.25);
+}
+.theme-toggle-header svg { display: block; }
+[data-theme="light"] .theme-toggle-header {
+    background: rgba(15,23,42,0.04);
+    border-color: rgba(15,23,42,0.15);
+    color: #5c6a82;
+}
+[data-theme="light"] .theme-toggle-header:hover {
+    background: rgba(15,23,42,0.08);
+    color: #0f172a;
+    border-color: rgba(15,23,42,0.25);
+}
+
+/* Floating fallback variant */
+.theme-toggle-float {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem 1.1rem;
+    background: #1a1f33;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    color: rgba(255,255,255,0.8);
+    font-size: .8rem;
+    font-weight: 600;
+    font-family: 'Manrope', sans-serif;
+    cursor: pointer;
+    transition: all .2s;
+    width: auto;
+}
+.theme-toggle-float:hover { color: #fff; transform: translateY(-1px); }
+.theme-toggle-float svg { flex-shrink: 0; }
+[data-theme="light"] .theme-toggle-float {
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.12);
+    color: #5c6a82;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.14);
+}
+[data-theme="light"] .theme-toggle-float:hover { color: #0f172a; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   v3 ADDITIONS — schedule grid borders, legend, controls, Chrome fixes
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Schedule grid: hardcoded rgba(255,255,255,.04) borders vanish on
+   light bg. Restore visible borders + proper surface colors. ──────── */
+[data-theme="light"] .schedule-grid { background: #ffffff; border: 1px solid rgba(15,23,42,0.1); border-radius: 14px; overflow: hidden; }
+[data-theme="light"] .time-slot {
+    color: #5c6a82;
+    background: #f8fafc;
+    border-bottom-color: rgba(15,23,42,0.06);
+    border-right-color: rgba(15,23,42,0.06);
+}
+[data-theme="light"] .schedule-grid > .time-slot:nth-child(-n+6) {
+    background: #eef2f7;
+    color: #0f172a;
+    border-bottom-color: rgba(37,99,235,0.2);
+}
+[data-theme="light"] .schedule-grid > .time-slot:first-child { color: #5c6a82; }
+[data-theme="light"] .schedule-cell {
+    border-bottom-color: rgba(15,23,42,0.06);
+    border-right-color: rgba(15,23,42,0.06);
+    background: #ffffff;
+}
+[data-theme="light"] .schedule-cell:hover { background: rgba(37,99,235,0.03); }
+
+/* Class event cards keep their solid colour backgrounds (blue/green/orange),
+   text stays white on them — that's fine in both themes. Just ensure the
+   muted "Група N" label remains legible on coloured cards. */
+[data-theme="light"] .class-item { box-shadow: 0 2px 8px rgba(15,23,42,0.08); }
+
+/* ── Sched controls / legend ─────────────────────────────────────── */
+[data-theme="light"] .sched-controls { color: #0f172a; }
+[data-theme="light"] .view-toggle { background: rgba(15,23,42,0.04); border: 1px solid rgba(15,23,42,0.1); border-radius: 10px; }
+[data-theme="light"] .view-btn { color: #5c6a82; }
+[data-theme="light"] .view-btn.active { background: rgba(37,99,235,0.12); color: #2563eb; }
+[data-theme="light"] .week-nav-btn { border-color: rgba(15,23,42,0.15); color: #5c6a82; background: #ffffff; }
+[data-theme="light"] .week-nav-btn:hover { border-color: rgba(37,99,235,0.4); color: #2563eb; background: rgba(37,99,235,0.06); }
+[data-theme="light"] .week-label, [data-theme="light"] #weekLabel { background: #ffffff; border: 1px solid rgba(15,23,42,0.12); color: #0f172a; }
+/* Legend text next to coloured dots */
+[data-theme="light"] .sched-controls span,
+[data-theme="light"] .legend,
+[data-theme="light"] .legend span,
+[data-theme="light"] .sched-legend { color: #0f172a; }
+
+/* ── Month / calendar view ───────────────────────────────────────── */
+[data-theme="light"] .calendar-grid { background: #ffffff; }
+[data-theme="light"] .calendar-weekday { color: #5c6a82; }
+
+/* ── Modals on schedule (meeting / attendance) ───────────────────── */
+[data-theme="light"] .meeting-box, [data-theme="light"] .attendance-box {
+    background: #ffffff; border-color: rgba(15,23,42,0.12); color: #0f172a;
+}
+[data-theme="light"] .close-btn { color: #5c6a82; }
+[data-theme="light"] .close-btn:hover { color: #0f172a; }
+
+/* ── btn-danger / btn-success readability in light ───────────────── */
+[data-theme="light"] .btn-danger { background: rgba(239,68,68,0.1); color: #dc2626; border-color: rgba(239,68,68,0.3); }
+[data-theme="light"] .btn-danger:hover { background: rgba(239,68,68,0.18); }
+[data-theme="light"] .btn-success { background: rgba(16,185,129,0.1); color: #059669; border-color: rgba(16,185,129,0.3); }
+[data-theme="light"] .btn-success:hover { background: rgba(16,185,129,0.18); }
+
+/* ── btn-primary text must stay white in BOTH themes (blue bg) ───── */
+.btn-primary, .btn.btn-primary { color: #ffffff !important; }
+.btn-primary svg { stroke: #ffffff; }
+
+/* ── Mobile sidebar toggle button: blue bg, white icon (both themes) ─ */
+.mobile-toggle { color: #ffffff !important; }
+.mobile-toggle svg { stroke: #ffffff; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CHROME-SPECIFIC ROBUSTNESS
+   Chrome differs from Edge mainly on: backdrop-filter stacking,
+   gradient text clipping, and sticky header paint. These keep things
+   consistent.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Gradient text fallback — if background-clip:text fails to paint in
+   some Chrome builds the text goes transparent/invisible. Guarantee a
+   visible colour as fallback. */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+    .gradient-text, .logo-text span { -webkit-text-fill-color: currentColor; color: #3b82f6 !important; }
+}
+
+/* Sticky schedule header: force its own paint layer so it doesn't
+   show through as transparent in Chrome when scrolling. */
+.schedule-grid > .time-slot:nth-child(-n+6) { will-change: transform; }
+
+/* backdrop-filter fallback for headers (Chrome sometimes drops blur
+   under heavy paint) — ensure header bg stays opaque enough to read. */
+@supports not (backdrop-filter: blur(1px)) {
+    .header, .app-header { background: rgba(10,14,26,0.98) !important; }
+    [data-theme="light"] .header, [data-theme="light"] .app-header { background: rgba(238,242,247,0.98) !important; }
+}
+
+/* Theme-toggle header button: guarantee the SVG inherits colour
+   (Chrome occasionally needs explicit stroke inheritance). */
+.theme-toggle-header svg, .theme-toggle-btn svg, .theme-toggle-float svg { stroke: currentColor; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   v4 ADDITIONS — Admin & Teacher dashboards (thorough light theme)
+   These pages hardcode color:#fff on several elements and use
+   #111827 modal backgrounds. Override them all for light mode.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Section cards & surfaces ────────────────────────────────────── */
+[data-theme="light"] .section-card,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .mail-item,
+[data-theme="light"] .notif-form,
+[data-theme="light"] .system-card,
+[data-theme="light"] .group-card,
+[data-theme="light"] .notification-card,
+[data-theme="light"] .test-item,
+[data-theme="light"] .topic-item,
+[data-theme="light"] .asset-item,
+[data-theme="light"] .selection-item {
+    background: #ffffff !important;
+    border-color: rgba(15,23,42,0.1) !important;
+    color: #0f172a;
+}
+[data-theme="light"] .stat-card:hover,
+[data-theme="light"] .mail-item:hover,
+[data-theme="light"] .group-card:hover,
+[data-theme="light"] .notification-card:hover,
+[data-theme="light"] .selection-item:hover {
+    border-color: rgba(37,99,235,0.3) !important;
+    box-shadow: 0 4px 16px rgba(15,23,42,0.08);
+}
+
+/* ── Stat values (hardcoded color:#fff) ──────────────────────────── */
+[data-theme="light"] .stat-value { color: #2563eb !important; }
+[data-theme="light"] .stat-label { color: #5c6a82 !important; }
+[data-theme="light"] .stat-icon { opacity: 1; }
+
+/* ── System overview cards (admin) ───────────────────────────────── */
+[data-theme="light"] .system-value { color: #0f172a !important; }
+[data-theme="light"] .system-label { color: #5c6a82 !important; }
+[data-theme="light"] .system-icon { opacity: 1; }
+
+/* ── Data tables ─────────────────────────────────────────────────── */
+[data-theme="light"] .data-table th,
+[data-theme="light"] .users-table th,
+[data-theme="light"] .students-table th {
+    color: #5c6a82 !important;
+    background: rgba(15,23,42,0.025) !important;
+    border-bottom-color: rgba(15,23,42,0.1) !important;
+}
+[data-theme="light"] .data-table td,
+[data-theme="light"] .users-table td,
+[data-theme="light"] .students-table td {
+    color: #0f172a !important;
+    border-bottom-color: rgba(15,23,42,0.06) !important;
+}
+[data-theme="light"] .data-table tr:hover td,
+[data-theme="light"] .users-table tr:hover td,
+[data-theme="light"] .students-table tr:hover td { background: rgba(37,99,235,0.03) !important; }
+[data-theme="light"] .student-row { border-color: rgba(15,23,42,0.06) !important; }
+
+/* ── User cells (admin users table) ──────────────────────────────── */
+[data-theme="light"] .user-cell-name { color: #0f172a !important; }
+[data-theme="light"] .user-cell-info, [data-theme="light"] .user-cell-role { color: #5c6a82 !important; }
+
+/* ── Mail / inbox items ──────────────────────────────────────────── */
+[data-theme="light"] .mail-question,
+[data-theme="light"] .mail-body { color: #475569 !important; }
+[data-theme="light"] .mail-sender-name, [data-theme="light"] .mail-header { color: #0f172a !important; }
+[data-theme="light"] .mail-sender-email, [data-theme="light"] .mail-time { color: #5c6a82 !important; }
+[data-theme="light"] .mail-reply-preview { background: rgba(37,99,235,0.05) !important; color: #475569 !important; border-color: rgba(37,99,235,0.12) !important; }
+[data-theme="light"] .mail-item.pending { border-left-color: #f59e0b !important; }
+[data-theme="light"] .mail-item.answered { border-left-color: #10b981 !important; }
+
+/* ── Notification cards (teacher) ────────────────────────────────── */
+[data-theme="light"] .notification-title { color: #0f172a !important; }
+[data-theme="light"] .notification-message { color: #475569 !important; }
+[data-theme="light"] .notification-meta { color: #5c6a82 !important; }
+
+/* ── Inputs / textareas (hardcoded color:#fff) ───────────────────── */
+[data-theme="light"] .grade-input,
+[data-theme="light"] .form-textarea,
+[data-theme="light"] .reply-textarea,
+[data-theme="light"] .admin-search input,
+[data-theme="light"] .notif-form input,
+[data-theme="light"] .notif-form textarea {
+    background: rgba(15,23,42,0.04) !important;
+    color: #0f172a !important;
+    border-color: rgba(15,23,42,0.15) !important;
+}
+[data-theme="light"] .grade-input:focus,
+[data-theme="light"] .form-textarea:focus,
+[data-theme="light"] .reply-textarea:focus,
+[data-theme="light"] .admin-search input:focus {
+    background: #ffffff !important;
+    border-color: rgba(37,99,235,0.5) !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.08) !important;
+}
+[data-theme="light"] .reply-textarea::placeholder,
+[data-theme="light"] .admin-search input::placeholder,
+[data-theme="light"] .form-textarea::placeholder { color: rgba(15,23,42,0.35) !important; }
+
+/* ── Reply / notif forms ─────────────────────────────────────────── */
+[data-theme="light"] .reply-form { background: #f8fafc !important; border-color: rgba(15,23,42,0.1) !important; }
+
+/* ── Modal box (hardcoded #111827) ───────────────────────────────── */
+[data-theme="light"] .modal-box {
+    background: #ffffff !important;
+    border-color: rgba(15,23,42,0.12) !important;
+    color: #0f172a;
+}
+[data-theme="light"] .modal-box h1,[data-theme="light"] .modal-box h2,
+[data-theme="light"] .modal-box h3,[data-theme="light"] .modal-box label,
+[data-theme="light"] .modal-title,[data-theme="light"] .modal-head { color: #0f172a !important; }
+[data-theme="light"] .modal-box p { color: #5c6a82 !important; }
+[data-theme="light"] .modal-close { color: #5c6a82 !important; }
+[data-theme="light"] .modal-close:hover { color: #0f172a !important; }
+[data-theme="light"] .modal-head { border-color: rgba(15,23,42,0.1) !important; }
+
+/* ── Selection lists (admin enroll / picker) ─────────────────────── */
+[data-theme="light"] .selection-list { background: #ffffff !important; border-color: rgba(15,23,42,0.1) !important; }
+[data-theme="light"] .selection-item-title { color: #0f172a !important; }
+[data-theme="light"] .selection-item-subtitle { color: #5c6a82 !important; }
+[data-theme="light"] .selection-search-hint { color: #5c6a82 !important; }
+
+/* ── Group / course items ────────────────────────────────────────── */
+[data-theme="light"] .group-name { color: #0f172a !important; }
+[data-theme="light"] .group-badge { background: rgba(37,99,235,0.1) !important; color: #2563eb !important; border-color: rgba(37,99,235,0.2) !important; }
+[data-theme="light"] .status-active { background: rgba(16,185,129,0.1) !important; color: #059669 !important; border-color: rgba(16,185,129,0.3) !important; }
+[data-theme="light"] .status-inactive { background: rgba(148,163,184,0.12) !important; color: #64748b !important; border-color: rgba(148,163,184,0.25) !important; }
+
+/* ── Role badges keep their colours (look fine on light) ─────────── */
+[data-theme="light"] .role-admin { background: rgba(139,92,246,0.1); color: #7c3aed; border-color: rgba(139,92,246,0.25); }
+[data-theme="light"] .role-teacher { background: rgba(16,185,129,0.1); color: #059669; border-color: rgba(16,185,129,0.25); }
+[data-theme="light"] .role-student { background: rgba(37,99,235,0.1); color: #2563eb; border-color: rgba(37,99,235,0.25); }
+
+/* ── Sidebar profile (admin/teacher) — stays on dark sidebar ─────── */
+[data-theme="light"] .sidebar-pname { color: #ffffff !important; }
+[data-theme="light"] .sidebar-prole { /* keeps its coloured badge */ }
+[data-theme="light"] .sidebar-profile { border-color: rgba(255,255,255,0.08) !important; }
+
+/* ── Section titles & headers ────────────────────────────────────── */
+[data-theme="light"] .section-title { color: #0f172a !important; }
+[data-theme="light"] .section-header { border-color: rgba(15,23,42,0.1) !important; }
+
+/* ── Editor grid (teacher course editor) ─────────────────────────── */
+[data-theme="light"] .editor-grid { color: #0f172a; }
+[data-theme="light"] .asset-list, [data-theme="light"] .test-list,
+[data-theme="light"] .topic-list, [data-theme="light"] .inbox-list { color: #0f172a; }
+
+/* ── Grade badges ────────────────────────────────────────────────── */
+[data-theme="light"] .grade-badge { color: #0f172a; }
+
+/* ── Inbox badge (notification count) keeps red/blue ─────────────── */
+
+/* ── Loaders ─────────────────────────────────────────────────────── */
+[data-theme="light"] .loader, [data-theme="light"] .loading { color: #5c6a82 !important; }
+[data-theme="light"] .spinner { border-color: rgba(15,23,42,0.1) !important; border-top-color: #2563eb !important; }
+
+/* ── Gradebook cards (teacher grades) — light theme ──────────────── */
+[data-theme="light"] .gb-card { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .gb-card-head { background: rgba(37,99,235,0.05); border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .gb-card-title { color: #0f172a !important; }
+[data-theme="light"] .gb-student-name { color: #0f172a !important; }
+[data-theme="light"] .gb-student-row { border-color: rgba(15,23,42,0.08); }
+[data-theme="light"] .gradebook-table th { background: #f1f5f9 !important; color: #5c6a82 !important; }
+[data-theme="light"] .gradebook-table td { color: #0f172a !important; border-color: rgba(15,23,42,0.08); }
+[data-theme="light"] .grade-none { background: rgba(15,23,42,0.06) !important; color: #5c6a82 !important; }
+[data-theme="light"] .gb-status.none { background: rgba(15,23,42,0.05) !important; color: #5c6a82 !important; }
+
+/* ── Course cards (teacher "Мої курси") — light theme ────────────── */
+[data-theme="light"] .course-card-rich { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .course-card-title { color: #0f172a !important; }
+[data-theme="light"] .course-card-desc { color: #5c6a82; }
+[data-theme="light"] .course-card-stats { color: #64748b; }
+[data-theme="light"] .cc-btn { background: rgba(15,23,42,0.05); color: #0f172a; border-color: rgba(15,23,42,0.12); }
+[data-theme="light"] .cc-btn.primary { background: #2563eb; color: #fff; }
+
+/* ── Overview panels — light theme ───────────────────────────────── */
+[data-theme="light"] .ov-panel { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .ov-panel-head { color: #0f172a; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .ov-mini-title { color: #0f172a; }
+[data-theme="light"] .ov-mini-item { border-color: rgba(15,23,42,0.06); }
+[data-theme="light"] .stat-value { /* colored, keep */ }
+
+/* ── Stat cards — light theme ────────────────────────────────────── */
+[data-theme="light"] .stat-card { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+
+/* ── Students table — light theme ────────────────────────────────── */
+[data-theme="light"] .students-table th { background: #f1f5f9; color: #5c6a82; }
+[data-theme="light"] .students-table td { color: #0f172a; border-color: rgba(15,23,42,0.06); }
+
+/* ── Attendance buttons — light theme ────────────────────────────── */
+[data-theme="light"] .att-btn { background: rgba(15,23,42,0.05); color: #5c6a82; border-color: rgba(15,23,42,0.12); }
+
+/* ── Assignment cards (course-view) — light theme ────────────────── */
+[data-theme="light"] .assignment-item { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .assignment-title { color: #0f172a !important; }
+[data-theme="light"] .assignment-desc { color: #475569; }
+[data-theme="light"] .cv-btn { background: rgba(15,23,42,0.05); color: #0f172a; border-color: rgba(15,23,42,0.12); }
+[data-theme="light"] .cv-btn.primary { background: #2563eb; color: #fff; }
+[data-theme="light"] .mat-item { background: #ffffff; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .cv-modal-box { background: #ffffff; }
+[data-theme="light"] .cv-code { background: #f1f5f9; color: #0f172a; border-color: rgba(15,23,42,0.1); }
+[data-theme="light"] .cv-textarea, [data-theme="light"] .cv-input { background: #f8fafc; color: #0f172a; border-color: rgba(15,23,42,0.12); }

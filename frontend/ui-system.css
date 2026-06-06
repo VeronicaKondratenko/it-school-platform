@@ -1,0 +1,115 @@
+/* ============================================================================
+   ui-system.css — shared design-system foundation (ADDITIVE / NON-BREAKING)
+
+   This file ONLY introduces new design tokens (--ui-*) and new utility classes
+   (.ui-*, .table-scroll, .ui-empty). It does NOT override any existing selector
+   or variable, so it is safe to include on every page. Migrate components to
+   these classes gradually.
+   ============================================================================ */
+
+:root {
+    /* semantic colour tokens (dark default) */
+    --ui-bg: #0a0e1a;
+    --ui-surface: #141829;
+    --ui-surface-2: #1a1f33;
+    --ui-text: #ffffff;
+    --ui-muted: #8b93b0;
+    --ui-border: rgba(255, 255, 255, .08);
+    --ui-primary: #2563eb;
+    --ui-primary-contrast: #ffffff;
+
+    /* radius scale */
+    --ui-radius-sm: 8px;
+    --ui-radius-md: 12px;
+    --ui-radius-lg: 18px;
+
+    /* spacing scale */
+    --ui-space-1: .25rem;
+    --ui-space-2: .5rem;
+    --ui-space-3: .75rem;
+    --ui-space-4: 1rem;
+    --ui-space-6: 1.5rem;
+}
+
+[data-theme="light"] {
+    --ui-bg: #eef2f7;
+    --ui-surface: #ffffff;
+    --ui-surface-2: #f8fafc;
+    --ui-text: #0f172a;
+    --ui-muted: #5c6a82;
+    --ui-border: rgba(15, 23, 42, .1);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ui-space-2);
+    min-height: 40px;
+    padding: .65rem 1rem;
+    border-radius: var(--ui-radius-md);
+    font-weight: 700;
+    font-family: inherit;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: filter .15s ease, background .15s ease;
+}
+.ui-btn:hover { filter: brightness(1.05); }
+.ui-btn--primary { background: var(--ui-primary); color: var(--ui-primary-contrast); }
+.ui-btn--secondary { background: var(--ui-surface-2); color: var(--ui-text); border-color: var(--ui-border); }
+.ui-btn--danger { background: #ef4444; color: #fff; }
+
+/* ── Cards ───────────────────────────────────────────────────────────── */
+.ui-card {
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    padding: 1.25rem;
+}
+
+/* ── Responsive table wrapper (#35) ──────────────────────────────────── */
+.table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.ui-table--wide { min-width: 760px; }
+
+/* ── Empty state (#34) ───────────────────────────────────────────────── */
+.ui-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--ui-muted);
+}
+.ui-empty__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--ui-surface-2);
+    color: var(--ui-primary);
+    margin-bottom: .75rem;
+}
+.ui-empty h3 { margin: .25rem 0; color: var(--ui-text); font-size: 1rem; }
+.ui-empty p { margin: 0; font-size: .875rem; }
+
+/* ── W11: guarantee horizontal scroll for existing table wrappers ────── */
+/* Additive safety net so wide tables scroll inside their container on
+   small screens instead of breaking the page layout. */
+.table-wrap,
+.grades-table-wrap,
+.table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 640px) {
+    .table-wrap > table,
+    .grades-table-wrap > table,
+    .table-scroll > table {
+        min-width: 560px;   /* force the scroll instead of squashing columns */
+    }
+}

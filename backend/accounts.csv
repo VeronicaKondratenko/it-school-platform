@@ -1,0 +1,24 @@
+﻿Роль,ПІБ,По батькові,Email,Пароль,Телефон,Курси (записаний),Курси (викладає),Групи
+Викладач,Олена Савчук,Дмитрівна,teacher1@example.com,password,+380501110001,,Python Fullstack розробка; Основи програмування на Python,Python-2024; Fullstack-Ранок
+Викладач,Ігор Мельник,Петрович,teacher2@example.com,password,+380501110002,,Бази даних та SQL; Програмування мовою C,C-Базовий; DB-Потік-А
+Викладач,Наталія Бондаренко,Сергіївна,teacher3@example.com,password,+380501110003,,Python Fullstack розробка; Веб-дизайн та UI/UX,Fullstack-Вечір; WebDesign-2024
+Студент,Андрій Ткаченко,Олександрович,1student@example.com,password,+380670000001,Основи програмування на Python; Python Fullstack розробка,,Python-2024; Fullstack-Ранок
+Студент,Софія Коваль,Ігорівна,2student@example.com,password,+380670000002,Основи програмування на Python; Python Fullstack розробка,,Python-2024; Fullstack-Ранок
+Студент,Дмитро Шевченко,Андрійович,3student@example.com,password,+380670000003,Основи програмування на Python; Python Fullstack розробка,,Python-2024; Fullstack-Ранок
+Студент,Марія Бойко,Володимирівна,4student@example.com,password,+380670000004,Основи програмування на Python; Веб-дизайн та UI/UX,,Python-2024; WebDesign-2024
+Студент,Максим Кравченко,Сергійович,5student@example.com,password,+380670000005,Основи програмування на Python; Програмування мовою C,,Python-2024; C-Базовий
+Студент,Анна Олійник,Петрівна,6student@example.com,password,+380670000006,Основи програмування на Python; Програмування мовою C,,Python-2024; C-Базовий
+Студент,Владислав Поліщук,Юрійович,7student@example.com,password,+380670000007,Основи програмування на Python; Програмування мовою C,,Python-2024; C-Базовий
+Студент,Катерина Гончаренко,Миколаївна,8student@example.com,password,+380670000008,Основи програмування на Python; Програмування мовою C,,Python-2024; C-Базовий
+Студент,Артем Лисенко,Дмитрович,9student@example.com,password,+380670000009,Програмування мовою C; Бази даних та SQL,,C-Базовий; DB-Потік-А
+Студент,Вероніка Марченко,Олегівна,10student@example.com,password,+380670000010,Програмування мовою C; Бази даних та SQL,,C-Базовий; DB-Потік-А
+Студент,Назар Руденко,Васильович,11student@example.com,password,+380670000011,Програмування мовою C; Бази даних та SQL,,C-Базовий; DB-Потік-А
+Студент,Юлія Ткачук,Романівна,12student@example.com,password,+380670000012,Бази даних та SQL; Веб-дизайн та UI/UX,,DB-Потік-А; WebDesign-2024
+Студент,Олег Савченко,Богданович,13student@example.com,password,+380670000013,Бази даних та SQL; Веб-дизайн та UI/UX,,DB-Потік-Б; WebDesign-2024
+Студент,Дарина Кравець,Анатоліївна,14student@example.com,password,+380670000014,Бази даних та SQL; Веб-дизайн та UI/UX,,DB-Потік-Б; WebDesign-2024
+Студент,Богдан Мороз,Степанович,15student@example.com,password,+380670000015,Бази даних та SQL,,DB-Потік-Б
+Студент,Аліна Пономаренко,Вікторівна,16student@example.com,password,+380670000016,Бази даних та SQL,,DB-Потік-Б
+Студент,Іван Гнатюк,Тарасович,17student@example.com,password,+380670000017,Python Fullstack розробка; Веб-дизайн та UI/UX,,Fullstack-Ранок; WebDesign-2024
+Студент,Поліна Левченко,Максимівна,18student@example.com,password,+380670000018,Python Fullstack розробка; Веб-дизайн та UI/UX,,Fullstack-Вечір; WebDesign-2024
+Студент,Роман Захарченко,Євгенович,19student@example.com,password,+380670000019,Python Fullstack розробка,,Fullstack-Вечір
+Студент,Вікторія Мельниченко,Артемівна,20student@example.com,password,+380670000020,Python Fullstack розробка,,Fullstack-Вечір

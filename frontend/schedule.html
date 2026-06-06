@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <script>(function(){try{var t=localStorage.getItem('it-school-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/logo-code-mark-128.png">
+    <title>Розклад — IT School</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+    [data-theme='dark'] select{color-scheme:dark;}
+    [data-theme='dark'] select option{background-color:#151b2e;color:#fff;}
+    [data-theme='light'] select{color-scheme:light;}
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Manrope', sans-serif; background: var(--ink); color: #fff; }
+
+    /* ── App shell ──────────────────────────────────────────────── */
+    .app { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ────────────────────────────────────────────────── */
+    .sidebar { width: 260px; background: var(--ink-soft); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 200; transition: transform .3s; }
+    .sidebar-logo { display: flex; align-items: center; gap: .65rem; padding: 1.5rem; border-bottom: 1px solid var(--border); }
+    .sidebar-logo img { height: 32px; }
+    .sidebar-logo span { font-family: 'Unbounded', sans-serif; font-size: .9rem; font-weight: 700; letter-spacing: -.02em; }
+    .sidebar-logo span b { color: #3b82f6; }
+    .sidebar-nav { flex: 1; padding: 1rem .75rem; overflow-y: auto; }
+    .sidebar-nav a { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500; margin-bottom: .2rem; transition: all .2s; }
+    .sidebar-nav a:hover { background: rgba(255,255,255,.05); color: #fff; }
+    .sidebar-nav a.active { background: rgba(37,99,235,.12); color: #3b82f6; border: 1px solid rgba(37,99,235,.2); }
+    .sidebar-nav a svg { flex-shrink: 0; opacity: .7; }
+    .sidebar-nav a.active svg { opacity: 1; }
+    .sidebar-bottom { padding: .75rem; border-top: 1px solid var(--border); }
+    .sidebar-bottom a { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; border-radius: 10px; color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500; transition: all .2s; }
+    .sidebar-bottom a:hover { background: rgba(239,68,68,.1); color: #ef4444; }
+
+    /* ── Main wrap ──────────────────────────────────────────────── */
+    .main-wrap { flex: 1; margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; }
+    .page-banner { background: linear-gradient(135deg, #0d1b4b 0%, #1a1040 60%, var(--ink) 100%); padding: 2rem 2rem 1.5rem; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+    .page-banner::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 120% at 40% 0%, rgba(37,99,235,.2), transparent); pointer-events: none; }
+    .page-banner h1 { font-family: 'Unbounded', sans-serif; font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 900; letter-spacing: -.03em; position: relative; z-index: 1; }
+    .page-banner p { color: var(--muted); font-size: .9rem; margin-top: .3rem; position: relative; z-index: 1; }
+    .page-body { padding: 1.5rem; flex: 1; }
+
+    /* ── Mobile toggle ──────────────────────────────────────────── */
+    .mobile-toggle { display: none; position: fixed; top: 1rem; left: 1rem; z-index: 300; background: var(--blue); border: none; border-radius: 10px; padding: .65rem; cursor: pointer; color: #fff; }
+
+    /* ── Controls bar ───────────────────────────────────────────── */
+    .sched-controls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .view-toggle { display: flex; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 10px; padding: .3rem; gap: .25rem; }
+    .view-btn { padding: .45rem 1.1rem; border: none; border-radius: 8px; font-size: .82rem; font-weight: 600; font-family: 'Manrope', sans-serif; cursor: pointer; color: var(--muted); background: transparent; transition: all .2s; }
+    .view-btn.active { background: rgba(37,99,235,.15); color: #3b82f6; }
+    .week-nav { display: flex; align-items: center; gap: .5rem; }
+    .week-nav-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; transition: all .2s; font-size: 1rem; }
+    .week-nav-btn:hover { border-color: rgba(37,99,235,.4); color: #fff; background: rgba(37,99,235,.08); }
+    .week-label { padding: .45rem 1rem; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: .82rem; font-weight: 600; min-width: 190px; text-align: center; background: rgba(255,255,255,.03); }
+
+    /* ── Admin panel ────────────────────────────────────────────── */
+    .admin-panel { background: rgba(37,99,235,.06); border: 1px solid rgba(37,99,235,.2); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .admin-panel h3 { font-weight: 700; font-size: .9rem; margin-bottom: .85rem; color: #3b82f6; display: flex; align-items: center; gap: .5rem; }
+    .admin-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: .6rem; margin-bottom: .85rem; }
+    .form-input { width: 100%; padding: .6rem .85rem; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: .85rem; font-family: 'Manrope', sans-serif; outline: none; transition: border-color .2s; }
+    .form-input:focus { border-color: rgba(37,99,235,.5); }
+    .form-input option { background: #141829; }
+    .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.1rem; border: none; border-radius: 8px; font-size: .82rem; font-weight: 700; font-family: 'Manrope', sans-serif; cursor: pointer; transition: all .2s; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #3b82f6; }
+    .btn-secondary { background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .btn-danger { background: rgba(239,68,68,.12); color: #ef4444; border: 1px solid rgba(239,68,68,.25); }
+    .btn-danger:hover { background: rgba(239,68,68,.2); }
+
+    /* ── Week view container ────────────────────────────────────── */
+    #weekView { border-radius: 14px; border: 1px solid var(--border); background: var(--ink-soft); overflow: auto; max-height: calc(100vh - 290px); min-height: 400px; }
+    #weekView.hidden { display: none; }
+
+    /* ── Schedule grid (generated by JS) ───────────────────────── */
+    .schedule-grid {
+        display: grid;
+        grid-template-columns: 68px repeat(5, 1fr);
+        min-width: 560px;
+    }
+
+    /* All time-slot cells */
+    .time-slot {
+        padding: .55rem .5rem;
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,.04);
+        border-right: 1px solid rgba(255,255,255,.04);
+        background: rgba(255,255,255,.015);
+        line-height: 1.3;
+    }
+
+    /* First 6 = header row (Час + 5 weekday names) — sticky */
+    .schedule-grid > .time-slot:nth-child(-n+6) {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #1a1f33;
+        font-size: .8rem;
+        font-weight: 700;
+        color: rgba(255,255,255,.8);
+        padding: .85rem .5rem;
+        border-bottom: 1px solid rgba(37,99,235,.25);
+        letter-spacing: .01em;
+    }
+
+    /* "Час" first header cell */
+    .schedule-grid > .time-slot:first-child {
+        color: var(--muted);
+        font-size: .7rem;
+        font-family: 'Unbounded', sans-serif;
+    }
+
+    /* Schedule cells */
+    .schedule-cell {
+        padding: .25rem;
+        border-bottom: 1px solid rgba(255,255,255,.04);
+        border-right: 1px solid rgba(255,255,255,.04);
+        min-height: 52px;
+        transition: background .15s;
+    }
+    .schedule-cell:hover { background: rgba(255,255,255,.02); }
+    .schedule-cell.today-col { background: rgba(37,99,235,.04); }
+    .schedule-cell.today-col:hover { background: rgba(37,99,235,.07); }
+
+    /* Class item (event card) */
+    .class-item {
+        border-radius: 7px;
+        padding: .4rem .55rem;
+        margin-bottom: .2rem;
+        cursor: pointer;
+        transition: transform .15s, box-shadow .15s;
+        position: relative;
+        overflow: hidden;
+        border-left: 3px solid rgba(255,255,255,.3);
+    }
+    .class-item:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,.35); opacity: .9; }
+    .class-item.attended { opacity: .65; }
+    .class-item.attended::after { content: ''; position: absolute; top: .35rem; right: .45rem; font-size: .7rem; font-weight: 900; color: rgba(255,255,255,.8); }
+    .class-time { font-size: .65rem; font-weight: 700; color: rgba(255,255,255,.85); margin-bottom: .1rem; letter-spacing: .02em; }
+    .class-title { font-size: .76rem; font-weight: 700; color: #fff; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .class-room { font-size: .65rem; color: rgba(255,255,255,.7); margin-top: .1rem; }
+    .class-meets-badge { display: inline-block; margin-top: .25rem; font-size: .75rem; }
+    .mark-attendance-btn, .edit-schedule-btn {
+        position: absolute; top: .3rem; right: .3rem;
+        background: rgba(255,255,255,.2); border: none; border-radius: 5px;
+        color: #fff; cursor: pointer; font-size: .7rem; padding: .15rem .4rem;
+        transition: background .2s;
+    }
+    .mark-attendance-btn:hover, .edit-schedule-btn:hover { background: rgba(255,255,255,.35); }
+    .attendance-badge { display: inline-flex; align-items: center; gap: .2rem; margin-top: .25rem; font-size: .65rem; font-weight: 700; color: rgba(255,255,255,.8); }
+
+    /* ── Month view ─────────────────────────────────────────────── */
+    #calendarGrid { display: none; }
+    #calendarGrid.active { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; }
+    .calendar-header { text-align: center; font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: .5rem .25rem; margin-bottom: .1rem; }
+    .calendar-day { background: var(--ink-soft); border: 1px solid var(--border); border-radius: 10px; padding: .5rem; min-height: 100px; transition: border-color .2s; }
+    .calendar-day:hover { border-color: rgba(37,99,235,.25); }
+    .calendar-day.today { border-color: rgba(37,99,235,.45); background: rgba(37,99,235,.05); }
+    .calendar-day.other-month { opacity: .3; }
+    .calendar-date { font-weight: 700; font-size: .82rem; margin-bottom: .35rem; }
+    .calendar-day.today .calendar-date { color: #3b82f6; }
+    .calendar-events { display: flex; flex-direction: column; gap: .2rem; }
+    .calendar-event { border-radius: 5px; padding: .18rem .45rem; font-size: .68rem; font-weight: 700; color: #fff; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: opacity .15s; }
+    .calendar-event:hover { opacity: .8; }
+
+    /* ── Meeting Modal ──────────────────────────────────────────── */
+    #meetingModal {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,.78);
+        backdrop-filter: blur(10px);
+        z-index: 900;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    #meetingModal.active { display: flex; }
+    .meeting-box {
+        background: #111827;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 2rem;
+        width: 100%;
+        max-width: 420px;
+        animation: modalIn .25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .meeting-box::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #2563eb, #4f46e5);
+    }
+    .meeting-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .meeting-title { font-family: 'Unbounded', sans-serif; font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; }
+    .close-btn { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: .25rem; transition: color .2s; line-height: 1; }
+    .close-btn:hover { color: #fff; }
+    .meeting-field { margin-bottom: 1rem; }
+    .meeting-field-label { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: .25rem; }
+    .meeting-field-value { font-size: .9rem; color: #fff; font-weight: 500; word-break: break-all; }
+    .meeting-field-value.link { color: #3b82f6; }
+    .meeting-actions { display: flex; gap: .6rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .meeting-actions .btn { flex: 1; justify-content: center; }
+
+    /* ── Attendance Modal ───────────────────────────────────────── */
+    #attendanceModal {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,.78);
+        backdrop-filter: blur(10px);
+        z-index: 900;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 2rem 1rem;
+        overflow-y: auto;
+    }
+    #attendanceModal.active { display: flex; }
+    .attendance-box {
+        background: #111827;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 2rem;
+        width: 100%;
+        max-width: 560px;
+        animation: modalIn .25s ease;
+        margin: auto;
+    }
+    .attendance-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .attendance-title { font-family: 'Unbounded', sans-serif; font-size: 1rem; font-weight: 700; }
+    .attendance-meta { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .attendance-meta span { font-size: .82rem; color: var(--muted); }
+    .attendance-meta b { color: #fff; }
+    #rosterContainer { display: flex; flex-direction: column; gap: .5rem; max-height: 50vh; overflow-y: auto; margin-bottom: 1.25rem; }
+    .roster-item { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; background: rgba(255,255,255,.04); border-radius: 10px; gap: 1rem; flex-wrap: wrap; }
+    .student-info {}
+    .student-name { font-weight: 700; font-size: .875rem; margin-bottom: .15rem; }
+    .student-email { font-size: .75rem; color: var(--muted); }
+    .attendance-status-group { display: flex; gap: .4rem; flex-wrap: wrap; }
+    .status-label { display: flex; align-items: center; gap: .3rem; padding: .3rem .65rem; border-radius: 999px; font-size: .75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); color: var(--muted); transition: all .2s; }
+    .status-label:has(input:checked).status-present { background: rgba(16,185,129,.15); border-color: rgba(16,185,129,.35); color: #10b981; }
+    .status-label:has(input:checked).status-late { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.35); color: #f59e0b; }
+    .status-label:has(input:checked).status-absent { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.35); color: #ef4444; }
+    .status-radio { display: none; }
+    .attendance-footer { display: flex; justify-content: flex-end; gap: .6rem; }
+
+    /* ── Misc ───────────────────────────────────────────────────── */
+    @keyframes modalIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .sidebar { transform: translateX(-100%); }
+        .sidebar.active { transform: translateX(0); }
+        .main-wrap { margin-left: 0; }
+        .page-body { padding: .75rem; }
+        .mobile-toggle { display: flex; }
+        .sched-controls { flex-direction: column; align-items: flex-start; }
+        .week-label { min-width: 160px; }
+        #weekView { max-height: 55vh; }
+    }
+    </style>
+    <link rel="stylesheet" href="professional-ui.css">
+    <link rel="stylesheet" href="theme-light.css">
+    <script defer src="professional-ui.js"></script>
+    <link rel="stylesheet" href="ui-system.css">
+</head>
+<body>
+<button class="mobile-toggle" id="mobileToggle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+
+<div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="assets/logo-code-mark.png" alt="IT School">
+            <span>IT&nbsp;<b>School</b></span>
+        </div>
+        <nav class="sidebar-nav" id="sidebarNav">
+            <a href="dashboard.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Кабінет
+            </a>
+            <a href="courses.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Курси
+            </a>
+            <a href="schedule.html" class="active">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Розклад
+            </a>
+            <a href="grades.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Оцінки
+            </a>
+            <a href="assignments.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Завдання
+            </a>
+            <a href="materials.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                Матеріали
+            </a>
+            <a href="profile.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Профіль
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="#" onclick="logout(); return false;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Вийти
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-wrap">
+        <div class="page-banner">
+            <h1>Розклад занять</h1>
+            <p>Плануйте свій навчальний тиждень</p>
+        </div>
+        <div class="page-body">
+
+            <!-- Controls -->
+            <div class="sched-controls">
+                <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+                    <div class="view-toggle">
+                        <button class="view-btn active" onclick="setView('week')">Тиждень</button>
+                        <button class="view-btn" onclick="setView('month')">Місяць</button>
+                    </div>
+                    <!-- Role-specific legend dots -->
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;" id="legendRow">
+                        <span style="display:flex;align-items:center;gap:.35rem;font-size:.75rem;color:var(--muted);">
+                            <span style="width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);flex-shrink:0;"></span>Backend
+                        </span>
+                        <span style="display:flex;align-items:center;gap:.35rem;font-size:.75rem;color:var(--muted);">
+                            <span style="width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);flex-shrink:0;"></span>Frontend
+                        </span>
+                        <span style="display:flex;align-items:center;gap:.35rem;font-size:.75rem;color:var(--muted);">
+                            <span style="width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);flex-shrink:0;"></span>SQL
+                        </span>
+                    </div>
+                </div>
+                <div class="week-nav">
+                    <button class="week-nav-btn" onclick="changeWeek(-1)" id="prevBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="week-label" id="currentWeekDisplay">Завантаження...</div>
+                    <button class="week-nav-btn" onclick="changeWeek(1)" id="nextBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin panel (hidden for students) -->
+            <div id="adminSchedulePanel" style="display:none;" class="admin-panel">
+                <h3>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Керування розкладом
+                </h3>
+                <div class="admin-form-grid">
+                    <input id="schDate" type="date" class="form-input" placeholder="Дата">
+                    <input id="schStart" type="time" class="form-input" placeholder="Початок">
+                    <input id="schEnd" type="time" class="form-input" placeholder="Кінець">
+                    <select id="schGroup" class="form-input"><option value="">Оберіть групу</option></select>
+                    <select id="schTeacher" class="form-input"><option value="">Оберіть викладача</option></select>
+                    <select id="schDiscipline" class="form-input"><option value="">Оберіть дисципліну</option></select>
+                    <input id="schMeeting" type="text" class="form-input" placeholder="Meeting link (optional)">
+                </div>
+                <input id="schEditingId" type="hidden" value="">
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="saveScheduleEntry()">Зберегти</button>
+                    <button class="btn btn-secondary" onclick="resetScheduleForm()">Очистити</button>
+                    <button class="btn btn-danger" onclick="deleteScheduleEntry()">Видалити</button>
+                </div>
+            </div>
+
+            <!-- Week view (JS populates .schedule-grid inside this) -->
+            <div id="weekView"></div>
+
+            <!-- Month view (JS populates inside calendarGrid) -->
+            <div id="monthViewWrap" style="display:contents;">
+                <div id="calendarGrid"></div>
+            </div>
+
+        </div><!-- .page-body -->
+    </div><!-- .main-wrap -->
+</div><!-- .app -->
+
+<!-- Meeting Modal -->
+<div id="meetingModal">
+    <div class="meeting-box">
+        <div class="meeting-head">
+            <div class="meeting-title">Деталі заняття</div>
+            <button class="close-btn" onclick="closeMeetingModal()">✕</button>
+        </div>
+        <div class="meeting-field">
+            <div class="meeting-field-label">Час</div>
+            <div class="meeting-field-value" id="meetingTime"></div>
+        </div>
+        <div class="meeting-field">
+            <div class="meeting-field-label">Дисципліна</div>
+            <div class="meeting-field-value" id="meetingDiscipline"></div>
+        </div>
+        <div class="meeting-field">
+            <div class="meeting-field-label">Група</div>
+            <div class="meeting-field-value" id="meetingGroup"></div>
+        </div>
+        <div class="meeting-field">
+            <div class="meeting-field-label">Посилання</div>
+            <div class="meeting-field-value link" id="meetingLink" style="word-break:break-all;"></div>
+        </div>
+        <div class="meeting-actions">
+            <button class="btn btn-primary" onclick="connectToMeeting()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                Приєднатись
+            </button>
+            <button class="btn btn-secondary" id="meetingBtnCopy" onclick="copyMeetingLink()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Скопіювати
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Modal (for teachers) -->
+<div id="attendanceModal">
+    <div class="attendance-box">
+        <div class="attendance-head">
+            <div class="attendance-title">Відмітити присутність</div>
+            <button class="close-btn" onclick="closeAttendanceModal()">✕</button>
+        </div>
+        <div class="attendance-meta">
+            <span><b id="attendanceDiscipline">—</b></span>
+            <span><span id="attendanceTime">—</span></span>
+            <span><span id="attendanceGroup">—</span></span>
+        </div>
+        <div id="rosterContainer" tabindex="0">
+            <div style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</div>
+        </div>
+        <div class="attendance-footer">
+            <button class="btn btn-secondary" onclick="closeAttendanceModal()">Скасувати</button>
+            <button class="btn btn-primary" id="attendanceSaveBtn" onclick="saveAllAttendance()">Зберегти</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        var toggle = document.getElementById('mobileToggle');
+        var sidebar = document.getElementById('sidebar');
+        if (toggle) toggle.addEventListener('click', function() { sidebar.classList.toggle('active'); });
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768 && sidebar && !sidebar.contains(e.target) && toggle && !toggle.contains(e.target))
+                sidebar.classList.remove('active');
+        });
+    })();
+</script>
+<script src="config.js"></script>
+<script src="mockData.js"></script>
+<script src="api.js"></script>
+<script>
+        // Role-based Navigation
+        document.addEventListener('DOMContentLoaded', () => {
+            const role = typeof getRole === 'function' ? getRole() : null;
+            const token = typeof getToken === 'function' ? getToken() : null;
+            
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+            if (typeof adjustNavForRole === 'function') adjustNavForRole();
+            
+            // Show/Hide navigation based on role
+            const teacherElements = document.querySelectorAll('.teacher-only');
+            const studentElements = document.querySelectorAll('.student-only');
+            const adminElements = document.querySelectorAll('.admin-only');
+            
+            if (role === 'teacher') {
+                teacherElements.forEach(el => el.style.display = 'inline-block');
+                studentElements.forEach(el => el.style.display = 'none');
+                adminElements.forEach(el => el.style.display = 'none');
+                // Hide page subtitle for teacher
+                const subtitle = document.querySelector('.page-header p');
+                if (subtitle) subtitle.textContent = 'Перегляньте розклад занять для вашої групи';
+            } else if (role === 'admin') {
+                teacherElements.forEach(el => el.style.display = 'none');
+                studentElements.forEach(el => el.style.display = 'none');
+                adminElements.forEach(el => el.style.display = 'inline-block');
+                const subtitle = document.querySelector('.page-header p');
+                if (subtitle) subtitle.textContent = 'Створюйте та редагуйте заняття з перевіркою конфліктів';
+                const panel = document.getElementById('adminSchedulePanel');
+                if (panel) panel.style.display = 'block';
+            } else {
+                teacherElements.forEach(el => el.style.display = 'none');
+                studentElements.forEach(el => el.style.display = 'inline-block');
+                adminElements.forEach(el => el.style.display = 'none');
+            }
+        });
+        
+        function logout() {
+            if (typeof clearAuth === 'function') {
+                clearAuth();
+            }
+            window.location.href = '/index.html';
+        }
+        
+        // Schedule Management System
+        const DISCIPLINE_COLORS = {
+            1: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',     // Backend (blue)
+            2: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',     // Frontend (green)
+            3: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',     // SQL (orange)
+        };
+
+        // Стабільна палітра «колір на дисципліну/курс»
+        const COURSE_PALETTE = [
+            'linear-gradient(135deg,#2563eb,#1d4ed8)', // синій
+            'linear-gradient(135deg,#10b981,#059669)', // зелений
+            'linear-gradient(135deg,#f59e0b,#d97706)', // помаранчевий
+            'linear-gradient(135deg,#8b5cf6,#6d28d9)', // фіолетовий
+            'linear-gradient(135deg,#ec4899,#be185d)', // рожевий
+            'linear-gradient(135deg,#06b6d4,#0891b2)', // блакитний
+            'linear-gradient(135deg,#ef4444,#b91c1c)', // червоний
+            'linear-gradient(135deg,#84cc16,#4d7c0f)', // лаймовий
+        ];
+        function colorForDiscipline(id) {
+            const n = Math.abs(Number(id) || 0);
+            return COURSE_PALETTE[n % COURSE_PALETTE.length];
+        }
+        function renderLegend() {
+            const row = document.getElementById('legendRow');
+            if (!row) return;
+            const seen = new Map();
+            (allScheduleData || []).forEach(s => {
+                const id = Number(s.discipline_id);
+                if (!seen.has(id)) seen.set(id, s.discipline_name || DISCIPLINE_NAMES[id] || ('Дисципліна #' + id));
+            });
+            if (!seen.size) { row.innerHTML = '<span style="font-size:.8rem;color:var(--muted);">Занять у розкладі немає</span>'; return; }
+            row.innerHTML = [...seen.entries()].map(([id, name]) => `
+                <span style="display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted);">
+                    <span style="width:10px;height:10px;border-radius:50%;background:${colorForDiscipline(id)};flex-shrink:0;"></span>${name}
+                </span>`).join('');
+        }
+
+        const INITIAL_WEEK_SCROLL_TIME = '08:00';
+        const DAY_NAMES = ['Час', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця'];
+        const WEEKDAYS_UK = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця', 'Субота'];
+        
+        let allScheduleData = [];
+        let allGroupsData = [];
+        let allUsersData = [];
+        let allDisciplinesData = [];
+        let disciplineOptions = [];
+        let currentView = 'week';
+        let currentDate = new Date(); // current week
+        let attendanceRecord = {}; // { scheduleId: true/false }
+
+        // Discipline names for display
+        const DISCIPLINE_NAMES = {
+            1: 'Backend with FastAPI',
+            2: 'Frontend Basics',
+            3: 'SQL Queries',
+        };
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Load and Initialize
+        // ─────────────────────────────────────────────────────────────────────
+
+        async function loadScheduleData() {
+            try {
+                const data = await apiGet('/api/schedule');
+                allScheduleData = data || [];
+                console.log('Loaded schedule data:', allScheduleData.length, 'records');
+                renderLegend();
+                await loadDisciplinesDirectory();
+                rebuildDisciplineOptions();
+                await loadAdminReferences();
+                renderView();
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+                allScheduleData = [];
+                await loadDisciplinesDirectory();
+                rebuildDisciplineOptions();
+                await loadAdminReferences();
+            }
+        }
+
+        async function loadDisciplinesDirectory() {
+            const role = typeof getRole === 'function' ? getRole() : null;
+            if (role !== 'admin' && role !== 'teacher') {
+                allDisciplinesData = [];
+                return;
+            }
+
+            try {
+                const rows = await apiGet('/api/disciplines/');
+                allDisciplinesData = Array.isArray(rows) ? rows : [];
+            } catch (e) {
+                allDisciplinesData = [];
+            }
+        }
+
+        function rebuildDisciplineOptions() {
+            const map = new Map();
+
+            allDisciplinesData.forEach(d => {
+                const id = Number(d.id);
+                if (!id) return;
+                const name = d.course_title ? `${d.name} (${d.course_title})` : d.name;
+                if (!map.has(id)) map.set(id, name);
+            });
+
+            allScheduleData.forEach(s => {
+                const id = Number(s.discipline_id);
+                if (!id) return;
+                const name = s.discipline_name || DISCIPLINE_NAMES[id] || `Дисципліна #${id}`;
+                if (!map.has(id)) map.set(id, name);
+            });
+            disciplineOptions = Array.from(map.entries())
+                .map(([id, name]) => ({ id, name }))
+                .sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+
+            const disciplineSelect = document.getElementById('schDiscipline');
+            if (disciplineSelect) {
+                disciplineSelect.innerHTML = '<option value="">Оберіть дисципліну</option>' + disciplineOptions
+                    .map(d => `<option value="${d.id}">${d.name}</option>`)
+                    .join('');
+            }
+        }
+
+        async function loadAdminReferences() {
+            const role = typeof getRole === 'function' ? getRole() : null;
+            if (role !== 'admin') return;
+
+            try {
+                allGroupsData = await apiGet('/api/groups') || [];
+            } catch (e) {
+                allGroupsData = [];
+            }
+
+            try {
+                allUsersData = await apiGet('/api/admin/users') || [];
+            } catch (e) {
+                allUsersData = [];
+            }
+
+            const groupSelect = document.getElementById('schGroup');
+            const teacherSelect = document.getElementById('schTeacher');
+
+            if (groupSelect) {
+                groupSelect.innerHTML = '<option value="">Оберіть групу</option>' + allGroupsData
+                    .map(g => `<option value="${g.id}">${g.name}</option>`)
+                    .join('');
+            }
+
+            if (teacherSelect) {
+                const teachers = allUsersData.filter(u => u.role === 'teacher');
+                teacherSelect.innerHTML = '<option value="">Оберіть викладача</option>' + teachers
+                    .map(t => `<option value="${t.id}">${t.full_name}</option>`)
+                    .join('');
+            }
+        }
+
+        function buildSchedulePayloadFromForm() {
+            return {
+                date: document.getElementById('schDate').value,
+                time: document.getElementById('schStart').value,
+                end_time: document.getElementById('schEnd').value || null,
+                group_id: parseInt(document.getElementById('schGroup').value, 10),
+                teacher_id: parseInt(document.getElementById('schTeacher').value, 10),
+                discipline_id: parseInt(document.getElementById('schDiscipline').value, 10),
+                meeting_link: document.getElementById('schMeeting').value || null
+            };
+        }
+
+        function loadScheduleToForm(scheduleId) {
+            const schedule = allScheduleData.find(s => s.id === scheduleId);
+            if (!schedule) return;
+            document.getElementById('schDate').value = schedule.date;
+            document.getElementById('schStart').value = schedule.time.substring(0, 5);
+            document.getElementById('schEnd').value = schedule.end_time ? schedule.end_time.substring(0, 5) : '';
+            document.getElementById('schGroup').value = schedule.group_id;
+            document.getElementById('schTeacher').value = schedule.teacher_id;
+            document.getElementById('schDiscipline').value = schedule.discipline_id;
+            document.getElementById('schMeeting').value = schedule.meeting_link || '';
+            document.getElementById('schEditingId').value = String(schedule.id);
+
+            const panel = document.getElementById('adminSchedulePanel');
+            if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function resetScheduleForm() {
+            document.getElementById('schDate').value = '';
+            document.getElementById('schStart').value = '';
+            document.getElementById('schEnd').value = '';
+            document.getElementById('schGroup').value = '';
+            document.getElementById('schTeacher').value = '';
+            document.getElementById('schDiscipline').value = '';
+            document.getElementById('schMeeting').value = '';
+            document.getElementById('schEditingId').value = '';
+        }
+
+        async function saveScheduleEntry() {
+            const role = typeof getRole === 'function' ? getRole() : null;
+            if (role !== 'admin') {
+                alert('Керування розкладом доступне лише адміністратору');
+                return;
+            }
+
+            try {
+                const payload = buildSchedulePayloadFromForm();
+                const editingId = parseInt(document.getElementById('schEditingId').value || '', 10);
+
+                if (editingId) {
+                    await apiPut(`/api/schedule/${editingId}`, payload);
+                    alert('Запис розкладу оновлено');
+                } else {
+                    await apiPost('/api/schedule', payload);
+                    alert('Запис розкладу створено');
+                }
+
+                resetScheduleForm();
+                await loadScheduleData();
+            } catch (e) {
+                alert(`Помилка збереження: ${e.message}`);
+            }
+        }
+
+        async function deleteScheduleEntry() {
+            const role = typeof getRole === 'function' ? getRole() : null;
+            if (role !== 'admin') {
+                alert('Керування розкладом доступне лише адміністратору');
+                return;
+            }
+
+            const editingId = parseInt(document.getElementById('schEditingId').value || '', 10);
+            if (!editingId) {
+                alert('Спочатку оберіть заняття через іконку у сітці');
+                return;
+            }
+
+            if (!confirm('Видалити вибране заняття?')) return;
+
+            try {
+                await apiDelete(`/api/schedule/${editingId}`);
+                resetScheduleForm();
+                await loadScheduleData();
+                alert('Запис розкладу видалено');
+            } catch (e) {
+                alert(`Помилка видалення: ${e.message}`);
+            }
+        }
+
+        function renderView() {
+            if (currentView === 'week') {
+                renderWeekView();
+            } else {
+                renderMonthView();
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Week View
+        // ─────────────────────────────────────────────────────────────────────
+
+        function renderWeekView() {
+            const weekView = document.getElementById('weekView');
+            weekView.innerHTML = '';
+            weekView.classList.remove('hidden');
+            const timeRows = getWeekTimeRows();
+            
+            const scheduleGrid = document.createElement('div');
+            scheduleGrid.className = 'schedule-grid';
+            
+            // Get Monday of current week
+            const monday = getMondayOfWeek(currentDate);
+            
+            // Header: "Час" + Day names with dates
+            const today = new Date(); today.setHours(0,0,0,0);
+            DAY_NAMES.forEach((name, i) => {
+                const div = document.createElement('div');
+                div.className = 'time-slot';
+                if (i === 0) {
+                    div.textContent = name; // "Час"
+                } else {
+                    const dayDate = new Date(monday);
+                    dayDate.setDate(dayDate.getDate() + (i - 1));
+                    const isToday = dayDate.toDateString() === today.toDateString();
+                    div.innerHTML = `<div>${name}</div><div style="font-size:.7rem;font-weight:600;color:${isToday?'#3b82f6':'var(--muted)'};margin-top:.15rem;">${dayDate.getDate()}.${String(dayDate.getMonth()+1).padStart(2,'0')}</div>`;
+                    if (isToday) {
+                        div.style.background = 'rgba(37,99,235,.18)';
+                        div.style.borderBottom = '2px solid #3b82f6';
+                    }
+                }
+                scheduleGrid.appendChild(div);
+            });
+            
+            // Time slots
+            timeRows.forEach(time => {
+                // Time label
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'time-slot';
+                timeDiv.textContent = time;
+                scheduleGrid.appendChild(timeDiv);
+                
+                // Day cells (Mon-Fri)
+                for (let dayOffset = 0; dayOffset < 5; dayOffset++) {
+                    const cellDate = new Date(monday);
+                    cellDate.setDate(cellDate.getDate() + dayOffset);
+                    
+                    const cell = document.createElement('div');
+                    cell.className = 'schedule-cell';
+                    const _today = new Date(); _today.setHours(0,0,0,0);
+                    if (cellDate.toDateString() === _today.toDateString()) {
+                        cell.classList.add('today-col');
+                    }
+
+                    const slotStart = timeToMinutes(time);
+                    const slotEnd = slotStart + 60;
+                    
+                    const scheduleAtThisTime = allScheduleData.filter(s => {
+                        const sDate = new Date(s.date);
+                        const start = timeToMinutes((s.time || '').substring(0, 5));
+                        return sDate.toDateString() === cellDate.toDateString() &&
+                               start >= slotStart && start < slotEnd;
+                    });
+                    
+                    if (scheduleAtThisTime.length > 0) {
+                        scheduleAtThisTime.forEach(schedule => {
+                            const classItem = createClassItem(schedule);
+                            cell.appendChild(classItem);
+                        });
+                    } else {
+                        cell.classList.add('empty-cell');
+                    }
+                    
+                    scheduleGrid.appendChild(cell);
+                }
+            });
+            
+            weekView.appendChild(scheduleGrid);
+            scrollWeekViewToInitialTime(weekView, INITIAL_WEEK_SCROLL_TIME);
+            updateWeekDisplay(monday);
+        }
+
+        function getWeekTimeRows() {
+            const rows = [];
+            for (let hour = 9; hour <= 18; hour++) {
+                rows.push(`${String(hour).padStart(2, '0')}:00`);
+            }
+            return rows;
+        }
+
+        function scrollWeekViewToInitialTime(weekViewEl, targetTime) {
+            requestAnimationFrame(() => {
+                const timeCells = weekViewEl.querySelectorAll('.time-slot');
+                const targetCell = Array.from(timeCells).find(cell => cell.textContent === targetTime);
+                if (!targetCell) return;
+                weekViewEl.scrollTop = Math.max(targetCell.offsetTop - 48, 0);
+            });
+        }
+
+        function timeToMinutes(time) {
+            const [h, m] = time.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function getGroupLabel(groupId) {
+            const group = allGroupsData.find(g => g.id === groupId);
+            return group ? group.name : `Група ${groupId}`;
+        }
+
+        function createClassItem(schedule) {
+            const item = document.createElement('div');
+            item.className = 'class-item';
+            item.style.background = colorForDiscipline(schedule.discipline_id);
+            item.style.cursor = 'pointer';
+            item.style.position = 'relative';
+            item.dataset.scheduleId = schedule.id;
+            
+            const isAttended = attendanceRecord[schedule.id];
+            if (isAttended) {
+                item.classList.add('attended');
+            }
+            
+            const time = schedule.time.substring(0, 5);
+            const duration = schedule.time.substring(0, 5) + '-' + addMinutesToTime(schedule.time, 90);
+            const disciplineLabel = schedule.discipline_name || DISCIPLINE_NAMES[schedule.discipline_id] || `Дисципліна #${schedule.discipline_id}`;
+            
+            const role = typeof getRole === 'function' ? getRole() : null;
+            let meetingBadge = '';
+            if (schedule.meeting_link) {
+                meetingBadge = `<div class="class-meets-badge" title="Має посилання на конференцію"></div>`;
+            }
+            
+            let markAttendanceBtn = '';
+            if (role === 'teacher') {
+                markAttendanceBtn = `<button class="mark-attendance-btn" title="Відмітити присутність" onclick="event.stopPropagation(); openAttendanceModal(${schedule.id}, '${disciplineLabel.replace(/'/g, "\\'")}', '${duration}', ${schedule.group_id})"></button>`;
+            }
+
+            let editBtn = '';
+            if (role === 'admin') {
+                editBtn = `<button class="edit-schedule-btn" title="Редагувати заняття" onclick="event.stopPropagation(); editScheduleFromGrid(${schedule.id})"></button>`;
+            }
+            
+            item.innerHTML = `
+                <div class="class-time">${duration}</div>
+                <div class="class-title">${disciplineLabel}</div>
+                <div class="class-room">${getGroupLabel(schedule.group_id)}</div>
+                ${meetingBadge}
+                ${markAttendanceBtn}
+                ${editBtn}
+                ${isAttended ? '<div class="attendance-badge"></div>' : ''}
+            `;
+            
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (role === 'admin') {
+                    if (schedule.meeting_link) openMeetingModal(schedule);
+                    return;
+                }
+                if (schedule.meeting_link) {
+                    // Show meeting modal if meeting link exists
+                    openMeetingModal(schedule);
+                } else if (role !== 'teacher') {
+                    // Toggle attendance if no meeting link (students only)
+                    toggleAttendance(schedule.id, item);
+                }
+            });
+            
+            return item;
+        }
+
+        function editScheduleFromGrid(scheduleId) {
+            loadScheduleToForm(scheduleId);
+        }
+
+        function addMinutesToTime(timeStr, minutes) {
+            const [hours, mins] = timeStr.split(':').map(Number);
+            const totalMins = hours * 60 + mins + minutes;
+            const newHours = Math.floor(totalMins / 60);
+            const newMins = totalMins % 60;
+            return `${String(newHours).padStart(2, '0')}:${String(newMins).padStart(2, '0')}`;
+        }
+
+        function getMondayOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        function updateWeekDisplay(monday) {
+            const sunday = new Date(monday);
+            sunday.setDate(sunday.getDate() + 6);
+            
+            const formatter = new Intl.DateTimeFormat('uk-UA', { month: 'long', day: 'numeric' });
+            document.getElementById('currentWeekDisplay').textContent = 
+                `${formatter.format(monday)} - ${formatter.format(sunday)}`;
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Month View (Calendar)
+        // ─────────────────────────────────────────────────────────────────────
+
+        function renderMonthView() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+            calendarGrid.classList.add('active');
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            // Day headers (Mon-Sun)
+            const dayHeaders = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-header';
+                header.textContent = day;
+                calendarGrid.appendChild(header);
+            });
+            
+            // Get first day and last day of month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDayOfWeek = (firstDay.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
+            
+            // Previous month days
+            const prevLastDay = new Date(year, month, 0).getDate();
+            for (let i = startDayOfWeek - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month';
+                day.innerHTML = `
+                    <div class="calendar-date">${prevLastDay - i}</div>
+                    <div class="calendar-events"></div>
+                `;
+                calendarGrid.appendChild(day);
+            }
+            
+            // Current month days
+            const today = new Date();
+            for (let date = 1; date <= daysInMonth; date++) {
+                const dayDate = new Date(year, month, date);
+                const day = document.createElement('div');
+                day.className = 'calendar-day';
+                
+                if (dayDate.toDateString() === today.toDateString()) {
+                    day.classList.add('today');
+                }
+                
+                const eventsForDay = allScheduleData.filter(s => {
+                    const sDate = new Date(s.date);
+                    return sDate.toDateString() === dayDate.toDateString();
+                });
+                
+                day.innerHTML = `
+                    <div class="calendar-date">${date}</div>
+                    <div class="calendar-events">
+                        ${eventsForDay.map(e => `
+                            <div class="calendar-event" data-schedule-id="${e.id}" style="background: ${colorForDiscipline(e.discipline_id)}">
+                                ${e.time.substring(0, 5)} ${e.discipline_name || DISCIPLINE_NAMES[e.discipline_id] || 'Дисципліна'}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                // Add click handlers for events
+                day.querySelectorAll('.calendar-event').forEach(event => {
+                    event.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const scheduleId = parseInt(event.dataset.scheduleId);
+                        const schedule = allScheduleData.find(s => s.id === scheduleId);
+                        if (schedule) {
+                            const role = typeof getRole === 'function' ? getRole() : null;
+                            if (role === 'admin') {
+                                loadScheduleToForm(schedule.id);
+                                return;
+                            }
+                            if (schedule.meeting_link) {
+                                // Show meeting modal if meeting link exists
+                                openMeetingModal(schedule);
+                            } else {
+                                // Toggle attendance if no meeting link
+                                toggleAttendance(scheduleId, event);
+                            }
+                        }
+                    });
+                });
+                
+                calendarGrid.appendChild(day);
+            }
+            
+            // Next month days
+            const totalCells = calendarGrid.children.length - 7; // Subtract headers
+            const remainingCells = 35 - totalCells; // 5 weeks * 7 days
+            for (let i = 1; i <= remainingCells; i++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month';
+                day.innerHTML = `
+                    <div class="calendar-date">${i}</div>
+                    <div class="calendar-events"></div>
+                `;
+                calendarGrid.appendChild(day);
+            }
+            
+            // Update month display
+            const monthFormatter = new Intl.DateTimeFormat('uk-UA', { month: 'long', year: 'numeric' });
+            document.getElementById('currentWeekDisplay').textContent = monthFormatter.format(new Date(year, month));
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Meeting Link Management
+        // ─────────────────────────────────────────────────────────────────────
+
+        let currentMeetingSchedule = null;
+
+        function openMeetingModal(schedule) {
+            currentMeetingSchedule = schedule;
+            
+            const duration = schedule.time.substring(0, 5) + '-' + addMinutesToTime(schedule.time, 90);
+            
+            document.getElementById('meetingTime').textContent = duration;
+            document.getElementById('meetingDiscipline').textContent = schedule.discipline_name || DISCIPLINE_NAMES[schedule.discipline_id] || `Дисципліна #${schedule.discipline_id}`;
+            document.getElementById('meetingGroup').textContent = getGroupLabel(schedule.group_id);
+            document.getElementById('meetingLink').textContent = schedule.meeting_link;
+            
+            const modal = document.getElementById('meetingModal');
+            modal.classList.add('active');
+        }
+
+        function closeMeetingModal() {
+            const modal = document.getElementById('meetingModal');
+            modal.classList.remove('active');
+            currentMeetingSchedule = null;
+        }
+
+        function connectToMeeting() {
+            if (currentMeetingSchedule && currentMeetingSchedule.meeting_link) {
+                window.open(currentMeetingSchedule.meeting_link, '_blank', 'noopener,noreferrer');
+            }
+        }
+
+        function copyMeetingLink() {
+            if (currentMeetingSchedule && currentMeetingSchedule.meeting_link) {
+                navigator.clipboard.writeText(currentMeetingSchedule.meeting_link).then(() => {
+                    const btn = document.getElementById('meetingBtnCopy');
+                    const originalText = btn.textContent;
+                    btn.textContent = ' Скопійовано!';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Помилка при копіюванні посилання');
+                });
+            }
+        }
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', (event) => {
+            const meetingModal = document.getElementById('meetingModal');
+            const attendanceModal = document.getElementById('attendanceModal');
+            if (event.target === meetingModal) {
+                closeMeetingModal();
+            }
+            if (event.target === attendanceModal) {
+                closeAttendanceModal();
+            }
+        });
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Teacher Attendance Management
+        // ─────────────────────────────────────────────────────────────────────
+
+        let currentAttendanceScheduleId = null;
+        let currentRosterData = [];
+
+        async function openAttendanceModal(scheduleId, disciplineName, duration, groupId) {
+            currentAttendanceScheduleId = scheduleId;
+            
+            // Update modal header info
+            document.getElementById('attendanceDiscipline').textContent = disciplineName;
+            document.getElementById('attendanceTime').textContent = duration;
+            document.getElementById('attendanceGroup').textContent = `Група ${groupId}`;
+            
+            // Fetch roster
+            await loadRoster(scheduleId);
+            
+            // Open modal
+            const modal = document.getElementById('attendanceModal');
+            modal.classList.add('active');
+            document.getElementById('rosterContainer').focus();
+        }
+
+        function closeAttendanceModal() {
+            const modal = document.getElementById('attendanceModal');
+            modal.classList.remove('active');
+            currentAttendanceScheduleId = null;
+            currentRosterData = [];
+        }
+
+        async function loadRoster(scheduleId) {
+            const rosterContainer = document.getElementById('rosterContainer');
+            rosterContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Завантаження...</div>';
+            
+            try {
+                const roster = await apiGet(`/api/attendance/teacher/roster/${scheduleId}`);
+                currentRosterData = roster || [];
+                renderRoster(currentRosterData);
+            } catch (error) {
+                console.error('Error loading roster:', error);
+                rosterContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: #ef4444; font-weight: 600;">Помилка при завантаженні списку студентів</div>';
+                showNotification('Помилка при завантаженні списку студентів', 'error');
+            }
+        }
+
+        function renderRoster(roster) {
+            const rosterContainer = document.getElementById('rosterContainer');
+            
+            if (roster.length === 0) {
+                rosterContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Немає студентів у групі</div>';
+                return;
+            }
+            
+            rosterContainer.innerHTML = '';
+            
+            roster.forEach((student, index) => {
+                const rosterItem = document.createElement('div');
+                rosterItem.className = 'roster-item';
+                rosterItem.dataset.studentId = student.student_id;
+                
+                const selectedStatus = student.status || 'absent';
+                
+                rosterItem.innerHTML = `
+                    <div class="student-info">
+                        <div class="student-name">${student.student_name}</div>
+                        <div class="student-email">${student.student_email}</div>
+                    </div>
+                    <div class="attendance-status-group">
+                        <label class="status-label status-present">
+                            <input type="radio" class="status-radio" name="status_${student.student_id}" value="present" ${selectedStatus === 'present' ? 'checked' : ''}>
+                            Присутній
+                        </label>
+                        <label class="status-label status-late">
+                            <input type="radio" class="status-radio" name="status_${student.student_id}" value="late" ${selectedStatus === 'late' ? 'checked' : ''}>
+                            Запізнився
+                        </label>
+                        <label class="status-label status-absent">
+                            <input type="radio" class="status-radio" name="status_${student.student_id}" value="absent" ${selectedStatus === 'absent' ? 'checked' : ''}>
+                            Відсутній
+                        </label>
+                    </div>
+                `;
+                
+                rosterContainer.appendChild(rosterItem);
+            });
+        }
+
+        async function saveAllAttendance() {
+            if (!currentAttendanceScheduleId) return;
+            
+            const saveBtn = document.getElementById('attendanceSaveBtn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = ' Збереження...';
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            try {
+                const rosterItems = document.querySelectorAll('.roster-item');
+                
+                for (const item of rosterItems) {
+                    const studentId = parseInt(item.dataset.studentId);
+                    const selectedRadio = item.querySelector('input[type="radio"]:checked');
+                    
+                    if (!selectedRadio) continue;
+                    
+                    const status = selectedRadio.value;
+                    
+                    try {
+                        await apiPost(`/api/attendance/teacher/mark/${currentAttendanceScheduleId}/${studentId}`, {
+                            status: status
+                        });
+                        successCount++;
+                    } catch (error) {
+                        console.error(`Error marking attendance for student ${studentId}:`, error);
+                        errorCount++;
+                    }
+                }
+                
+                // Show result notification
+                if (errorCount === 0) {
+                    showNotification(` Збережено ${successCount} записів`, 'success');
+                } else {
+                    showNotification(`Збережено ${successCount}, помилок: ${errorCount}`, 'warning');
+                }
+                
+                // Update the data
+                const updatedRoster = await apiGet(`/api/attendance/teacher/roster/${currentAttendanceScheduleId}`);
+                currentRosterData = updatedRoster || [];
+                renderRoster(currentRosterData);
+                
+            } catch (error) {
+                console.error('Error saving attendance:', error);
+                showNotification('Помилка при збереженні присутності', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            let bgColor = '#3b82f6';
+            if (type === 'success') bgColor = '#10b981';
+            if (type === 'error') bgColor = '#ef4444';
+            if (type === 'warning') bgColor = '#f59e0b';
+            
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                background: ${bgColor};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Attendance Management
+        // ─────────────────────────────────────────────────────────────────────
+
+        async function toggleAttendance(scheduleId, element) {
+            const isCurrentlyAttended = attendanceRecord[scheduleId];
+            const newStatus = !isCurrentlyAttended;
+            
+            attendanceRecord[scheduleId] = newStatus;
+            
+            // Visual feedback
+            if (newStatus) {
+                element.classList.add('attended');
+                showNotification('Відмічено на парі ', 'success');
+            } else {
+                element.classList.remove('attended');
+                showNotification('Позначка видалена', 'info');
+            }
+            
+            // Save to backend (optional)
+            try {
+                await apiPost(`/api/attendance/${scheduleId}`, { 
+                    status: newStatus 
+                });
+            } catch (error) {
+                console.error('Error saving attendance:', error);
+            }
+            
+            renderView();
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // View Controls
+        // ─────────────────────────────────────────────────────────────────────
+
+        window.setView = function(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('calendarGrid').classList.remove('active');
+            document.getElementById('weekView').classList.remove('hidden');
+            
+            if (view === 'month') {
+                document.getElementById('weekView').classList.add('hidden');
+                document.getElementById('calendarGrid').classList.add('active');
+            }
+            
+            renderView();
+        }
+
+        window.changeWeek = function(direction) {
+            if (currentView === 'week') {
+                currentDate.setDate(currentDate.getDate() + (direction * 7));
+            } else {
+                currentDate.setMonth(currentDate.getMonth() + direction);
+            }
+            renderView();
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Initialization
+        // ─────────────────────────────────────────────────────────────────────
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadScheduleData();
+        });
+
+        // Add simple animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script></body>
+</html>

@@ -1,0 +1,153 @@
+/* professional-ui.css — Dark theme refinement for IT School LMS
+   Overrides legacy light variables with the new dark palette.
+   Applies to all internal pages (dashboard, courses, etc.)     */
+
+:root {
+    /* Palette sync with styles.css */
+    --primary:           #2563eb;
+    --primary-dark:      #1d4ed8;
+    --primary-light:     #3b82f6;
+    --secondary:         #8b93b0;
+    --success:           #10b981;
+    --warning:           #f59e0b;
+    --error:             #ef4444;
+    --danger:            #ef4444;
+
+    /* Backgrounds */
+    --bg-primary:        #0a0e1a;
+    --bg-secondary:      #141829;
+    --bg-tertiary:       #1a1f33;
+    --ui-bg:             #0a0e1a;
+    --ui-surface:        #141829;
+    --ui-surface-2:      #1a1f33;
+    --ui-surface-3:      #1e2540;
+
+    /* Text */
+    --text-primary:      #ffffff;
+    --text-secondary:    #8b93b0;
+    --text-light:        rgba(255,255,255,0.3);
+    --ui-text:           #ffffff;
+    --ui-muted:          #8b93b0;
+
+    /* Borders */
+    --border-color:      rgba(255,255,255,0.08);
+    --border-dark:       rgba(255,255,255,0.12);
+    --ui-border:         rgba(255,255,255,0.08);
+
+    /* UI tokens */
+    --ui-primary:        #2563eb;
+    --ui-primary-hover:  #3b82f6;
+    --ui-primary-soft:   rgba(37,99,235,0.1);
+    --ui-primary-soft-2: rgba(37,99,235,0.18);
+    --ui-danger:         #ef4444;
+    --ui-danger-soft:    rgba(239,68,68,0.1);
+
+    /* Gray scale (dark) */
+    --dark:        #ffffff;
+    --white:       #0a0e1a;
+    --gray-50:     #141829;
+    --gray-100:    #1a1f33;
+    --gray-200:    rgba(255,255,255,0.08);
+    --gray-300:    rgba(255,255,255,0.12);
+    --gray-400:    rgba(255,255,255,0.3);
+    --gray-500:    #8b93b0;
+    --gray-600:    rgba(255,255,255,0.6);
+    --gray-700:    rgba(255,255,255,0.75);
+    --gray-800:    #ffffff;
+
+    /* Gradients */
+    --gradient-primary:   linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+    --gradient-secondary: linear-gradient(135deg, #8b93b0 0%, #475569 100%);
+    --gradient-hero:      linear-gradient(135deg, #0a0e1a 0%, #141829 100%);
+
+    /* Radius + shadow */
+    --radius-sm:  6px;
+    --radius-md:  10px;
+    --radius-lg:  14px;
+    --radius-xl:  20px;
+    --radius-2xl: 28px;
+    --shadow-sm:  0 2px 8px rgba(0,0,0,0.4);
+    --shadow-md:  0 6px 20px rgba(0,0,0,0.45);
+    --shadow-lg:  0 14px 36px rgba(0,0,0,0.5);
+    --shadow-xl:  0 24px 56px rgba(0,0,0,0.6);
+}
+
+/* ── Body override for internal pages ── */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* ── Generic surface elements ── */
+.card, [class*="-card"] {
+    background: var(--ui-surface) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--text-primary);
+}
+
+/* ── Input / select overrides ── */
+input, select, textarea {
+    background: rgba(255,255,255,0.05) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--text-primary) !important;
+}
+
+input::placeholder, textarea::placeholder {
+    color: rgba(255,255,255,0.2) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: rgba(37,99,235,0.5) !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+}
+
+/* ── Tables ── */
+table { background: transparent; }
+
+thead tr { background: rgba(255,255,255,0.02); }
+
+th { color: var(--text-secondary) !important; }
+
+td { color: var(--text-primary) !important; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Search bar on index ── */
+.search-bar input {
+    background: rgba(255,255,255,0.06) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--white) !important;
+}
+
+/* ── Logo image sizing ── */
+.logo-img {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDEBAR NAV — stop the "jump" when switching active item.
+   Active items add a 1px border; non-active had none → 2px height
+   difference shifted the whole list. Give every item a transparent
+   1px border baseline so the box size never changes.
+   ═══════════════════════════════════════════════════════════════════ */
+.sidebar-nav a,
+.nav-item {
+    border: 1px solid transparent !important;
+    box-sizing: border-box;
+}
+.sidebar-nav a.active,
+.nav-item.active {
+    border: 1px solid rgba(37,99,235,0.25) !important;
+}
+/* keep the bottom logout/theme area aligned too */
+.sidebar-bottom a,
+.sidebar-bottom .theme-toggle-btn {
+    border: 1px solid transparent !important;
+    box-sizing: border-box;
+}

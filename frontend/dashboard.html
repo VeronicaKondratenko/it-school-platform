@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <script>(function(){try{var t=localStorage.getItem('it-school-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/logo-code-mark-128.png">
+    <title>Кабінет — IT School</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body{font-family:'Manrope',sans-serif;background:var(--ink);color:#fff;margin:0;}
+        .app{display:flex;min-height:100vh;}
+        /* Sidebar */
+        .sidebar{width:260px;background:var(--ink-soft);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200;transition:transform .3s;}
+        .sidebar-logo{display:flex;align-items:center;gap:.65rem;padding:1.5rem;border-bottom:1px solid var(--border);}
+        .sidebar-logo img{height:32px;}
+        .sidebar-logo span{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:-.02em;}
+        .sidebar-logo span b{color:#3b82f6;font-weight:900;}
+        .sidebar-nav{flex:1;padding:1rem .75rem;overflow-y:auto;}
+        .sidebar-nav a{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500;margin-bottom:.2rem;transition:all .2s;}
+        .sidebar-nav a:hover{background:rgba(255,255,255,.05);color:#fff;}
+        .sidebar-nav a.active{background:rgba(37,99,235,.12);color:#3b82f6;border:1px solid rgba(37,99,235,.2);}
+        .sidebar-nav a svg{flex-shrink:0;opacity:.7;}
+        .sidebar-nav a.active svg{opacity:1;}
+        .sidebar-bottom{padding:.75rem;border-top:1px solid var(--border);}
+        .sidebar-bottom a{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.9rem;font-weight:500;transition:all .2s;}
+        .sidebar-bottom a:hover{background:rgba(239,68,68,.1);color:#ef4444;}
+        /* Main */
+        .main{flex:1;margin-left:260px;padding:2rem;min-height:100vh;}
+        /* Top bar */
+        .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;}
+        .topbar-greeting h1{font-family:'Unbounded',sans-serif;font-size:1.5rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.3rem;}
+        .topbar-greeting p{color:var(--muted);font-size:.9rem;}
+        /* Stat cards */
+        .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:2rem;}
+        .stat-card{background:var(--ink-soft);border:1px solid var(--border);border-radius:16px;padding:1.5rem;position:relative;overflow:hidden;transition:all .3s;}
+        .stat-card:hover{border-color:rgba(37,99,235,.3);transform:translateY(-2px);}
+        .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--line-color,var(--gradient-primary));transition:opacity .3s;}
+        .stat-card:hover::before{opacity:1;}
+        .stat-icon-wrap{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.2rem;}
+        .stat-val{font-family:'Unbounded',sans-serif;font-size:1.8rem;font-weight:900;letter-spacing:-.03em;line-height:1;margin-bottom:.3rem;}
+        .stat-lbl{color:var(--muted);font-size:.8rem;font-weight:500;}
+        /* Section */
+        .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+        .section-head h2{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;}
+        /* Course cards */
+        .courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;margin-bottom:2rem;}
+        .course-card{background:var(--ink-soft);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .3s;cursor:pointer;}
+        .course-card:hover{border-color:rgba(37,99,235,.35);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.4);}
+        .course-thumb{height:120px;background:linear-gradient(135deg,#1e2d5e,#2563eb);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:2.5rem;}
+        .course-body{padding:1.25rem;}
+        .course-title{font-weight:700;font-size:.95rem;margin-bottom:.4rem;}
+        .course-desc{color:var(--muted);font-size:.8rem;line-height:1.5;margin-bottom:1rem;}
+        .progress-bar{background:rgba(255,255,255,.07);height:5px;border-radius:999px;overflow:hidden;margin-bottom:.4rem;}
+        .progress-fill{height:100%;background:linear-gradient(90deg,#2563eb,#3b82f6);border-radius:999px;transition:width .5s;}
+        .progress-stats{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);}
+        /* Notifications */
+        .notif-list{display:flex;flex-direction:column;gap:.75rem;}
+        .notif-card{background:var(--ink-soft);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;transition:border-color .2s;}
+        .notif-card:hover{border-color:rgba(37,99,235,.25);}
+        .notif-meta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:.35rem;}
+        .notif-title{font-weight:700;font-size:.9rem;margin-bottom:.25rem;}
+        .notif-text{color:var(--muted);font-size:.85rem;line-height:1.55;}
+        .tg-btn{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.25rem;padding:.8rem 1.5rem;border-radius:999px;background:linear-gradient(135deg,#229ed9,#0088cc);color:#fff;text-decoration:none;font-weight:700;font-size:.875rem;box-shadow:0 0 20px rgba(34,158,217,.25);transition:all .25s;}
+        .tg-btn:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(34,158,217,.4);}
+        /* Mobile toggle */
+        .mobile-toggle{display:none;position:fixed;top:1rem;left:1rem;z-index:300;background:var(--blue);border:none;border-radius:10px;padding:.65rem;cursor:pointer;color:#fff;}
+        @media(max-width:1024px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
+        @media(max-width:768px){
+            .sidebar{transform:translateX(-100%);}
+            .sidebar.active{transform:translateX(0);}
+            .main{margin-left:0;padding:1rem;padding-top:4.5rem;}
+            .mobile-toggle{display:flex;}
+            .stat-grid{grid-template-columns:repeat(2,1fr);}
+        }
+    </style>
+    <link rel="stylesheet" href="professional-ui.css">
+    <link rel="stylesheet" href="theme-light.css">
+    <script defer src="professional-ui.js"></script>
+    <link rel="stylesheet" href="ui-system.css">
+</head>
+<body>
+<button class="mobile-toggle" id="mobileToggle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="assets/logo-code-mark.png" alt="IT School">
+            <span>IT&nbsp;<b>School</b></span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="active">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Кабінет
+            </a>
+            <a href="courses.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Курси
+            </a>
+            <a href="schedule.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Розклад
+            </a>
+            <a href="grades.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Оцінки
+            </a>
+            <a href="assignments.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Завдання
+            </a>
+            <a href="materials.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                Матеріали
+            </a>
+            <a href="profile.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Профіль
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="#" onclick="logout(); return false;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Вийти
+            </a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-greeting">
+                <h1>Вітаємо, <span id="greetName">Студент</span>!</h1>
+                <p id="greetSub">Сьогодні чудовий день для навчання.</p>
+            </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid">
+            <div class="stat-card" id="cardCourses" style="display:none;--line-color:linear-gradient(90deg,#2563eb,#4f46e5);">
+                <div class="stat-icon-wrap" style="background:rgba(37,99,235,.12);color:#3b82f6;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div class="stat-val" id="coursesCount">0</div>
+                <div class="stat-lbl">Активні курси</div>
+            </div>
+            <div class="stat-card" style="--line-color:linear-gradient(90deg,#10b981,#059669);">
+                <div class="stat-icon-wrap" style="background:rgba(16,185,129,.12);color:#10b981;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="stat-val" id="completedCount">0</div>
+                <div class="stat-lbl">Виконані завдання</div>
+            </div>
+            <div class="stat-card" style="--line-color:linear-gradient(90deg,#f59e0b,#d97706);">
+                <div class="stat-icon-wrap" style="background:rgba(245,158,11,.12);color:#f59e0b;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                </div>
+                <div class="stat-val" id="avgScore">0%</div>
+                <div class="stat-lbl">Успішність</div>
+            </div>
+            <div class="stat-card" style="--line-color:linear-gradient(90deg,#ef4444,#dc2626);">
+                <div class="stat-icon-wrap" style="background:rgba(239,68,68,.12);color:#ef4444;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="stat-val" id="pendingCount">0</div>
+                <div class="stat-lbl">Нові завдання</div>
+            </div>
+        </div>
+
+        <!-- My courses -->
+        <section style="margin-bottom:2rem;">
+            <div class="section-head">
+                <h2>Мої курси</h2>
+                <a href="courses.html" style="font-size:.85rem;color:#3b82f6;text-decoration:none;font-weight:600;">Всі курси →</a>
+            </div>
+            <div class="courses-grid"></div>
+        </section>
+
+        <!-- Notifications -->
+        <section id="notifications">
+            <div class="section-head">
+                <h2>Сповіщення</h2>
+            </div>
+            <div id="notificationsList" class="notif-list"></div>
+            <a class="tg-btn" href="https://t.me/itveronita_bot" target="_blank" rel="noopener">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                Приєднатись до Telegram
+            </a>
+        </section>
+    </main>
+</div>
+
+    <script>
+        document.getElementById('mobileToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('mobileToggle');
+            if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        function renderDashboardCourses(courses, progressByCourseId = {}) {
+            const container = document.querySelector('.courses-grid');
+            container.innerHTML = '';
+            if (!courses.length) {
+                container.innerHTML = '<div style="grid-column:1/-1;padding:2rem;text-align:center;color:var(--muted);background:var(--ink-soft);border-radius:16px;border:1px solid var(--border);">Ви ще не записані на жоден курс. <a href="courses.html" style="color:#3b82f6;font-weight:600;">Переглянути курси</a></div>';
+                return;
+            }
+            courses.forEach(course => {
+                const progress = Math.round(progressByCourseId[course.id] || 0);
+                const card = document.createElement('div');
+                card.className = 'course-card';
+                card.innerHTML = `
+                    <div class="course-thumb"></div>
+                    <div class="course-body">
+                        <div class="course-title">${course.title}</div>
+                        <div class="course-desc">${course.description || 'Опис відсутній'}</div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${progress}%;"></div></div>
+                        <div class="progress-stats"><span>${progress}% завершено</span><span>Переглянути</span></div>
+                    </div>`;
+                card.addEventListener('click', () => { window.location.href = `course-view.html?id=${course.id}`; });
+                container.appendChild(card);
+            });
+        }
+
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+            if (!container) return;
+            if (!notifications.length) {
+                container.innerHTML = '<div style="padding:1rem 0;color:var(--muted);">Наразі немає нових сповіщень.</div>';
+                return;
+            }
+            container.innerHTML = notifications.map(item => `
+                <article class="notif-card">
+                    <div class="notif-meta"><span>${item.source}</span><span>${item.date}</span></div>
+                    <div class="notif-title">${item.title}</div>
+                    <div class="notif-text">${item.text}</div>
+                </article>`).join('');
+        }
+    </script>
+    <script src="config.js?v=2"></script>
+    <script src="mockData.js?v=2"></script>
+    <script src="api.js?v=2"></script>
+    <script src="script.js?v=2"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!requireAuth()) return;
+            showDemoBanner();
+
+            const user = await fetchCurrentUser();
+            if (!user) return;
+
+            if (user.role === 'admin')   { window.location.href = 'admin-dashboard.html'; return; }
+            if (user.role === 'teacher') { window.location.href = 'teacher-dashboard.html'; return; }
+
+            const nameEl = document.getElementById('greetName');
+            if (nameEl) nameEl.textContent = user.full_name.split(' ')[0];
+
+            const countEl = document.getElementById('coursesCount');
+            if (countEl) {
+                const userGroups = user.groups || user.study_groups || [];
+                countEl.textContent = userGroups.length;
+                document.getElementById('cardCourses').style.display = 'block';
+            }
+
+            let studentCourses = [], assignments = [];
+            try {
+                studentCourses = await apiGet('/api/student/courses') || [];
+                assignments = await apiGet('/api/student/assignments') || [];
+            } catch(e) {}
+
+            let totalGrades = 0, sumScores = 0;
+            studentCourses.forEach(course => {
+                totalGrades += (course.grades_count || course.grades?.length || 0);
+                (course.grades || []).forEach(grade => { sumScores += grade.score; });
+            });
+            const completedCount = totalGrades;
+            const avgScore = totalGrades > 0 ? Math.round(sumScores / totalGrades) : 0;
+            const pendingCount = assignments.filter(a => a.status === 'pending').length;
+
+            const greetSub = document.getElementById('greetSub');
+            if (greetSub) greetSub.textContent = pendingCount > 0
+                ? `У вас ${pendingCount} нових завдань.`
+                : 'Всі завдання виконані. Чудова робота!';
+
+            document.getElementById('completedCount').textContent = completedCount;
+            document.getElementById('avgScore').textContent = avgScore + '%';
+            document.getElementById('pendingCount').textContent = pendingCount;
+
+            // Animate counters
+            document.querySelectorAll('.stat-val').forEach(stat => {
+                const finalValue = stat.textContent;
+                const isPercentage = finalValue.includes('%');
+                const numericValue = parseInt(finalValue);
+                if (!isNaN(numericValue) && numericValue > 0) {
+                    let currentValue = 0;
+                    const increment = Math.max(numericValue / 50, 0.1);
+                    const timer = setInterval(() => {
+                        currentValue += increment;
+                        if (currentValue >= numericValue) { currentValue = numericValue; clearInterval(timer); }
+                        stat.textContent = Math.floor(currentValue) + (isPercentage ? '%' : '');
+                    }, 30);
+                }
+            });
+
+            const courses = await apiGet('/api/courses');
+            if (courses) {
+                const userGroups = user.groups || user.study_groups || [];
+                const enrolledSet = new Set();
+                userGroups.forEach(g => {
+                    if (Array.isArray(g.courses)) g.courses.forEach(c => { if (c && typeof c.id === 'number') enrolledSet.add(c.id); });
+                    if (typeof g.course_id === 'number') enrolledSet.add(g.course_id);
+                });
+                if (enrolledSet.size === 0 && Array.isArray(studentCourses)) {
+                    studentCourses.forEach(sc => { if (typeof sc.course_id === 'number') enrolledSet.add(sc.course_id); });
+                }
+                const myCoursesData = courses.filter(c => enrolledSet.has(c.id)).slice(0, 3);
+                const progressByCourseId = {};
+                studentCourses.forEach(course => { progressByCourseId[course.course_id] = course.average_score !== null ? Math.round(course.average_score) : 0; });
+                renderDashboardCourses(myCoursesData, progressByCourseId);
+            }
+
+            try {
+                const notifications = await apiGet('/api/student/notifications') || [];
+                renderNotifications(notifications.map(item => ({
+                    source: item.sender_name || 'Адміністрація',
+                    date: item.timestamp ? new Date(item.timestamp).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—',
+                    title: item.title,
+                    text: item.message,
+                })));
+            } catch (error) {
+                renderNotifications([
+                    { source: 'Адміністрація', date: '21.05.2026', title: 'Оновлено розклад занять', text: 'Перевірте розділ «Розклад», щоб побачити актуальні зміни.' },
+                    { source: 'Викладач', date: '20.05.2026', title: 'Нові матеріали до курсу', text: 'Нові матеріали та рекомендації додані на сторінці вашого курсу.' },
+                    { source: 'Адміністрація', date: '19.05.2026', title: 'Telegram для сповіщень', text: 'Підключіть Telegram і отримуйте повідомлення швидше.' }
+                ]);
+            }
+        });
+    </script>
+</body>
+</html>

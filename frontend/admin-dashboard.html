@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <script>(function(){try{var t=localStorage.getItem('it-school-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/logo-code-mark-128.png">
+    <title>Адмін-панель — IT School</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+    [data-theme='dark'] select{color-scheme:dark;}
+    [data-theme='dark'] select option{background-color:#151b2e;color:#fff;}
+    [data-theme='light'] select{color-scheme:light;}
+
+
+    body{font-family:'Manrope',sans-serif;background:var(--ink);color:#fff;margin:0;}
+    *{box-sizing:border-box;}
+    .app{display:flex;min-height:100vh;}
+    /* Sidebar */
+    .sidebar{width:260px;background:var(--ink-soft);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200;transition:transform .3s;overflow-y:auto;}
+    .sidebar-logo{display:flex;align-items:center;gap:.65rem;padding:1.5rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .sidebar-logo img{height:32px;}
+    .sidebar-logo span{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:-.02em;}
+    .sidebar-logo span b{color:#3b82f6;font-weight:900;}
+    /* Teacher profile in sidebar */
+    .sidebar-profile{padding:1.25rem 1rem;border-bottom:1px solid var(--border);text-align:center;}
+    .sidebar-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-size:1.5rem;font-weight:900;color:#fff;margin:0 auto .75rem;cursor:pointer;transition:transform .2s;box-shadow:0 0 20px rgba(16,185,129,.25);}
+    .sidebar-avatar:hover{transform:scale(1.05);}
+    .sidebar-pname{font-weight:700;font-size:.95rem;margin-bottom:.2rem;}
+    .sidebar-prole{display:inline-block;padding:.2rem .7rem;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+    .role-teacher{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);}
+    .role-admin{background:rgba(139,92,246,.12);color:#8b5cf6;border:1px solid rgba(139,92,246,.25);}
+    /* Nav */
+    .sidebar-nav{flex:1;padding:.75rem;}
+    .nav-section-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:.5rem 1rem;margin-top:.5rem;}
+    .sidebar-nav a,.nav-item{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;margin-bottom:.15rem;transition:all .2s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:'Manrope',sans-serif;}
+    .sidebar-nav a:hover,.nav-item:hover{background:rgba(255,255,255,.05);color:#fff;}
+    .sidebar-nav a.active,.nav-item.active{background:rgba(37,99,235,.12);color:#3b82f6;border:1px solid rgba(37,99,235,.2);}
+    .sidebar-bottom{padding:.75rem;border-top:1px solid var(--border);}
+    .sidebar-bottom a{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .2s;}
+    .sidebar-bottom a:hover{background:rgba(239,68,68,.1);color:#ef4444;}
+    /* Main */
+    .main{flex:1;margin-left:260px;padding:2rem;min-height:100vh;overflow-x:hidden;}
+    /* Section cards */
+    .section-card{background:var(--ink-soft);border:1px solid var(--border);border-radius:16px;padding:2rem;display:none;margin-bottom:1.5rem;}
+    .section-card.active{display:block;}
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);gap:1rem;flex-wrap:wrap;}
+    .section-title{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;}
+    /* Stats */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.1rem;margin-bottom:1.5rem;}
+    .stat-card{background:var(--ink);border:1px solid var(--border);border-radius:14px;padding:1.25rem;text-align:center;transition:all .3s;}
+    .stat-card:hover{border-color:rgba(37,99,235,.3);transform:translateY(-2px);}
+    .stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto .75rem;}
+    .stat-value{font-family:'Unbounded',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.2rem;color:#fff;word-wrap:break-word;}
+    .stat-label{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+    /* Tables */
+    .table-wrap{background:var(--ink);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .data-table{width:100%;border-collapse:collapse;}
+    .data-table th{padding:.75rem 1rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);}
+    .data-table td{padding:.85rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.875rem;}
+    .data-table tr:last-child td{border-bottom:none;}
+    .data-table tr:hover td{background:rgba(255,255,255,.02);}
+    /* Inbox items */
+    .inbox-list{display:flex;flex-direction:column;gap:.85rem;}
+    .mail-item{background:var(--ink);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;transition:all .25s;position:relative;}
+    .mail-item.pending{border-left:3px solid #f59e0b;}
+    .mail-item.answered{border-left:3px solid #10b981;opacity:.75;}
+    .mail-item:hover{border-color:rgba(37,99,235,.3);}
+    .mail-header{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;margin-bottom:.5rem;}
+    .mail-from{font-weight:700;font-size:.9rem;}
+    .mail-time{font-size:.75rem;color:var(--muted);}
+    .mail-question{font-size:.875rem;color:rgba(255,255,255,.8);line-height:1.55;margin-bottom:.75rem;}
+    .mail-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+    /* Attendance */
+    .attendance-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:.5rem;}
+    .att-cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;cursor:pointer;border:1px solid var(--border);transition:all .2s;background:var(--ink);}
+    .att-cell.present{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#10b981;}
+    .att-cell.absent{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#ef4444;}
+    .att-cell.excused{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#f59e0b;}
+    /* Grades editor */
+    .grade-input{width:64px;padding:.4rem .5rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff;text-align:center;font-size:.875rem;font-family:'Manrope',sans-serif;outline:none;}
+    .grade-input:focus{border-color:rgba(37,99,235,.5);}
+    /* Form fields */
+    .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem;}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:1rem;}
+    .modal.open{display:flex;}
+    .modal-box{background:#111827;border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease;}
+    @keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+    .modal-title{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;}
+    .modal-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:.2rem;}
+    .modal-close:hover{color:#fff;}
+    .modal-footer{display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem;}
+    .form-textarea{width:100%;padding:.8rem 1rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:.9rem;font-family:'Manrope',sans-serif;min-height:100px;resize:vertical;outline:none;transition:all .2s;}
+    .form-textarea:focus{border-color:rgba(37,99,235,.5);}
+    .loading{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:2rem;color:var(--muted);}
+    .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.1);border-top:2px solid #3b82f6;border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .badge-tag{display:inline-flex;align-items:center;padding:.2rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;}
+    .badge-green{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);}
+    .badge-yellow{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);}
+    .badge-red{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
+    .badge-blue{background:rgba(37,99,235,.12);color:#3b82f6;border:1px solid rgba(37,99,235,.25);}
+    .badge-muted{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border);}
+    .mobile-toggle{display:none;position:fixed;top:1rem;left:1rem;z-index:300;background:var(--blue);border:none;border-radius:10px;padding:.65rem;cursor:pointer;color:#fff;}
+    @media(max-width:1024px){.main{margin-left:0;padding:1rem;padding-top:4.5rem;}.sidebar{transform:translateX(-100%);}.sidebar.active{transform:translateX(0);}.mobile-toggle{display:flex;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:480px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+
+    .admin-search-row{display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+    .admin-search{position:relative;flex:1;min-width:200px;}
+    .admin-search input{width:100%;padding:.7rem 1rem .7rem 2.5rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:.875rem;font-family:'Manrope',sans-serif;outline:none;transition:all .2s;}
+    .admin-search input:focus{border-color:rgba(37,99,235,.5);}
+    .admin-search svg{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--muted);}
+    .notif-form{background:var(--ink);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;}
+    .notif-form h4{font-weight:700;font-size:.9rem;margin-bottom:.85rem;}
+    </style>
+    <link rel="stylesheet" href="professional-ui.css">
+    <link rel="stylesheet" href="theme-light.css">
+    <style>
+    /* ── Buttons ───────────────────────────────────────────── */
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.1rem;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-size:.85rem;font-weight:600;font-family:'Manrope',sans-serif;cursor:pointer;transition:all .2s;text-decoration:none;}
+    .btn:hover{background:rgba(255,255,255,.1);}
+    .btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:transparent;color:#fff;}
+    .btn-primary:hover{filter:brightness(1.08);}
+    .btn-secondary{background:rgba(255,255,255,.05);}
+    .btn-sm{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .8rem;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-size:.78rem;font-weight:600;font-family:'Manrope',sans-serif;cursor:pointer;transition:all .2s;margin-right:.35rem;}
+    .btn-sm:hover{background:rgba(255,255,255,.1);}
+    .btn-edit{background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.25);color:#3b82f6;}
+    .btn-edit:hover{background:rgba(37,99,235,.2);}
+    .btn-danger{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#ef4444;}
+    .btn-danger:hover{background:rgba(239,68,68,.18);}
+    /* ── Forms ─────────────────────────────────────────────── */
+    .form-group{margin-bottom:1rem;}
+    .form-label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.4rem;}
+    .form-input,.form-select{width:100%;padding:.7rem 1rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:.9rem;font-family:'Manrope',sans-serif;outline:none;transition:all .2s;}
+    .form-input:focus,.form-select:focus{border-color:rgba(37,99,235,.5);}
+    /* ── Modal actions ─────────────────────────────────────── */
+    .modal-actions{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1.25rem;}
+    .btn-cancel{padding:.6rem 1.1rem;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif;}
+    .btn-cancel:hover{background:rgba(255,255,255,.1);}
+    .btn-submit{padding:.6rem 1.2rem;border-radius:10px;border:none;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-weight:700;cursor:pointer;font-family:'Manrope',sans-serif;}
+    .btn-submit:hover{filter:brightness(1.08);}
+    .btn-submit:disabled{opacity:.6;cursor:default;}
+    /* ── Badges / role chips in tables ─────────────────────── */
+    .group-badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-size:.72rem;font-weight:600;background:rgba(255,255,255,.07);color:var(--muted);margin:.1rem .15rem;}
+    .user-cell-role{display:inline-block;padding:.2rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;}
+    .user-cell-role.role-student{background:rgba(37,99,235,.12);color:#3b82f6;border:1px solid rgba(37,99,235,.25);}
+    .user-cell-role.role-teacher{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);}
+    .user-cell-role.role-admin{background:rgba(139,92,246,.12);color:#8b5cf6;border:1px solid rgba(139,92,246,.25);}
+    /* ── Selection lists (group modal) ─────────────────────── */
+    .selection-list{max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:.4rem;background:rgba(255,255,255,.02);}
+    .selection-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;border-radius:8px;cursor:pointer;}
+    .selection-item:hover{background:rgba(255,255,255,.05);}
+    .selection-item-content{display:flex;flex-direction:column;}
+    .selection-item-title{font-size:.85rem;font-weight:600;}
+    .selection-item-subtitle{font-size:.75rem;color:var(--muted);}
+    .selection-search-hint{font-size:.75rem;color:var(--muted);margin-top:.35rem;}
+    /* ── Readability: titles in dark theme ─────────────────── */
+    [data-theme="dark"] .section-title,
+    [data-theme="dark"] .modal-title{color:#f1f5f9 !important;}
+    [data-theme="dark"] .stat-value{color:#fff !important;}
+    [data-theme="dark"] .data-table td{color:#e2e8f0;}
+    </style>
+    <script defer src="professional-ui.js"></script>
+    <link rel="stylesheet" href="ui-system.css">
+</head>
+<body>
+<button class="mobile-toggle" id="mobileToggle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="assets/logo-code-mark.png" alt="IT School">
+            <span>IT&nbsp;<b>School</b></span>
+        </div>
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);box-shadow:0 0 20px rgba(139,92,246,.25);" id="adminAvatar">АД</div>
+            <div class="sidebar-pname" id="adminName">Адміністратор</div>
+            <span class="sidebar-prole role-admin">Адмін</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Панель</div>
+            <button class="nav-item active" onclick="loadSection('overview')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Огляд
+            </button>
+            <div class="nav-section-label" style="margin-top:.5rem;">Управління</div>
+            <button class="nav-item" onclick="loadSection('users')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Користувачі
+            </button>
+            <button class="nav-item" onclick="loadSection('courses')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Курси
+            </button>
+            <button class="nav-item" onclick="loadSection('groups')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                Групи
+            </button>
+            <button class="nav-item" onclick="loadSection('disciplines')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                Дисципліни
+            </button>
+            <div class="nav-section-label" style="margin-top:.5rem;">Звіти</div>
+            <button class="nav-item" onclick="loadSection('reports')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                Звіти
+            </button>
+            <button class="nav-item" onclick="loadSection('notifications')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Сповіщення
+            </button>
+            <div class="nav-section-label" style="margin-top:.5rem;">Навігація</div>
+            <a href="courses.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Каталог курсів
+            </a>
+            <a href="schedule.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Розклад
+            </a>
+            <a href="profile.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Профіль
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="#" onclick="logout(); return false;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Вийти
+            </a>
+        </div>
+    </aside>
+
+    <main class="main" id="mainContent">
+        <div class="section-card active" id="section-overview">
+            <div class="section-header"><div class="section-title">Огляд системи</div></div>
+            <div class="stats-grid" id="adminStatsGrid">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+        </div>
+        <div class="section-card" id="section-users">
+            <div class="section-header">
+                <div class="section-title">Користувачі</div>
+                <button class="btn btn-primary" onclick="openAddUserModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Додати
+                </button>
+            </div>
+            <div class="admin-search-row">
+                <div class="admin-search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="userSearchInput" placeholder="Пошук користувачів..." oninput="filterUsers(this.value)">
+                </div>
+                <select id="roleFilter" class="form-input" style="max-width:160px;" onchange="filterUsers()">
+                    <option value="">Всі ролі</option>
+                    <option value="student">Студенти</option>
+                    <option value="teacher">Викладачі</option>
+                    <option value="admin">Адміни</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Ім'я</th><th>Email</th><th>Роль</th><th>Телефон</th><th>Дії</th></tr></thead>
+                    <tbody id="usersTableBody"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="section-card" id="section-courses">
+            <div class="section-header">
+                <div class="section-title">Курси</div>
+                <button class="btn btn-primary" onclick="openCreateCourseModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Новий курс
+                </button>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Назва</th><th>Дисципліна</th><th>Студентів</th><th>Завдань</th><th>Дії</th></tr></thead>
+                    <tbody id="coursesTableBody"><tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="section-card" id="section-groups">
+            <div class="section-header">
+                <div class="section-title">Групи</div>
+                <button class="btn btn-primary" onclick="openAddGroupModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Нова група
+                </button>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Назва групи</th><th>Курс</th><th>Студентів</th><th>Дії</th></tr></thead>
+                    <tbody id="groupsTableBody"><tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="section-card" id="section-disciplines">
+            <div class="section-header">
+                <div class="section-title">Дисципліни</div>
+                <button class="btn btn-primary" onclick="openAddDisciplineModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Нова дисципліна
+                </button>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Назва</th><th>Опис</th><th>Курсів</th><th>Дії</th></tr></thead>
+                    <tbody id="disciplinesTableBody"><tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="section-card" id="section-reports">
+            <div class="section-header"><div class="section-title">Звіти та аналітика</div></div>
+            <div id="reportsContent"><div class="loading"><div class="spinner"></div><p>Завантаження звітів...</p></div></div>
+        </div>
+        <div class="section-card" id="section-notifications">
+            <div class="section-header"><div class="section-title">Розсилка сповіщень</div></div>
+            <div class="notif-form">
+                <h4>Нове сповіщення</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Заголовок</label>
+                        <input type="text" class="form-input" id="notifTitle" placeholder="Тема сповіщення">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Одержувачі</label>
+                        <select class="form-input" id="notifTarget">
+                            <option value="all">Всі користувачі</option>
+                            <option value="students">Всі студенти</option>
+                            <option value="teachers">Всі викладачі</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Повідомлення</label>
+                    <textarea class="form-textarea" id="notifMessage" placeholder="Текст сповіщення..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="sendNotification()">Надіслати</button>
+            </div>
+            <div id="notificationsHistory"><div class="loading"><div class="spinner"></div><p>Завантаження...</p></div></div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal overlay (used by openModal / openUserDetail / editUser) -->
+<div class="modal" id="modalOverlay">
+    <div class="modal-box" id="modalContent"></div>
+</div>
+
+    <script>
+        (function(){
+            var toggle = document.getElementById('mobileToggle');
+            var sidebar = document.getElementById('sidebar');
+            if(toggle) toggle.addEventListener('click', function(){ sidebar.classList.toggle('active'); });
+            document.addEventListener('click', function(e){
+                if(window.innerWidth <= 1024 && sidebar && !sidebar.contains(e.target) && toggle && !toggle.contains(e.target))
+                    sidebar.classList.remove('active');
+            });
+        })();
+    </script>
+    <script src="config.js"></script>
+    <script src="mockData.js"></script>
+    <script src="api.js"></script>
+    <script>
+        let currentAdminUser = null;
+        let currentReportType = null;
+        let currentReportTitle = 'report';
+        let allUsers = [];
+        let allGroups = [];
+        let allCourses = [];
+        let allDisciplines = [];
+        let pendingCount = 0;
+
+        let filteredUsers = [];
+        let currentRoleFilter = 'all';
+        let currentStatusFilter = 'all';
+        let currentSearchFilter = '';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!requireAuth()) return;
+            showDemoBanner();
+
+            const user = await fetchCurrentUser();
+            if (!user || user.role !== 'admin') {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            currentAdminUser = user;
+            document.getElementById('adminName').textContent = user.full_name;
+
+            initReportsUI();
+            bindSidebarNavigation();
+            await preloadAdminData();
+            await loadSection('overview');
+            await checkInboxBadge();
+        });
+
+        function initReportsUI() {
+            document.querySelectorAll('.report-card').forEach(card => {
+                const type = card.getAttribute('data-report-type');
+                if (!type) return;
+                card.style.cursor = 'pointer';
+                card.setAttribute('tabindex', '0');
+                card.addEventListener('click', () => loadReport(type));
+                card.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        loadReport(type);
+                    }
+                });
+            });
+        }
+
+        function bindSidebarNavigation() {
+            document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
+                link.addEventListener('click', async e => {
+                    const href = link.getAttribute('href') || '';
+                    if (!href.startsWith('#')) return;
+
+                    e.preventDefault();
+                    const id = href.substring(1);
+                    document.querySelectorAll('.sidebar-nav .nav-item').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    await loadSection(id);
+                });
+            });
+        }
+
+        async function preloadAdminData() {
+            await Promise.all([refreshUsers(), refreshGroups(), refreshCourses()]);
+        }
+
+        async function refreshUsers() {
+            allUsers = await apiGet('/api/admin/users') || [];
+        }
+
+        async function refreshGroups() {
+            allGroups = await apiGet('/api/groups') || [];
+        }
+
+        async function refreshCourses() {
+            allCourses = await apiGet('/api/courses') || [];
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
+            const el = document.getElementById('section-' + id);
+            if (el) el.classList.add('active');
+            document.querySelectorAll('.sidebar-nav .nav-item, .sidebar .nav-item').forEach(b => {
+                const oc = b.getAttribute('onclick') || '';
+                b.classList.toggle('active', oc.includes(`'${id}'`));
+            });
+        }
+
+        async function loadSection(id) {
+            showSection(id);
+            if (id === 'overview')     await loadStats();
+            if (id === 'users')        await loadUsers();
+            if (id === 'groups')       await loadGroups();
+            if (id === 'courses')      await loadCourses();
+            if (id === 'disciplines')  await loadDisciplines();
+            if (id === 'reports')      await loadReport('attendance');
+            if (id === 'notifications') await loadNotificationsHistory();
+            if (id === 'inbox')        await loadInbox();
+            if (id === 'stats')        await loadStats();
+        }
+
+        const REPORT_TITLES_UA = {
+            attendance: 'Звіт відвідуваності',
+            task_completion: 'Виконання завдань',
+            teacher_subject_mapping: 'Викладачі та дисципліни',
+            course_statistics: 'Статистика курсів',
+            active_students: 'Активні студенти',
+            graduated_students: 'Випускники',
+            excellent_students: 'Відмінники',
+        };
+        const REPORT_COL_UA = {
+            metric: 'Показник', value: 'Значення', teacher: 'Викладач', group: 'Група',
+            course: 'Курс', student: 'Студент', email: 'Email', attendance: 'Відвідуваність',
+            avg_grade: 'Середній бал', grade: 'Оцінка', courses: 'Курси', disciplines: 'Дисципліни',
+            topics: 'Теми', assignments: 'Завдання', students: 'Студентів', status: 'Статус',
+        };
+
+        async function fetchReportData(type) {
+            return await apiGet('/api/reports?type=' + encodeURIComponent(type));
+        }
+
+        async function loadReport(type) {
+            const host = document.getElementById('reportsContent');
+            if (!host) return;
+            currentReportType = type;
+            const types = Object.keys(REPORT_TITLES_UA);
+            const buttons = types.map(t =>
+                `<button class="btn-sm ${t === type ? 'btn-edit' : ''}" style="margin:.15rem;border:1px solid var(--border);" onclick="loadReport('${t}')">${REPORT_TITLES_UA[t]}</button>`
+            ).join('');
+            host.innerHTML = `
+                <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:1rem;align-items:center;">
+                    ${buttons}
+                    <button class="btn-sm btn-edit" style="margin-left:auto;" onclick="downloadCurrentReportCSV()">Завантажити CSV</button>
+                </div>
+                <div id="reportTableContainer">Завантаження...</div>`;
+            const container = document.getElementById('reportTableContainer');
+            try {
+                const report = await fetchReportData(type);
+                currentReportTitle = report?.title || type;
+                const rows = Array.isArray(report.rows) ? report.rows : [];
+                const cols = Array.isArray(report.columns) ? report.columns : [];
+                const emptyRowsHtml = `<tr><td colspan="${cols.length || 1}" style="padding:1rem;text-align:center;color:var(--muted);">Немає даних для відображення</td></tr>`;
+                container.innerHTML = `
+                    <div style="font-weight:700;margin-bottom:.75rem;">${REPORT_TITLES_UA[report.type] || report.title}</div>
+                    <div style="overflow:auto;">
+                        <table id="reportDataTable" style="width:100%;border-collapse:collapse;">
+                            <thead><tr>${cols.map(c => `<th style="text-align:left;padding:.5rem;border-bottom:1px solid var(--border);">${REPORT_COL_UA[c] || c}</th>`).join('')}</tr></thead>
+                            <tbody>${rows.length ? rows.map(row => `<tr>${cols.map(c => `<td style="padding:.5rem;border-bottom:1px solid var(--border);">${row[c] ?? '—'}</td>`).join('')}</tr>`).join('') : emptyRowsHtml}</tbody>
+                        </table>
+                    </div>`;
+            } catch (err) {
+                container.innerHTML = `<div style="color:var(--error);padding:1rem;">Помилка звіту: ${err.message}</div>`;
+            }
+        }
+
+        function downloadCurrentReportCSV() {
+            const table = document.getElementById('reportDataTable');
+            if (!table) {
+                showToast('Спочатку оберіть і завантажте звіт', 'warning');
+                return;
+            }
+            const delimiter = ';';
+            const rows = Array.from(table.querySelectorAll('tr')).map(tr => {
+                const cells = Array.from(tr.querySelectorAll('th,td')).map(cell => {
+                    const text = (cell.innerText || cell.textContent || '')
+                        .replace(/\r?\n|\r/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .replace(/"/g, '""');
+                    return `"${text}"`;
+                });
+                return cells.join(delimiter);
+            });
+            const csvContent = '\uFEFF' + rows.join('\r\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const safeType = currentReportType || 'report';
+            a.href = url;
+            a.download = `${safeType}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function loadUsers() {
+            const body = document.getElementById('usersTableBody');
+            if (!body) return;
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</td></tr>';
+            try {
+                await refreshUsers();
+                if (!allUsers) {
+                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--error);">Не вдалося отримати користувачів. Перевірте підключення до сервера.</td></tr>';
+                    return;
+                }
+                applyUsersFilters();
+            } catch (err) {
+                body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--error);">Помилка завантаження: ${err.message}</td></tr>`;
+            }
+        }
+
+        function filterUsers(value) {
+            const searchEl = document.getElementById('userSearchInput');
+            const roleEl = document.getElementById('roleFilter');
+            currentSearchFilter = (value !== undefined ? value : (searchEl ? searchEl.value : '')).toLowerCase();
+            currentRoleFilter = (roleEl && roleEl.value) ? roleEl.value : 'all';
+            applyUsersFilters();
+        }
+
+        function searchUsers(query) {
+            currentSearchFilter = (query || '').toLowerCase();
+            applyUsersFilters();
+        }
+
+        function applyUsersFilters() {
+            const body = document.getElementById('usersTableBody');
+            if (!body || !allUsers) return;
+            const roleLabels = {student:'Студент', teacher:'Викладач', admin:'Адмін'};
+            const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+            filteredUsers = allUsers.filter(u => (!currentRoleFilter || currentRoleFilter === 'all') ? true : u.role === currentRoleFilter);
+            if (currentSearchFilter) {
+                filteredUsers = filteredUsers.filter(u => {
+                    const name = (u.full_name || '').toLowerCase();
+                    const email = (u.email || '').toLowerCase();
+                    const groups = (u.groups || u.study_groups || []).map(g => (g.name || '').toLowerCase()).join(' ');
+                    return name.includes(currentSearchFilter) || email.includes(currentSearchFilter) || groups.includes(currentSearchFilter);
+                });
+            }
+            if (!filteredUsers.length) {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Користувачів не знайдено</td></tr>';
+                return;
+            }
+            body.innerHTML = filteredUsers.map(u => {
+                const isSelf = !!currentAdminUser && (u.id === currentAdminUser.id || u.email === currentAdminUser.email);
+                const tg = u.telegram_id ? ' <span class="group-badge" style="background:rgba(0,136,204,.12);color:#0088cc;">Telegram</span>' : '';
+                const actions = isSelf
+                    ? '<span style="color:var(--muted);font-size:.85rem;">Ваш акаунт</span>'
+                    : `<button class="btn-sm btn-edit" onclick="editUser(${u.id})">Змінити</button> <button class="btn-sm btn-danger" onclick="deleteUser(${u.id}, decodeURIComponent('${encodeURIComponent(u.full_name)}'))">Видалити</button>`;
+                return `<tr style="cursor:pointer;" onclick="openUserDetail(${u.id})">
+                    <td>${esc(u.full_name)}${tg}</td>
+                    <td>${esc(u.email)}</td>
+                    <td><span class="user-cell-role role-${u.role}">${roleLabels[u.role] || u.role}</span></td>
+                    <td>${esc(u.phone) || '—'}</td>
+                    <td><div onclick="event.stopPropagation()">${actions}</div></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function openUserDetail(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            overlay.classList.add('open');
+            
+            const groups = (user.study_groups || user.groups || []).map(g => g.name).join(', ') || 'Немає';
+            const roleLabels = {student:'Студент', teacher:'Викладач', admin:'Адмін'};
+            const canEdit = !currentAdminUser || (user.id !== currentAdminUser.id && user.email !== currentAdminUser.email);
+            
+            content.innerHTML = `
+                <h2 class="modal-title">Дані студента</h2>
+                <div style="margin:1.5rem 0;">
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:var(--gray-700);">Ім\'я:</div>
+                        <div style="color:var(--gray-600);">${escapeHtml(user.full_name)}</div>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:var(--gray-700);">Email:</div>
+                        <div style="color:var(--gray-600);">${escapeHtml(user.email)}</div>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:var(--gray-700);">Роль:</div>
+                        <div>${roleLabels[user.role]}</div>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:var(--gray-700);">Групи:</div>
+                        <div style="color:var(--gray-600);">${groups}</div>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:var(--gray-700);">Статус:</div>
+                        <div>${user.is_active ? 'Активний' : 'Неактивний'}</div>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <div style="font-weight:600;color:var(--gray-700);">Telegram:</div>
+                        <div style="color:var(--gray-600);">${user.telegram_id ? 'Прив\'язаний' : 'Не прив\'язаний'}</div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeModal()">Закрити</button>
+                    ${canEdit ? `<button class="btn-submit" onclick="editUser(${user.id})">Редагувати</button>` : ''}
+                </div>`;
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        async function deleteUser(id, name) {
+            if (currentAdminUser && id === currentAdminUser.id) {
+                showToast('Ви не можете видалити власний акаунт', 'warning');
+                return;
+            }
+            if (!confirm(`Видалити користувача "${name}"?`)) return;
+            try {
+                await apiDelete(`/api/admin/users/${id}`);
+                showToast('Користувача видалено', 'success');
+                await Promise.all([loadUsers(), loadStats()]);
+            } catch (err) {
+                console.error('Error deleting user:', err);
+                showToast(`Не вдалося видалити: ${err.message}`, 'error');
+            }
+        }
+
+        async function editUser(id) {
+            if (currentAdminUser && id === currentAdminUser.id) {
+                showToast('Ви не можете редагувати власний акаунт', 'warning');
+                return;
+            }
+            const user = allUsers.find(u => u.id === id);
+            if (!user) {
+                showToast('Користувача не знайдено', 'error');
+                return;
+            }
+
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            overlay.classList.add('open');
+
+            const dateValue = user.date_of_birth ? String(user.date_of_birth).slice(0, 10) : '';
+            content.innerHTML = `
+                <h2 class="modal-title">Редагувати користувача</h2>
+                <form id="editUserForm" onsubmit="submitEditUserForm(event, ${user.id})">
+                    <div class="form-group">
+                        <label class="form-label">Повне ім'я</label>
+                        <input class="form-input" id="editFullName" value="${escapeHtml(user.full_name)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input class="form-input" id="editEmail" type="email" value="${escapeHtml(user.email)}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">По батькові</label>
+                        <input class="form-input" id="editPatronymic" value="${escapeHtml(user.patronymic)}" placeholder="За потреби">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Дата народження</label>
+                        <input class="form-input" id="editDateOfBirth" type="date" value="${dateValue}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Телефон</label>
+                        <input class="form-input" id="editPhone" value="${user.phone || ''}" placeholder="+380...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">URL фото</label>
+                        <input class="form-input" id="editPhotoUrl" value="${user.photo_url || ''}" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Роль</label>
+                        <select class="form-select" id="editRole">
+                            <option value="student" ${user.role === 'student' ? 'selected' : ''}>Студент</option>
+                            <option value="teacher" ${user.role === 'teacher' ? 'selected' : ''}>Викладач</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Адміністратор</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-cancel" onclick="closeModal()">Скасувати</button>
+                        <button type="submit" class="btn-submit">Зберегти</button>
+                    </div>
+                </form>`;
+        }
+
+        async function submitEditUserForm(e, userId) {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-submit');
+            btn.textContent = 'Збереження...';
+            btn.disabled = true;
+            try {
+                await apiPut(`/api/admin/users/${userId}`, {
+                    full_name: document.getElementById('editFullName').value.trim(),
+                    email: document.getElementById('editEmail').value.trim(),
+                    patronymic: document.getElementById('editPatronymic').value.trim() || null,
+                    date_of_birth: document.getElementById('editDateOfBirth').value || null,
+                    phone: document.getElementById('editPhone').value.trim() || null,
+                    photo_url: document.getElementById('editPhotoUrl').value.trim() || null,
+                    role: document.getElementById('editRole').value,
+                });
+                closeModal();
+                showToast('Користувача оновлено', 'success');
+                await Promise.all([loadUsers(), loadStats()]);
+            } catch (err) {
+                console.error('Error updating user:', err);
+                showToast(`Помилка: ${err.message}`, 'error');
+                btn.textContent = 'Зберегти';
+                btn.disabled = false;
+            }
+        }
+
+        // ── STATS ────────────────────────────────────────────────────
+        async function loadStats() {
+            const grid = document.getElementById('adminStatsGrid');
+            if (!grid) return;
+            grid.innerHTML = '<div class="loader">Завантаження...</div>';
+            try {
+                const stats = await apiGet('/api/admin/stats');
+                if (!stats) {
+                    grid.innerHTML = '<div style="padding:2rem;color:var(--error);text-align:center;">Помилка завантаження статистики</div>';
+                    return;
+                }
+                const ic = {
+                    users: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+                    student: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+                    teacher: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+                    course: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+                    group: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+                    check: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+                    calendar: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+                    telegram: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+                };
+                const cards = [
+                    {icon:ic.users, bg:'rgba(37,99,235,.12)', color:'#3b82f6', value: stats.total_users, label:'Всього користувачів'},
+                    {icon:ic.student, bg:'rgba(16,185,129,.12)', color:'#10b981', value: stats.total_students, label:'Студентів'},
+                    {icon:ic.teacher, bg:'rgba(245,158,11,.12)', color:'#f59e0b', value: stats.total_teachers, label:'Викладачів'},
+                    {icon:ic.course, bg:'rgba(139,92,246,.12)', color:'#8b5cf6', value: stats.total_courses, label:'Курсів', section:'courses'},
+                    {icon:ic.group, bg:'rgba(6,182,212,.12)', color:'#06b6d4', value: stats.total_groups, label:'Груп', section:'groups'},
+                    {icon:ic.check, bg:'rgba(16,185,129,.12)', color:'#10b981', value: stats.active_groups, label:'Активних груп'},
+                    {icon:ic.calendar, bg:'rgba(37,99,235,.12)', color:'#3b82f6', value: stats.total_schedules, label:'Занять у розкладі'},
+                    {icon:ic.telegram, bg:'rgba(0,136,204,.12)', color:'#0088cc', value: stats.telegram_linked, label:'Telegram прив\'язань'},
+            ];
+            grid.innerHTML = cards.map(c=>`
+                <div class="stat-card" ${c.section ? `role="button" tabindex="0" onclick="loadSection('${c.section}')" onkeypress="if(event.key==='Enter'||event.key===' '){event.preventDefault();loadSection('${c.section}');}" style="cursor:pointer;"` : ''}>
+                    <div class="stat-icon" style="background:${c.bg};color:${c.color};">${c.icon}</div>
+                    <div class="stat-value">${c.value ?? 0}</div>
+                    <div class="stat-label">${c.label}</div>
+                </div>`).join('');
+            } catch (err) {
+                console.error('Error loading stats:', err);
+                grid.innerHTML = '<div style="padding:2rem;color:var(--error);text-align:center;">Помилка завантаження статистики</div>';
+            }
+        }
+
+        // ── GROUPS ───────────────────────────────────────────────────
+        async function loadGroups() {
+            const body = document.getElementById('groupsTableBody');
+            if (!body) return;
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</td></tr>';
+            try {
+                await Promise.all([refreshGroups(), refreshCourses(), refreshUsers()]);
+                if (!allGroups || !allGroups.length) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted);">Груп ще немає</td></tr>';
+                    return;
+                }
+                const coursesById = new Map(allCourses.map(c => [c.id, c]));
+                const teachersById = new Map(allUsers.filter(u => u.role === 'teacher').map(t => [t.id, t]));
+                const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+                body.innerHTML = allGroups.map(g => {
+                    const courses = (g.course_ids || []).map(id => coursesById.get(id)?.title || `#${id}`).join(', ') || '—';
+                    const count = (g.student_ids || []).length;
+                    const teacher = teachersById.get(g.teacher_id)?.full_name || '—';
+                    return `<tr>
+                        <td>${esc(g.name)}<div style="font-size:.78rem;color:var(--muted);">Викладач: ${esc(teacher)}</div></td>
+                        <td>${esc(courses)}</td>
+                        <td>${count}</td>
+                        <td>
+                            <button class="btn-sm btn-edit" onclick="openGroupStudents(${g.id})">Студенти</button>
+                            <button class="btn-sm btn-danger" onclick="deleteGroup(${g.id}, decodeURIComponent('${encodeURIComponent(g.name)}'))">Видалити</button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch (err) {
+                body.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--error);">Помилка завантаження груп: ${err.message}</td></tr>`;
+            }
+        }
+
+        // ── COURSES ──────────────────────────────────────────────────
+        async function loadCourses() {
+            const body = document.getElementById('coursesTableBody');
+            if (!body) return;
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</td></tr>';
+            try {
+                await Promise.all([refreshCourses(), refreshGroups(), refreshUsers(), refreshDisciplines()]);
+                if (!allCourses || !allCourses.length) {
+                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">Курсів ще немає</td></tr>';
+                    return;
+                }
+                const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+                body.innerHTML = allCourses.map(c => {
+                    const disciplines = allDisciplines.filter(d => d.course_id === c.id).map(d => d.name);
+                    const disciplineLabel = disciplines.length ? disciplines.join(', ') : '—';
+                    // distinct students across groups linked to this course
+                    const studentIds = new Set();
+                    allGroups.filter(g => (g.course_ids || []).includes(c.id))
+                             .forEach(g => (g.student_ids || []).forEach(id => studentIds.add(id)));
+                    return `<tr>
+                        <td>${esc(c.title)}<div style="font-size:.78rem;color:var(--muted);">${esc(c.description || '')}</div></td>
+                        <td>${esc(disciplineLabel)}</td>
+                        <td>${studentIds.size}</td>
+                        <td>—</td>
+                        <td>
+                            <button class="btn-sm btn-edit" onclick="openModal('course', ${c.id})">Редагувати</button>
+                            <button class="btn-sm btn-danger" onclick="deleteCourse(${c.id}, decodeURIComponent('${encodeURIComponent(c.title)}'))">Видалити</button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } catch (err) {
+                body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--error);">Помилка завантаження курсів: ${err.message}</td></tr>`;
+            }
+        }
+
+        // ── DISCIPLINES ──────────────────────────────────────────────
+        async function refreshDisciplines() {
+            allDisciplines = await apiGet('/api/disciplines/') || [];
+        }
+
+        async function loadDisciplines() {
+            const body = document.getElementById('disciplinesTableBody');
+            if (!body) return;
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted);">Завантаження...</td></tr>';
+            try {
+                await refreshDisciplines();
+                if (!allDisciplines.length) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--muted);">Дисциплін ще немає</td></tr>';
+                    return;
+                }
+                const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                body.innerHTML = allDisciplines.map(d => `
+                    <tr>
+                        <td>${esc(d.name)}</td>
+                        <td>${esc(d.course_title) || '—'}</td>
+                        <td>1</td>
+                        <td><span style="color:var(--muted);font-size:.85rem;">—</span></td>
+                    </tr>`).join('');
+            } catch (err) {
+                body.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--error);">Помилка завантаження дисциплін: ${err.message}</td></tr>`;
+            }
+        }
+
+        // ── NOTIFICATIONS HISTORY ────────────────────────────────────
+        async function loadNotificationsHistory() {
+            const host = document.getElementById('notificationsHistory');
+            if (!host) return;
+            host.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження...</p></div>';
+            try {
+                const items = await apiGet('/api/messages/public') || [];
+                if (!items.length) {
+                    host.innerHTML = '<div style="padding:1rem;color:var(--muted);">Немає надісланих сповіщень</div>';
+                    return;
+                }
+                const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                host.innerHTML = '<h4 style="margin:1rem 0 .5rem;">Історія сповіщень</h4>' + items.map(n => `
+                    <div style="border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;margin-bottom:.5rem;">
+                        <div style="font-weight:600;">${esc(n.title)}</div>
+                        <div style="font-size:.85rem;color:var(--muted);margin-top:.25rem;white-space:pre-wrap;">${esc(n.message)}</div>
+                        <div style="font-size:.72rem;color:var(--muted);margin-top:.35rem;">${n.sender_name ? esc(n.sender_name) + ' • ' : ''}${n.timestamp ? new Date(n.timestamp).toLocaleString('uk-UA') : ''}</div>
+                    </div>`).join('');
+            } catch (err) {
+                host.innerHTML = `<div style="padding:1rem;color:var(--error);">Помилка: ${err.message}</div>`;
+            }
+        }
+
+        // ── CREATE BUTTONS (wrappers) ────────────────────────────────
+        function openAddUserModal()       { openModal('user'); }
+        function openCreateCourseModal()  { openModal('course'); }
+        function openAddGroupModal()      { openModal('group'); }
+        function openAddDisciplineModal() { openModal('discipline'); }
+
+        async function sendNotification() {
+            const title = (document.getElementById('notifTitle')?.value || '').trim();
+            const message = (document.getElementById('notifMessage')?.value || '').trim();
+            if (!message) { showToast('Введіть текст сповіщення', 'warning'); return; }
+            try {
+                await apiPost('/api/messages/public', { title: title || 'Сповіщення', message });
+                showToast('Сповіщення надіслано', 'success');
+                const t = document.getElementById('notifTitle'); if (t) t.value = '';
+                const m = document.getElementById('notifMessage'); if (m) m.value = '';
+                await loadNotificationsHistory();
+            } catch (err) {
+                showToast('Помилка: ' + err.message, 'error');
+            }
+        }
+
+        function filterCourseStudents(courseId, query) {
+            const select = document.getElementById(`studentSelect-${courseId}`);
+            if (!select) return;
+            const q = (query || '').toLowerCase();
+            const students = allUsers.filter(u => u.role === 'student' && (`${u.full_name} ${u.email}`).toLowerCase().includes(q));
+            select.innerHTML = students.map(s => `<option value="${s.id}">${escapeHtml(s.full_name)} (${escapeHtml(s.email)})</option>`).join('');
+        }
+
+        async function enrollStudentToCourse(courseId) {
+            const studentSelect = document.getElementById(`studentSelect-${courseId}`);
+            const groupSelect = document.getElementById(`groupSelect-${courseId}`);
+            const studentId = parseInt(studentSelect?.value || '', 10);
+            const groupId = parseInt(groupSelect?.value || '', 10);
+            if (!studentId || !groupId) {
+                showToast('Оберіть студента і групу для зарахування', 'warning');
+                return;
+            }
+            await apiPost(`/api/groups/${groupId}/enroll/${studentId}`, {});
+            showToast('Студента зараховано на курс через вибрану групу', 'success');
+            await Promise.all([loadGroups(), loadUsers()]);
+        }
+
+        async function deleteCourse(id, title) {
+            if (!confirm(`Видалити курс "${title}"?`)) return;
+            await apiDelete(`/api/courses/${id}`);
+            showToast('Курс видалено', 'success');
+            await Promise.all([loadCourses(), loadGroups(), loadStats()]);
+        }
+
+        async function loadInbox() {
+            const list = document.getElementById('inboxList');
+            list.innerHTML = '<div class="loader">Завантаження...</div>';
+            const messages = await apiGet('/api/messages/inbox');
+            if (!messages || messages.length === 0) {
+                pendingCount = 0;
+                updateInboxBadge();
+                list.innerHTML = '<div class="loader" style="color:var(--success);">Немає нових питань</div>';
+                return;
+            }
+            pendingCount = messages.filter(m => m.status === 'pending').length;
+            updateInboxBadge();
+
+            list.innerHTML = messages.map(msg => {
+                const date = new Date(msg.timestamp).toLocaleString('uk-UA', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+                const replyHtml = msg.reply ? `<div style="margin-top:.5rem;padding:.5rem;background:var(--gray-50);border-radius:.5rem;"><strong>Відповідь:</strong> ${msg.reply}</div>` : '';
+                return `
+                    <div class="mail-item ${msg.status}">
+                        <div class="mail-header">
+                            <div>
+                                <div style="font-weight:700;">${msg.sender_name || 'Невідомий користувач'}</div>
+                                <div style="font-size:.85rem;color:var(--gray-500);">${msg.sender_email || '—'} · ${date}</div>
+                            </div>
+                            <span class="mail-status ${msg.status}">${msg.status === 'pending' ? 'Очікує' : 'Відповіли'}</span>
+                        </div>
+                        <div style="color:var(--gray-700);">${msg.content}</div>
+                        ${replyHtml}
+                        ${msg.status === 'pending' ? `
+                            <div class="reply-form" id="replyForm-${msg.id}">
+                                <textarea class="reply-textarea" id="replyText-${msg.id}" placeholder="Напишіть відповідь студенту..."></textarea>
+                                <div class="reply-actions">
+                                    <button class="btn-cancel" onclick="toggleReplyForm(${msg.id})" style="padding:.5rem 1rem;">Скасувати</button>
+                                    <button class="btn-reply" onclick="sendInboxReply(${msg.id}, ${msg.telegram_id || 'null'})">Надіслати</button>
+                                </div>
+                            </div>
+                            <div style="display:flex;justify-content:flex-end;margin-top:.75rem;">
+                                <button class="btn-sm btn-edit" onclick="toggleReplyForm(${msg.id})">Відповісти</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleReplyForm(id) {
+            const form = document.getElementById(`replyForm-${id}`);
+            if (form) form.classList.toggle('open');
+        }
+
+        async function sendInboxReply(messageId, telegramId) {
+            const text = document.getElementById(`replyText-${messageId}`)?.value?.trim();
+            if (!text) {
+                showToast('Введіть текст відповіді', 'warning');
+                return;
+            }
+            await replyToMessage(messageId, text);
+            showToast(telegramId ? 'Відповідь надіслана (Telegram теж)' : 'Відповідь збережена', 'success');
+            await loadInbox();
+        }
+
+        async function checkInboxBadge() {
+            const messages = await apiGet('/api/messages/inbox');
+            pendingCount = Array.isArray(messages) ? messages.filter(m => m.status === 'pending').length : 0;
+            updateInboxBadge();
+        }
+
+        function updateInboxBadge() {
+            const link = document.getElementById('inboxNavLink');
+            if (!link) return;
+            const badge = link.querySelector('.inbox-badge');
+            if (badge) badge.remove();
+            if (pendingCount > 0) {
+                link.innerHTML = `Інбокс питань <span class="inbox-badge">${pendingCount}</span>`;
+            } else {
+                link.textContent = 'Інбокс питань';
+            }
+        }
+
+        async function sendBroadcast() {
+            const role = document.getElementById('broadcastRole').value || null;
+            const message = document.getElementById('broadcastMessage').value.trim();
+            if (!message) {
+                showToast('Введіть текст сповіщення', 'warning');
+                return;
+            }
+            const response = await apiPost('/api/admin/broadcast', {
+                message,
+                target_role: role,
+            });
+            showToast(`Розіслано: ${response.sent_count || 0}`, 'success');
+            document.getElementById('broadcastMessage').value = '';
+        }
+
+        // ── MODALS ───────────────────────────────────────────────────
+        async function openModal(type, entityId = null) {
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            content.innerHTML = '<div style="padding:1rem;color:var(--muted);">Завантаження...</div>';
+            overlay.classList.add('open');
+
+            if (type === 'user') {
+                content.innerHTML = `
+                    <h2 class="modal-title">Додати користувача</h2>
+                    <form id="userForm" onsubmit="submitUserForm(event)">
+                        <div class="form-group">
+                            <label class="form-label">Повне ім'я</label>
+                            <input class="form-input" id="newName" placeholder="Іван Петренко" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input class="form-input" id="newEmail" type="email" placeholder="user@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Пароль</label>
+                            <input class="form-input" id="newPassword" type="password" placeholder="Мінімум 8 символів" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Роль</label>
+                            <select class="form-select" id="newRole">
+                                <option value="student">Студент</option>
+                                <option value="teacher">Викладач</option>
+                                <option value="admin">Адміністратор</option>
+                            </select>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn-cancel" onclick="closeModal()">Скасувати</button>
+                            <button type="submit" class="btn-submit">Створити</button>
+                        </div>
+                    </form>`;
+            } else if (type === 'group') {
+                await Promise.all([refreshUsers(), refreshCourses()]);
+                const students = allUsers.filter(u => u.role === 'student');
+                const teachers = allUsers.filter(u => u.role === 'teacher');
+                content.innerHTML = `
+                    <h2 class="modal-title">Створити групу</h2>
+                    <form id="groupForm" onsubmit="submitGroupForm(event)">
+                        <div class="form-group">
+                            <label class="form-label">Назва групи</label>
+                            <input class="form-input" id="groupName" placeholder="WEB-2024-A" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Курси</label>
+                            <div class="selection-list" id="groupCourseIdsList">
+                                ${allCourses.map(c => `
+                                    <label class="selection-item">
+                                        <input type="checkbox" value="${c.id}" name="groupCourseIds">
+                                        <span class="selection-item-content">
+                                            <span class="selection-item-title">${c.title}</span>
+                                            <span class="selection-item-subtitle">${c.description || 'Опис відсутній'}</span>
+                                        </span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Викладач</label>
+                            <select class="form-select" id="groupTeacherId" required>
+                                <option value="">Оберіть викладача</option>
+                                ${teachers.map(t => `<option value="${t.id}">${escapeHtml(t.full_name)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Пошук та вибір студентів</label>
+                            <input class="form-input" id="groupStudentSearch" placeholder="Пошук по ПІБ або email" oninput="filterGroupStudents(this.value)">
+                            <div class="selection-search-hint">Натискайте по студенту, щоб додати або прибрати його з групи.</div>
+                            <div class="selection-list" id="groupStudentsList" style="margin-top:.5rem;">
+                                ${students.map(s => `
+                                    <label class="selection-item" data-student-item data-search="${`${s.full_name} ${s.email}`.toLowerCase()}">
+                                        <input type="checkbox" value="${s.id}" name="groupStudentIds">
+                                        <span class="selection-item-content">
+                                            <span class="selection-item-title">${escapeHtml(s.full_name)}</span>
+                                            <span class="selection-item-subtitle">${escapeHtml(s.email)}</span>
+                                        </span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn-cancel" onclick="closeModal()">Скасувати</button>
+                            <button type="submit" class="btn-submit">Створити групу</button>
+                        </div>
+                    </form>`;
+
+            } else if (type === 'course') {
+                if (!allCourses.length) { await refreshCourses(); }
+                const editing = entityId != null;
+                const course = editing ? (allCourses.find(c => c.id === entityId) || {}) : {};
+                const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                content.innerHTML = `
+                    <h2 class="modal-title">${editing ? 'Редагувати курс' : 'Новий курс'}</h2>
+                    <form id="courseForm" onsubmit="submitCourseForm(event, ${editing ? entityId : 'null'})">
+                        <div class="form-group">
+                            <label class="form-label">Назва курсу</label>
+                            <input class="form-input" id="courseTitle" value="${esc(course.title)}" placeholder="Напр.: Основи Python" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Опис</label>
+                            <textarea class="form-input" id="courseDesc" rows="4" placeholder="Короткий опис курсу">${esc(course.description)}</textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn-cancel" onclick="closeModal()">Скасувати</button>
+                            <button type="submit" class="btn-submit">${editing ? 'Зберегти' : 'Створити'}</button>
+                        </div>
+                    </form>`;
+            } else if (type === 'discipline') {
+                await refreshCourses();
+                content.innerHTML = `
+                    <h2 class="modal-title">Нова дисципліна</h2>
+                    <form id="disciplineForm" onsubmit="submitDisciplineForm(event)">
+                        <div class="form-group">
+                            <label class="form-label">Назва дисципліни</label>
+                            <input class="form-input" id="disciplineName" placeholder="Напр.: Бази даних" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Курс</label>
+                            <select class="form-select" id="disciplineCourseId" required>
+                                <option value="">Оберіть курс</option>
+                                ${allCourses.map(c => `<option value="${c.id}">${c.title}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn-cancel" onclick="closeModal()">Скасувати</button>
+                            <button type="submit" class="btn-submit">Створити</button>
+                        </div>
+                    </form>`;
+            }
+        }
+
+        async function submitDisciplineForm(event) {
+            event.preventDefault();
+            const name = (document.getElementById('disciplineName')?.value || '').trim();
+            const courseId = parseInt(document.getElementById('disciplineCourseId')?.value || '', 10);
+            if (!name || !courseId) { showToast('Заповніть назву і курс', 'warning'); return; }
+            try {
+                await apiPost('/api/disciplines/', { name, course_id: courseId });
+                showToast('Дисципліну створено', 'success');
+                closeModal();
+                await loadDisciplines();
+            } catch (err) {
+                showToast('Помилка: ' + err.message, 'error');
+            }
+        }
+
+        async function deleteGroup(id, name) {
+            if (!confirm(`Видалити групу "${name}"?`)) return;
+            try {
+                await apiDelete(`/api/groups/${id}`);
+                showToast('Групу видалено', 'success');
+                await loadGroups();
+            } catch (err) {
+                showToast('Помилка: ' + err.message, 'error');
+            }
+        }
+
+        let currentGroupId = null;
+        async function openGroupStudents(groupId) {
+            currentGroupId = groupId;
+            await Promise.all([refreshGroups(), refreshUsers()]);
+            renderGroupStudentsModal();
+        }
+
+        function renderGroupStudentsModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+            const g = allGroups.find(x => x.id === currentGroupId);
+            if (!g || !overlay || !content) return;
+            const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const memberIds = new Set(g.student_ids || []);
+            const members = allUsers.filter(u => memberIds.has(u.id));
+            const nonMembers = allUsers.filter(u => u.role === 'student' && !memberIds.has(u.id));
+            content.innerHTML = `
+                <h2 class="modal-title">Студенти групи «${esc(g.name)}»</h2>
+                <div style="margin:1rem 0;">
+                    <div class="form-label">У групі (${members.length})</div>
+                    <div class="selection-list">
+                        ${members.length ? members.map(s => `
+                            <div class="selection-item" style="justify-content:space-between;">
+                                <span class="selection-item-content">
+                                    <span class="selection-item-title">${esc(s.full_name)}</span>
+                                    <span class="selection-item-subtitle">${esc(s.email)}</span>
+                                </span>
+                                <button class="btn-sm btn-danger" onclick="removeStudentFromGroup(${s.id})">Прибрати</button>
+                            </div>`).join('') : '<div class="selection-search-hint">Поки що нікого немає</div>'}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Додати студента</label>
+                    <div style="display:flex;gap:.5rem;align-items:center;">
+                        <select class="form-select" id="addStudentSelect" style="flex:1;">
+                            ${nonMembers.length ? nonMembers.map(s => `<option value="${s.id}">${esc(s.full_name)} (${esc(s.email)})</option>`).join('') : '<option value="">Усі студенти вже в групі</option>'}
+                        </select>
+                        <button class="btn btn-primary" onclick="addStudentToGroup()">Додати</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeModal(); loadGroups();">Закрити</button>
+                </div>`;
+            overlay.classList.add('open');
+        }
+
+        async function addStudentToGroup() {
+            const sel = document.getElementById('addStudentSelect');
+            const sid = parseInt(sel?.value || '', 10);
+            if (!sid) { showToast('Оберіть студента', 'warning'); return; }
+            try {
+                await apiPost(`/api/groups/${currentGroupId}/enroll/${sid}`, {});
+                showToast('Студента додано', 'success');
+                await Promise.all([refreshGroups(), refreshUsers()]);
+                renderGroupStudentsModal();
+            } catch (err) {
+                showToast('Помилка: ' + err.message, 'error');
+            }
+        }
+
+        async function removeStudentFromGroup(sid) {
+            try {
+                await apiDelete(`/api/groups/${currentGroupId}/enroll/${sid}`);
+                showToast('Студента прибрано', 'success');
+                await Promise.all([refreshGroups(), refreshUsers()]);
+                renderGroupStudentsModal();
+            } catch (err) {
+                showToast('Помилка: ' + err.message, 'error');
+            }
+        }
+
+        function filterGroupStudents(query) {
+            const items = document.querySelectorAll('[data-student-item]');
+            if (!items.length) return;
+            const q = (query || '').toLowerCase();
+            items.forEach(item => {
+                const matches = (item.getAttribute('data-search') || '').includes(q);
+                item.style.display = matches ? 'flex' : 'none';
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+        document.getElementById('modalOverlay').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+
+        async function submitUserForm(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-submit');
+            btn.textContent = 'Збереження...'; btn.disabled = true;
+            try {
+                const userData = {
+                    full_name: document.getElementById('newName').value,
+                    email:     document.getElementById('newEmail').value,
+                    password:  document.getElementById('newPassword').value,
+                    role:      document.getElementById('newRole').value
+                };
+                console.log('[SUBMIT USER] Sending data:', userData);
+                await apiPost('/api/admin/users', userData);
+                closeModal();
+                showToast('Користувача створено!', 'success');
+                await loadUsers();
+                await checkInboxBadge();
+            } catch (err) {
+                console.error('[SUBMIT USER] Error:', err);
+                showToast(`Помилка: ${err.message}`, 'error');
+                btn.textContent = 'Створити';
+                btn.disabled = false;
+            }
+        }
+
+        async function submitGroupForm(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-submit');
+            btn.textContent = 'Збереження...'; btn.disabled = true;
+
+            const selectedStudents = Array.from(document.querySelectorAll('input[name="groupStudentIds"]:checked'))
+                .map(o => parseInt(o.value, 10));
+            const selectedCourseIds = Array.from(document.querySelectorAll('input[name="groupCourseIds"]:checked'))
+                .map(o => parseInt(o.value, 10));
+            
+            try {
+                await apiPost('/api/groups', {
+                    name:      document.getElementById('groupName').value,
+                    course_ids: selectedCourseIds,
+                    student_ids: selectedStudents,
+                    teacher_id: parseInt(document.getElementById('groupTeacherId').value),
+                    is_active: true
+                });
+                
+                closeModal();
+                showToast(`Групу створено! Додано ${selectedStudents.length} студентів і ${selectedCourseIds.length} курсів.`, 'success');
+                await Promise.all([loadGroups(), loadUsers(), refreshCourses()]);
+            } catch (err) {
+                console.error('Error creating group:', err);
+                showToast(`Помилка при створенні групи: ${err.message}`, 'error');
+                btn.textContent = 'Створити групу';
+                btn.disabled = false;
+            }
+        }
+
+        async function submitCourseForm(e, courseId = null) {
+            e.preventDefault();
+            const btn = e.target.querySelector('.btn-submit');
+            btn.textContent = 'Збереження...'; btn.disabled = true;
+            try {
+                const payload = {
+                    title:       document.getElementById('courseTitle').value,
+                    description: document.getElementById('courseDesc').value
+                };
+                if (courseId) {
+                    await apiPut(`/api/courses/${courseId}`, payload);
+                    showToast('Курс оновлено', 'success');
+                } else {
+                    await apiPost('/api/courses', payload);
+                    showToast('Курс додано!', 'success');
+                }
+                closeModal();
+                await Promise.all([loadCourses(), loadGroups(), loadStats()]);
+            } catch (err) {
+                showToast(`Помилка: ${err.message}`, 'error');
+                btn.textContent = courseId ? 'Зберегти' : 'Створити';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

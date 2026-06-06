@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT School — Діагностика</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#080c18;--ink-soft:#0f1425;--ink-card:#151b2e;--border:rgba(255,255,255,.07);--muted:#5c6680;--blue:#3b82f6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--mono:'JetBrains Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Manrope',sans-serif;background:var(--ink);color:#fff;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.hdr-logo{display:flex;align-items:center;gap:.75rem;}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,#2563eb,#4f46e5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;font-family:'Unbounded',sans-serif;color:#fff;}
+.logo-text{font-family:'Unbounded',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:-.02em;}
+.logo-text span{color:var(--blue);}
+.hdr-badge{font-family:var(--mono);font-size:.7rem;padding:.2rem .6rem;border-radius:999px;background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2);}
+.hero{text-align:center;padding:1rem 0 2.5rem;}
+.hero h1{font-family:'Unbounded',sans-serif;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:900;letter-spacing:-.04em;line-height:1.1;margin-bottom:.65rem;background:linear-gradient(135deg,#fff 30%,rgba(59,130,246,.8));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{color:var(--muted);font-size:.9rem;}
+.config-card{background:var(--ink-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem;}
+.config-card h3{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;}
+.config-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;}
+.cfg-row{display:flex;flex-direction:column;gap:.25rem;}
+.cfg-label{font-size:.72rem;color:var(--muted);font-weight:600;}
+.cfg-input{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:.5rem .8rem;color:#fff;font-family:var(--mono);font-size:.8rem;outline:none;transition:border-color .2s;width:100%;}
+.cfg-input:focus{border-color:rgba(59,130,246,.4);}
+.run-btn{width:100%;padding:1rem;background:linear-gradient(135deg,#2563eb,#4f46e5);border:none;border-radius:12px;color:#fff;font-family:'Unbounded',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:-.02em;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1.25rem;}
+.run-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(37,99,235,.4);}
+.run-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.spin{width:17px;height:17px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+.run-btn.running .spin{display:block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.progress-track{height:3px;background:rgba(255,255,255,.06);border-radius:99px;margin-bottom:1.25rem;overflow:hidden;opacity:0;transition:opacity .3s;}
+.progress-track.vis{opacity:1;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#2563eb,#06b6d4);border-radius:99px;transition:width .25s ease;width:0%;}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem;margin-bottom:1.25rem;opacity:0;transition:opacity .4s;}
+.summary.vis{opacity:1;}
+.sum-card{background:var(--ink-card);border:1px solid var(--border);border-radius:12px;padding:.9rem;text-align:center;}
+.sum-val{font-family:'Unbounded',sans-serif;font-size:1.5rem;font-weight:900;margin-bottom:.15rem;}
+.sum-lbl{font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+.c-green{color:var(--green);}.c-red{color:var(--red);}.c-yellow{color:var(--yellow);}.c-blue{color:var(--blue);}
+.log-wrap{background:var(--ink-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.25rem;display:none;}
+.log-wrap.vis{display:block;}
+.log-hdr{padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;}
+.log-body{padding:.65rem .9rem;font-family:var(--mono);font-size:.7rem;color:rgba(255,255,255,.45);line-height:1.7;max-height:140px;overflow-y:auto;}
+.ll-pass{color:var(--green);}.ll-fail{color:var(--red);}.ll-warn{color:var(--yellow);}.ll-info{color:var(--blue);}
+.results-wrap{display:flex;flex-direction:column;gap:.4rem;}
+.grp{background:var(--ink-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.grp-hdr{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;cursor:pointer;user-select:none;transition:background .15s;}
+.grp-hdr:hover{background:rgba(255,255,255,.02);}
+.grp-left{display:flex;align-items:center;gap:.6rem;}
+.grp-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;}
+.grp-name{font-weight:700;font-size:.85rem;}
+.grp-pills{display:flex;gap:.3rem;}
+.pill{font-size:.67rem;font-weight:700;padding:.12rem .5rem;border-radius:999px;}
+.pg{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.18);}
+.pr{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.18);}
+.py{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.18);}
+.grp-arrow{color:var(--muted);font-size:.7rem;transition:transform .2s;}
+.grp.open .grp-arrow{transform:rotate(180deg);}
+.grp-body{display:none;border-top:1px solid var(--border);}
+.grp.open .grp-body{display:block;}
+.t-row{display:grid;grid-template-columns:20px 1fr auto;gap:.6rem;align-items:start;padding:.55rem 1rem;border-bottom:1px solid rgba(255,255,255,.025);font-size:.8rem;}
+.t-row:last-child{border-bottom:none;}
+.t-dot{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;margin-top:.1rem;}
+.d-pass{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.22);}
+.d-fail{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.22);}
+.d-warn{background:rgba(245,158,11,.12);color:var(--yellow);border:1px solid rgba(245,158,11,.22);}
+.t-name{font-weight:600;line-height:1.3;}
+.t-detail{font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-top:.15rem;word-break:break-all;line-height:1.4;}
+.t-time{font-family:var(--mono);font-size:.65rem;color:var(--muted);white-space:nowrap;}
+.exp-row{display:flex;gap:.65rem;margin-top:1.25rem;}
+.exp-btn{flex:1;padding:.65rem;border:1px solid var(--border);background:rgba(255,255,255,.04);border-radius:10px;color:#fff;font-family:'Manrope',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.exp-btn:hover{background:rgba(255,255,255,.08);}
+@media(max-width:700px){.config-grid{grid-template-columns:1fr 1fr;}.summary{grid-template-columns:repeat(2,1fr);}.exp-row{flex-wrap:wrap;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="hdr-logo">
+    <div class="logo-icon">&lt;/&gt;</div>
+    <div class="logo-text">IT&nbsp;<span>School</span></div>
+  </div>
+  <div class="hdr-badge">v2.0 · diagnostic</div>
+</div>
+
+<div class="hero">
+  <h1>Діагностика системи</h1>
+  <p>Повна перевірка всіх API ендпоінтів, ролей та дій користувачів</p>
+</div>
+
+<div class="config-card">
+  <h3>Налаштування підключення</h3>
+  <div class="config-grid">
+    <div class="cfg-row" style="grid-column:1/-1">
+      <label class="cfg-label">API URL</label>
+      <input class="cfg-input" id="cfgBase" value="http://localhost:8000">
+    </div>
+    <div class="cfg-row"><label class="cfg-label">Email студента</label><input class="cfg-input" id="cfgStudentEmail" value="student@example.com"></div>
+    <div class="cfg-row"><label class="cfg-label">Пароль студента</label><input class="cfg-input" id="cfgStudentPw" type="password" value="password"></div>
+    <div class="cfg-row"></div>
+    <div class="cfg-row"><label class="cfg-label">Email викладача</label><input class="cfg-input" id="cfgTeacherEmail" value="teacher@example.com"></div>
+    <div class="cfg-row"><label class="cfg-label">Пароль викладача</label><input class="cfg-input" id="cfgTeacherPw" type="password" value="password"></div>
+    <div class="cfg-row"></div>
+    <div class="cfg-row"><label class="cfg-label">Email адміна</label><input class="cfg-input" id="cfgAdminEmail" value="admin@school.com"></div>
+    <div class="cfg-row"><label class="cfg-label">Пароль адміна</label><input class="cfg-input" id="cfgAdminPw" type="password" value="admin123"></div>
+    <div class="cfg-row"></div>
+  </div>
+</div>
+
+<button class="run-btn" id="runBtn" onclick="runAll()">
+  <div class="spin"></div>
+  <span id="runBtnTxt">Запустити повну діагностику</span>
+</button>
+
+<div class="progress-track" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="log-wrap" id="logWrap">
+  <div class="log-hdr"><span>Живий лог</span><span id="logCount">0 рядків</span></div>
+  <div class="log-body" id="logBody"></div>
+</div>
+
+<div class="summary" id="summary">
+  <div class="sum-card"><div class="sum-val c-blue" id="sTotal">0</div><div class="sum-lbl">Всього</div></div>
+  <div class="sum-card"><div class="sum-val c-green" id="sPass">0</div><div class="sum-lbl">Успішно</div></div>
+  <div class="sum-card"><div class="sum-val c-red" id="sFail">0</div><div class="sum-lbl">Помилки</div></div>
+  <div class="sum-card"><div class="sum-val c-yellow" id="sWarn">0</div><div class="sum-lbl">Попередження</div></div>
+</div>
+
+<div class="results-wrap" id="resultsWrap"></div>
+
+<div class="exp-row" id="expRow" style="display:none;">
+  <button class="exp-btn" onclick="exportLog()">Лог (.txt)</button>
+  <button class="exp-btn" onclick="exportJson()">JSON звіт</button>
+  <button class="exp-btn" id="copyBtn" onclick="copyLog()">Копіювати лог</button>
+</div>
+
+</div>
+<script>
+// Diagnostic tooling is for administrators only.
+(function () {
+    try {
+        const token = localStorage.getItem('access_token');
+        const role = localStorage.getItem('user_role') || localStorage.getItem('mock_role');
+        if (!token || role !== 'admin') {
+            document.body.innerHTML = '<div style="max-width:480px;margin:4rem auto;font-family:system-ui,Arial,sans-serif;text-align:center;color:#334155;">'
+                + '<h2>Доступ обмежено</h2><p>Ця діагностична сторінка доступна лише адміністраторам.</p>'
+                + '<p><a href="index.html">На головну</a></p></div>';
+            throw new Error('diagnostic: admin only');
+        }
+    } catch (e) {
+        if (String(e.message).indexOf('admin only') !== -1) { throw e; }
+    }
+})();
+const $=id=>document.getElementById(id);
+let BASE,tokens={},results=[],passed=0,failed=0,warned=0,logLines=[],done=0,total=0;
+const T=()=>new Date().toISOString().slice(11,19);
+
+// ── HTTP ──────────────────────────────────────────────────────────────────────
+async function api(method,path,body,token){
+  const h={'Content-Type':'application/json'};
+  if(token) h['Authorization']='Bearer '+token;
+  const opts={method,headers:h};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(BASE+path,opts);
+  let d; try{d=await r.json();}catch{d=await r.text();}
+  return{status:r.status,body:d};
+}
+async function form(path,fields){
+  const body=Object.entries(fields).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+  const r=await fetch(BASE+path,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+  let d; try{d=await r.json();}catch{d=await r.text();}
+  return{status:r.status,body:d};
+}
+
+// ── Log & result ──────────────────────────────────────────────────────────────
+function log(msg,type=''){
+  const line=`[${T()}] ${msg}`;
+  logLines.push(line);
+  const el=document.createElement('div');
+  el.className='ll-'+type;el.textContent=line;
+  const lb=$('logBody');lb.appendChild(el);lb.scrollTop=lb.scrollHeight;
+  $('logCount').textContent=logLines.length+' рядків';
+}
+function res(group,name,status,detail='',ms=0){
+  const ts=new Date().toISOString();
+  results.push({group,name,status,detail,ms,ts});
+  const t=status==='PASS'?'pass':status==='FAIL'?'fail':'warn';
+  const e=status==='PASS'?'':status==='FAIL'?'':'~';
+  log(`${e} [${group}] ${name}${detail?' → '+detail:''}${ms?' ('+ms+'ms)':''}`,t);
+  if(status==='PASS')passed++;else if(status==='FAIL')failed++;else warned++;
+  done++;
+  if(total) $('progressFill').style.width=Math.min(100,Math.round(done/total*100))+'%';
+  $('sTotal').textContent=done;$('sPass').textContent=passed;
+  $('sFail').textContent=failed;$('sWarn').textContent=warned;
+}
+
+// ── Test helpers ──────────────────────────────────────────────────────────────
+async function get(group,name,path,token,expectCount=false){
+  const t0=Date.now();
+  try{
+    const r=await api('GET',path,null,token);
+    const ms=Date.now()-t0;
+    const ok=r.status===200;
+    const detail=ok?(Array.isArray(r.body)?r.body.length+' записів':JSON.stringify(r.body).slice(0,60)):'HTTP '+r.status;
+    res(group,name,ok?'PASS':'FAIL',detail,ms);
+    return ok?r.body:null;
+  }catch(e){res(group,name,'FAIL',e.message);return null;}
+}
+async function post(group,name,path,body,token){
+  const t0=Date.now();
+  try{
+    const r=await api('POST',path,body,token);
+    const ms=Date.now()-t0;
+    const ok=r.status===200||r.status===201;
+    res(group,name,ok?'PASS':'FAIL',ok?JSON.stringify(r.body).slice(0,80):'HTTP '+r.status+' '+JSON.stringify(r.body).slice(0,60),ms);
+    return ok?r.body:null;
+  }catch(e){res(group,name,'FAIL',e.message);return null;}
+}
+async function put(group,name,path,body,token){
+  const t0=Date.now();
+  try{
+    const r=await api('PUT',path,body,token);
+    const ms=Date.now()-t0;
+    const ok=r.status===200;
+    res(group,name,ok?'PASS':'FAIL',ok?JSON.stringify(r.body).slice(0,80):'HTTP '+r.status,ms);
+    return ok?r.body:null;
+  }catch(e){res(group,name,'FAIL',e.message);return null;}
+}
+async function del(group,name,path,token){
+  const t0=Date.now();
+  try{
+    const r=await api('DELETE',path,null,token);
+    const ms=Date.now()-t0;
+    const ok=r.status===200||r.status===204;
+    res(group,name,ok?'PASS':'FAIL',ok?'Видалено':'HTTP '+r.status,ms);
+    return ok;
+  }catch(e){res(group,name,'FAIL',e.message);return false;}
+}
+
+// ── 1. Health ─────────────────────────────────────────────────────────────────
+async function testHealth(){
+  log('── HEALTH ──────────────────────────────','info');
+  try{
+    const r=await api('GET','/');
+    res('Health','Backend доступний',r.status<500?'PASS':'FAIL','HTTP '+r.status);
+    return true;
+  }catch(e){res('Health','Backend доступний','FAIL',e.message);return false;}
+}
+
+// ── 2. Auth ───────────────────────────────────────────────────────────────────
+async function testAuth(){
+  log('── АВТОРИЗАЦІЯ ─────────────────────────','info');
+  const users={
+    student:{email:$('cfgStudentEmail').value, pw:$('cfgStudentPw').value},
+    teacher:{email:$('cfgTeacherEmail').value, pw:$('cfgTeacherPw').value},
+    admin:  {email:$('cfgAdminEmail').value,   pw:$('cfgAdminPw').value},
+  };
+  for(const[role,u]of Object.entries(users)){
+    try{
+      const r=await form('/api/auth/login',{username:u.email,password:u.pw});
+      if(r.status===200&&r.body.access_token){
+        tokens[role]=r.body.access_token;
+        res('Auth','Логін: '+role,'PASS',u.email);
+      }else{
+        res('Auth','Логін: '+role,'FAIL','HTTP '+r.status+' '+JSON.stringify(r.body).slice(0,80));
+      }
+    }catch(e){res('Auth','Логін: '+role,'FAIL',e.message);}
+  }
+  // /me
+  for(const[role,tok]of Object.entries(tokens)){
+    const r=await api('GET','/api/users/me',null,tok);
+    res('Auth','/me: '+role,r.status===200?'PASS':'FAIL',
+      r.status===200?r.body.full_name+' ('+r.body.role+')':'HTTP '+r.status);
+  }
+  // Неправильний пароль
+  try{
+    const r=await form('/api/auth/login',{username:'nobody@test.com',password:'wrongpass'});
+    res('Auth','Відмова при неправильному паролі',r.status===401||r.status===400?'PASS':'WARN','HTTP '+r.status);
+  }catch(e){res('Auth','Відмова при неправильному паролі','WARN',e.message);}
+}
+
+// ── 3. Student actions ────────────────────────────────────────────────────────
+async function testStudent(){
+  const t=tokens.student;
+  if(!t){log('student token відсутній','warn');return;}
+  log('── СТУДЕНТ ─────────────────────────────','info');
+  // Read endpoints
+  await get('Student','Мої курси','/api/student/courses',t);
+  const grades=await get('Student','Мої оцінки','/api/student/grades',t);
+  const assignments=await get('Student','Список завдань','/api/assignments',t);
+  await get('Student','Каталог курсів','/api/courses',t);
+  await get('Student','Розклад','/api/schedule',t);
+  await get('Student','Повідомлення (inbox)','/api/messages/inbox',t);
+  await get('Student','Публічні сповіщення','/api/messages/public',t);
+  await get('Student','Профіль (/me)','/api/users/me',t);
+  // Оновлення профілю
+  await put('Student','Оновлення профілю','/api/users/me',{full_name:'Test Student Updated'},t);
+  // Здача завдання
+  if(assignments&&assignments.length>0){
+    const a=assignments[0];
+    const sr=await api('POST',`/api/assignments/${a.id}/submit`,{content:'Діагностичний тест v2 — автоздача',file_name:null},t);
+    const ok=sr.status===200&&(sr.body.success||sr.body.submission_id);
+    res('Student',`Здача завдання "${a.title.slice(0,30)}"`,ok?'PASS':'FAIL',
+      ok?`submission_id=${sr.body.submission_id}`:'HTTP '+sr.status+' '+JSON.stringify(sr.body).slice(0,60));
+    // Перегляд деталей завдання
+    await get('Student',`Деталі завдання #${a.id}`,`/api/assignments/${a.id}`,t);
+  }else{
+    res('Student','Здача завдання','WARN','Немає доступних завдань');
+  }
+}
+
+// ── 4. Teacher actions ────────────────────────────────────────────────────────
+async function testTeacher(){
+  const t=tokens.teacher;
+  if(!t){log('teacher token відсутній','warn');return;}
+  log('── ВИКЛАДАЧ ────────────────────────────','info');
+  await get('Teacher','Статистика','/api/teacher/stats',t);
+  const courses=await get('Teacher','Мої курси','/api/teacher/courses',t);
+  await get('Teacher','Мої студенти','/api/teacher/students',t);
+  const assignments=await get('Teacher','Завдання','/api/assignments',t);
+  await get('Teacher','Повідомлення (inbox)','/api/messages/inbox',t);
+  // Перегляд відповідей
+  if(assignments&&assignments.length>0){
+    const a=assignments[0];
+    const subs=await get('Teacher',`Відповіді до завдання #${a.id}`,`/api/assignments/${a.id}/submissions`,t);
+    // Оцінювання якщо є відповідь
+    if(subs&&subs.length>0){
+      const sid=subs[0].submission_id||subs[0].id;
+      const gr=await api('POST',`/api/assignments/submissions/${sid}/grade`,{score:85,status:'graded',feedback:'Діагностичний коментар'},t);
+      res('Teacher',`Оцінювання submission #${sid}`,gr.status===200?'PASS':'FAIL',
+        gr.status===200?JSON.stringify(gr.body).slice(0,60):'HTTP '+gr.status);
+      // Reset submission
+      const rr=await api('POST',`/api/assignments/submissions/${sid}/reset`,{},t);
+      res('Teacher',`Reset submission #${sid}`,rr.status===200?'PASS':'WARN','HTTP '+rr.status);
+    }
+  }
+  // Створення нового завдання
+  let newAsgId=null;
+  const allCourses=await api('GET','/api/courses',null,t);
+  if(allCourses.status===200&&allCourses.body.length>0){
+    const courseId=allCourses.body[0].id;
+    // Отримати теми
+    const topics=await api('GET',`/api/courses/${courseId}/topics`,null,t);
+    if(topics.status===200&&topics.body.length>0){
+      const topicId=topics.body[0].id;
+      const na=await api('POST','/api/assignments',{
+        title:'[ДІАГНОСТИКА] Тестове завдання '+Date.now(),
+        description:'Автоматично створено діагностичним скриптом',
+        topic_id:topicId,
+        due_date:new Date(Date.now()+7*86400000).toISOString().slice(0,10),
+        max_score:100
+      },t);
+      res('Teacher','Створення завдання',na.status===200?'PASS':'FAIL',
+        na.status===200?'id='+na.body.id:'HTTP '+na.status+' '+JSON.stringify(na.body).slice(0,80));
+      if(na.status===200) newAsgId=na.body.id;
+    }else{
+      res('Teacher','Створення завдання','WARN','Немає тем для курсу — пропущено');
+    }
+  }
+  // Видалення тестового завдання
+  if(newAsgId){
+    await del('Teacher',`Видалення тестового завдання #${newAsgId}`,`/api/assignments/${newAsgId}`,t);
+  }
+  // Редагування курсу
+  if(courses&&courses.length>0){
+    const c=courses[0];
+    await put('Teacher',`Редагування курсу "${c.title.slice(0,20)}"`,`/api/courses/${c.id}`,{title:c.title,description:c.description||'Оновлено діагностикою'},t);
+  }
+  // Розклад
+  await get('Teacher','Розклад','/api/schedule',t);
+}
+
+// ── 5. Admin actions ──────────────────────────────────────────────────────────
+async function testAdmin(){
+  const t=tokens.admin;
+  if(!t){log('admin token відсутній','warn');return;}
+  log('── АДМІН ───────────────────────────────','info');
+  await get('Admin','Статистика','/api/admin/stats',t);
+  const users=await get('Admin','Список користувачів','/api/admin/users',t);
+  await get('Admin','Групи','/api/groups',t);
+  const courses=await get('Admin','Курси','/api/courses',t);
+  await get('Admin','Дисципліни','/api/disciplines',t);
+  await get('Admin','Розклад','/api/schedule',t);
+  // Деталі першого курсу + теми
+  if(courses&&courses.length>0){
+    const c=courses[0];
+    await get('Admin',`Теми курсу "${c.title.slice(0,20)}"`,`/api/courses/${c.id}/topics`,t);
+  }
+  // Деталі користувача
+  if(users&&users.length>0){
+    const uid=users[0].id;
+    const ur=await api('GET','/api/admin/users',null,t);
+    res('Admin','Список користувачів повторно',ur.status===200?'PASS':'FAIL','HTTP '+ur.status);
+    // Оновлення профілю через admin
+    const upd=await api('PUT',`/api/admin/users/${uid}`,{full_name:users[0].full_name,role:users[0].role,is_active:true},t);
+    res('Admin',`PUT /admin/users/${uid}`,upd.status===200?'PASS':'WARN',
+      upd.status===200?'ok':'HTTP '+upd.status+' (можливо не реалізовано)');
+  }
+}
+
+// ── 6. Course & topics ────────────────────────────────────────────────────────
+async function testCourses(){
+  const t=tokens.teacher||tokens.admin;
+  if(!t) return;
+  log('── КУРСИ ТА ТЕМИ ───────────────────────','info');
+  const courses=await get('Courses','Список курсів','/api/courses',t);
+  if(courses&&courses.length>0){
+    const c=courses[0];
+    const topics=await get('Courses',`Теми: "${c.title.slice(0,25)}"`,`/api/courses/${c.id}/topics`,t);
+    // Створити тему
+    const nt=await api('POST',`/api/courses/${c.id}/topics`,{title:'[ДІАГНОСТИКА] Тема '+Date.now(),discipline_id:topics&&topics.length>0?topics[0].discipline_id:1},t);
+    res('Courses','Створення теми',nt.status===200?'PASS':'WARN',
+      nt.status===200?'id='+nt.body.id:'HTTP '+nt.status);
+    // Видалити тему
+    if(nt.status===200&&nt.body.id){
+      await del('Courses','Видалення тестової теми',`/api/courses/topics/${nt.body.id}`,t);
+    }
+  }
+}
+
+// ── 7. Attendance ─────────────────────────────────────────────────────────────
+async function testAttendance(){
+  const t=tokens.teacher||tokens.admin;
+  if(!t) return;
+  log('── ВІДВІДУВАНІСТЬ ──────────────────────','info');
+  // Отримати розклад щоб взяти schedule_id
+  const sched=await api('GET','/api/schedule',null,t);
+  if(sched.status===200&&sched.body.length>0){
+    const sid=sched.body[0].id;
+    await get('Attendance',`Відвідуваність заняття #${sid}`,`/api/attendance/${sid}`,t);
+    await get('Attendance',`Список студентів заняття #${sid}`,`/api/attendance/teacher/roster/${sid}`,t);
+    await get('Attendance',`Всі записи заняття #${sid}`,`/api/attendance/schedule/${sid}/all`,t);
+  }else{
+    res('Attendance','GET /api/attendance','WARN','Немає розкладу для тесту');
+  }
+}
+
+// ── 8. Messages ───────────────────────────────────────────────────────────────
+async function testMessages(){
+  // Test course topics (used by materials page)
+  log('── МАТЕРІАЛИ (ТЕМИ КУРСІВ) ─────────────','info');
+  const allC=await api('GET','/api/courses',null,tokens.student||tokens.teacher);
+  if(allC.status===200&&allC.body.length>0){
+    for(const c of allC.body.slice(0,3)){
+      const tp=await api('GET',`/api/courses/${c.id}/topics`,null,tokens.student||tokens.teacher);
+      res('Materials',`Теми курсу "${c.title.slice(0,25)}"`,tp.status===200?'PASS':'FAIL',
+        tp.status===200?tp.body.length+' тем':'HTTP '+tp.status);
+    }
+  }else{
+    res('Materials','Теми курсів','WARN','Курсів не знайдено');
+  }
+
+  log('── ПОВІДОМЛЕННЯ ────────────────────────','info');
+  const ts=tokens.student;
+  const tt=tokens.teacher;
+  if(ts) await get('Messages','Inbox студента','/api/messages/inbox',ts);
+  if(ts) await get('Messages','Публічні сповіщення','/api/messages/public',ts);
+  if(tt) await get('Messages','Inbox викладача','/api/messages/inbox',tt);
+  // Відповідь на повідомлення (якщо є)
+  if(tt){
+    const inbox=await api('GET','/api/messages/inbox',null,tt);
+    if(inbox.status===200&&inbox.body.length>0){
+      const mid=inbox.body[0].id;
+      const rr=await api('POST',`/api/messages/reply/${mid}`,{reply:'Діагностична відповідь'},tt);
+      res('Messages',`Reply на msg #${mid}`,rr.status===200?'PASS':'WARN','HTTP '+rr.status);
+    }else{
+      res('Messages','Reply на повідомлення','WARN','Немає повідомлень для тесту');
+    }
+  }
+}
+
+// ── 9. Schedule ───────────────────────────────────────────────────────────────
+async function testSchedule(){
+  const t=tokens.admin;
+  if(!t) return;
+  log('── РОЗКЛАД ─────────────────────────────','info');
+  await get('Schedule','Список занять','/api/schedule',t);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderResults(){
+  const groups={};
+  for(const r of results){if(!groups[r.group])groups[r.group]=[];groups[r.group].push(r);}
+  const icons={Health:'',Auth:'',Student:'',Teacher:'',Admin:'',Courses:'',Attendance:'',Messages:'',Schedule:''};
+  const wrap=$('resultsWrap');wrap.innerHTML='';
+  for(const[grp,items]of Object.entries(groups)){
+    const p=items.filter(i=>i.status==='PASS').length;
+    const f=items.filter(i=>i.status==='FAIL').length;
+    const w=items.filter(i=>i.status==='WARN').length;
+    const block=document.createElement('div');
+    block.className='grp open';
+    block.innerHTML=`
+      <div class="grp-hdr" onclick="this.closest('.grp').classList.toggle('open')">
+        <div class="grp-left">
+          <div class="grp-icon" style="background:rgba(59,130,246,.1);">${icons[grp]||''}</div>
+          <span class="grp-name">${grp}</span>
+          <div class="grp-pills">
+            ${p?`<span class="pill pg">${p}</span>`:''}
+            ${f?`<span class="pill pr">${f}</span>`:''}
+            ${w?`<span class="pill py">${w}~</span>`:''}
+          </div>
+        </div>
+        <span class="grp-arrow">▼</span>
+      </div>
+      <div class="grp-body">
+        ${items.map(i=>`
+          <div class="t-row">
+            <div class="t-dot ${i.status==='PASS'?'d-pass':i.status==='FAIL'?'d-fail':'d-warn'}">${i.status==='PASS'?'':i.status==='FAIL'?'':'~'}</div>
+            <div>
+              <div class="t-name">${i.name}</div>
+              ${i.detail?`<div class="t-detail">${i.detail}</div>`:''}
+            </div>
+            <div class="t-time">${i.ms?i.ms+'ms':''}</div>
+          </div>`).join('')}
+      </div>`;
+    wrap.appendChild(block);
+  }
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+function exportLog(){
+  const b=new Blob([logLines.join('\n')],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='it-school-diag.log';a.click();
+}
+function exportJson(){
+  const data={summary:{total:done,passed,failed,warned},results,ts:new Date().toISOString()};
+  const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='it-school-diag.json';a.click();
+}
+function copyLog(){
+  navigator.clipboard.writeText(logLines.join('\n'))
+    .then(()=>{$('copyBtn').textContent='Скопійовано!';setTimeout(()=>{$('copyBtn').textContent='Копіювати лог';},2000);});
+}
+
+// ── Materials ─────────────────────────────────────────────────────────────────
+async function testMaterials(){
+  log('── МАТЕРІАЛИ (ТЕМИ КУРСІВ) ─────────────','info');
+  // Test with ALL roles - student must also have access after backend fix
+  for(const [role,t] of Object.entries(tokens)){
+    const cr=await api('GET','/api/courses',null,t);
+    if(cr.status!==200||!cr.body.length) continue;
+    const c=cr.body[0];
+    const tp=await api('GET',`/api/courses/${c.id}/topics`,null,t);
+    res('Materials',`Теми як ${role}: "${c.title.slice(0,20)}"`,tp.status===200?'PASS':'FAIL',
+      tp.status===200?tp.body.length+' тем':'HTTP '+tp.status+' (403=student заблокований у бекенді)');
+    break; // one per role is enough for speed
+  }
+  // Verify each course has topics accessible by student
+  if(tokens.student){
+    const cr=await api('GET','/api/courses',null,tokens.student);
+    if(cr.status===200){
+      let ok=0,fail=0;
+      for(const c of cr.body){
+        const tp=await api('GET',`/api/courses/${c.id}/topics`,null,tokens.student);
+        if(tp.status===200) ok++; else fail++;
+      }
+      res('Materials',`Теми для всіх курсів (student)`,fail===0?'PASS':'FAIL',
+        `${ok} курсів доступні, ${fail} заблоковані`);
+    }
+  }
+}
+
+// ── Chat AI ──────────────────────────────────────────────────────────────────
+async function testChat(){
+  log('── AI ЧАТ ──────────────────────────────','info');
+  const t=tokens.student;
+  if(!t){res('Chat','AI запит','WARN','Немає студентського токену');return;}
+  try{
+    const r=await api('POST','/api/chat/ask',{message:'Що таке покажчик у мові C?'},t);
+    res('Chat','AI запит (POST /api/chat/ask)',r.status===200?'PASS':'WARN',
+      r.status===200?'відповідь отримано':'HTTP '+r.status+' '+JSON.stringify(r.body).slice(0,60));
+  }catch(e){res('Chat','AI запит','WARN',e.message);}
+  try{
+    const r=await api('GET','/api/chat/status',null,t);
+    res('Chat','Chat status',r.status===200?'PASS':'WARN','HTTP '+r.status);
+  }catch(e){res('Chat','Chat status','WARN',e.message);}
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+async function runAll(){
+  BASE=$('cfgBase').value.replace(/\/$/,'');
+  tokens={};results=[];passed=0;failed=0;warned=0;logLines=[];done=0;
+  total=60; // rough
+
+  $('resultsWrap').innerHTML='';
+  $('summary').classList.add('vis');
+  $('logWrap').classList.add('vis');
+  $('logBody').innerHTML='';
+  $('progressTrack').classList.add('vis');
+  $('progressFill').style.width='0%';
+  $('expRow').style.display='none';
+
+  const btn=$('runBtn');
+  btn.disabled=true;btn.classList.add('running');
+  $('runBtnTxt').textContent='Тестування...';
+
+  log('IT School LMS — Діагностика v2.0','info');
+  log('URL: '+BASE+' | '+new Date().toLocaleString('uk-UA'),'info');
+
+  const up=await testHealth();
+  if(up){
+    await testAuth();
+    await testStudent();
+    await testTeacher();
+    await testAdmin();
+    await testCourses();
+    await testAttendance();
+    await testMessages();
+    await testMaterials();
+    await testSchedule();
+    await testChat();
+  }
+
+  log('','');
+  log(`ПІДСУМОК: ${done} тестів |${passed}${failed}${warned}`,failed?'fail':'pass');
+
+  renderResults();
+  $('progressFill').style.width='100%';
+  btn.disabled=false;btn.classList.remove('running');
+  $('runBtnTxt').textContent='Запустити знову';
+  $('expRow').style.display='flex';
+}
+</script>
+</body>
+</html>

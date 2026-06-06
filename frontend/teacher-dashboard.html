@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <script>(function(){try{var t=localStorage.getItem('it-school-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/logo-code-mark-128.png">
+    <title>Панель викладача — IT School</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+    [data-theme='dark'] select{color-scheme:dark;}
+    [data-theme='dark'] select option{background-color:#151b2e;color:#fff;}
+    [data-theme='light'] select{color-scheme:light;}
+
+
+    body{font-family:'Manrope',sans-serif;background:var(--ink);color:#fff;margin:0;}
+    *{box-sizing:border-box;}
+    .app{display:flex;min-height:100vh;}
+    /* Sidebar */
+    .sidebar{width:260px;background:var(--ink-soft);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200;transition:transform .3s;overflow-y:auto;}
+    .sidebar-logo{display:flex;align-items:center;gap:.65rem;padding:1.5rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .sidebar-logo img{height:32px;}
+    .sidebar-logo span{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:-.02em;}
+    .sidebar-logo span b{color:#3b82f6;font-weight:900;}
+    /* Teacher profile in sidebar */
+    .sidebar-profile{padding:1.25rem 1rem;border-bottom:1px solid var(--border);text-align:center;}
+    .sidebar-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-size:1.5rem;font-weight:900;color:#fff;margin:0 auto .75rem;cursor:pointer;transition:transform .2s;box-shadow:0 0 20px rgba(16,185,129,.25);}
+    .sidebar-avatar:hover{transform:scale(1.05);}
+    .sidebar-pname{font-weight:700;font-size:.95rem;margin-bottom:.2rem;}
+    .sidebar-prole{display:inline-block;padding:.2rem .7rem;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+    .role-teacher{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);}
+    .role-admin{background:rgba(139,92,246,.12);color:#8b5cf6;border:1px solid rgba(139,92,246,.25);}
+    /* Nav */
+    .sidebar-nav{flex:1;padding:.75rem;}
+    .nav-section-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:.5rem 1rem;margin-top:.5rem;}
+    .sidebar-nav a,.nav-item{display:flex;align-items:center;gap:.75rem;padding:.7rem 1rem;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;margin-bottom:.15rem;transition:all .2s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-family:'Manrope',sans-serif;}
+    .sidebar-nav a:hover,.nav-item:hover{background:rgba(255,255,255,.05);color:#fff;}
+    .sidebar-nav a.active,.nav-item.active{background:rgba(37,99,235,.12);color:#3b82f6;border:1px solid rgba(37,99,235,.2);}
+    .sidebar-bottom{padding:.75rem;border-top:1px solid var(--border);}
+    .sidebar-bottom a{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .2s;}
+    .sidebar-bottom a:hover{background:rgba(239,68,68,.1);color:#ef4444;}
+    /* Main */
+    .main{flex:1;margin-left:260px;padding:2rem;min-height:100vh;overflow-x:hidden;}
+    /* Section cards */
+    .section-card{background:var(--ink-soft);border:1px solid var(--border);border-radius:16px;padding:2rem;display:none;margin-bottom:1.5rem;}
+    .section-card.active{display:block;}
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);gap:1rem;flex-wrap:wrap;}
+    .section-title{font-family:'Unbounded',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:-.03em;color:#fff !important;}
+    /* Stats */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.1rem;margin-bottom:1.5rem;}
+    .stat-card{background:var(--ink);border:1px solid var(--border);border-radius:14px;padding:1.25rem;text-align:center;transition:all .3s;}
+    .ov-panel{background:var(--ink);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.4rem;}
+    .course-card-rich{background:var(--ink);border:1px solid var(--border);border-radius:14px;padding:0;display:flex;align-items:stretch;gap:0;overflow:hidden;transition:all .2s;}
+    .course-card-rich:hover{border-color:rgba(37,99,235,.35);transform:translateY(-1px);}
+    .course-accent{width:4px;flex-shrink:0;}
+    .course-card-rich > div:nth-child(2){padding:1.25rem 1.4rem;}
+    .course-card-title{font-family:'Unbounded',sans-serif;font-weight:700;font-size:1.05rem;letter-spacing:-.02em;color:#fff;margin-bottom:.4rem;}
+    .course-card-desc{font-size:.85rem;color:var(--muted);line-height:1.5;margin-bottom:.85rem;}
+    .course-card-stats{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.8rem;color:rgba(255,255,255,.6);}
+    .course-card-actions{display:flex;flex-direction:column;gap:.5rem;padding:1.25rem 1.4rem;flex-shrink:0;justify-content:center;}
+    .cc-btn{padding:.55rem 1.1rem;background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--border);border-radius:9px;font-size:.83rem;font-weight:600;font-family:'Manrope',sans-serif;cursor:pointer;white-space:nowrap;transition:all .2s;}
+    .cc-btn:hover{background:rgba(255,255,255,.12);}
+    .cc-btn.primary{background:rgba(37,99,235,.85);border-color:transparent;}
+    .cc-btn.primary:hover{background:#2563eb;}
+    @media(max-width:600px){.course-card-rich{flex-direction:column;}.course-accent{width:100%;height:4px;}.course-card-actions{flex-direction:row;}}
+    .ov-panel-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.9rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);}
+    .ov-mini-item{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.85rem;}
+    .ov-mini-item:last-child{border-bottom:none;}
+    .ov-mini-title{font-weight:600;}
+    .ov-mini-meta{font-size:.75rem;color:var(--muted);}
+    @media(max-width:768px){.overview-panels{grid-template-columns:1fr !important;}}
+    .stat-card:hover{border-color:rgba(37,99,235,.3);transform:translateY(-2px);}
+    .stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto .75rem;}
+    .stat-value{font-family:'Unbounded',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.2rem;color:#fff;word-wrap:break-word;}
+    .stat-label{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+    /* Tables */
+    .table-wrap{background:var(--ink);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .data-table{width:100%;border-collapse:collapse;}
+    .data-table th{padding:.75rem 1rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);}
+    .data-table td{padding:.85rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.875rem;}
+    .data-table tr:last-child td{border-bottom:none;}
+    .data-table tr:hover td{background:rgba(255,255,255,.02);}
+    /* Inbox items */
+    .inbox-list{display:flex;flex-direction:column;gap:.85rem;}
+    .mail-item{background:var(--ink);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;transition:all .25s;position:relative;}
+    .mail-item.pending{border-left:3px solid #f59e0b;}
+    .mail-item.answered{border-left:3px solid #10b981;opacity:.75;}
+    .mail-item:hover{border-color:rgba(37,99,235,.3);}
+    .mail-header{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;margin-bottom:.5rem;}
+    .mail-from{font-weight:700;font-size:.9rem;}
+    .mail-time{font-size:.75rem;color:var(--muted);}
+    .mail-question{font-size:.875rem;color:rgba(255,255,255,.8);line-height:1.55;margin-bottom:.75rem;}
+    .mail-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+    /* Attendance */
+    .attendance-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:.5rem;}
+    .att-cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;cursor:pointer;border:1px solid var(--border);transition:all .2s;background:var(--ink);}
+    .att-cell.present{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#10b981;}
+    .att-cell.absent{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#ef4444;}
+    .att-cell.excused{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#f59e0b;}
+    /* Grades editor */
+    .grade-input{width:64px;padding:.4rem .5rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:#fff;text-align:center;font-size:.875rem;font-family:'Manrope',sans-serif;outline:none;}
+    .grade-input:focus{border-color:rgba(37,99,235,.5);}
+    /* Form fields */
+    .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem;}
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:1rem;}
+    .modal.open{display:flex;}
+    .modal-box{background:#111827;border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease;}
+    @keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+    .modal-title{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;}
+    .modal-close{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:.2rem;}
+    .modal-close:hover{color:#fff;}
+    .modal-footer{display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.25rem;}
+    .form-textarea{width:100%;padding:.8rem 1rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:.9rem;font-family:'Manrope',sans-serif;min-height:100px;resize:vertical;outline:none;transition:all .2s;}
+    .form-textarea:focus{border-color:rgba(37,99,235,.5);}
+    .loading{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:2rem;color:var(--muted);}
+    .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.1);border-top:2px solid #3b82f6;border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .badge-tag{display:inline-flex;align-items:center;padding:.2rem .65rem;border-radius:999px;font-size:.72rem;font-weight:700;}
+    .badge-green{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);}
+    .badge-yellow{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);}
+    .badge-red{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
+    .badge-blue{background:rgba(37,99,235,.12);color:#3b82f6;border:1px solid rgba(37,99,235,.25);}
+    .badge-muted{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border);}
+    .mobile-toggle{display:none;position:fixed;top:1rem;left:1rem;z-index:300;background:var(--blue);border:none;border-radius:10px;padding:.65rem;cursor:pointer;color:#fff;}
+    @media(max-width:1024px){.main{margin-left:0;padding:1rem;padding-top:4.5rem;}.sidebar{transform:translateX(-100%);}.sidebar.active{transform:translateX(0);}.mobile-toggle{display:flex;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:480px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+
+    /* Course cards */
+    .course-card{background:var(--ink);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;transition:all .2s;}
+    .course-card:hover{border-color:rgba(37,99,235,.35);transform:translateY(-1px);}
+    .course-card-info .course-title{font-weight:700;font-size:1rem;color:#fff;margin-bottom:.25rem;}
+    .course-card-info .course-desc{font-size:.85rem;color:var(--muted);line-height:1.4;}
+    /* Grade badges */
+    .grade-badge{display:inline-flex;align-items:center;padding:.25rem .75rem;border-radius:999px;font-size:.8rem;font-weight:700;}
+    .grade-a{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);}
+    .grade-b{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.25);}
+    .grade-c{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
+    .grade-none{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border);}
+    .styled-file-input::file-selector-button{padding:.45rem 1rem;margin-right:.85rem;background:rgba(37,99,235,.15);color:#3b82f6;border:1px solid rgba(37,99,235,.3);border-radius:8px;font-family:'Manrope',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s;}
+    .styled-file-input::file-selector-button:hover{background:rgba(37,99,235,.25);}
+    .styled-file-input::-webkit-file-upload-button{padding:.45rem 1rem;margin-right:.85rem;background:rgba(37,99,235,.15);color:#3b82f6;border:1px solid rgba(37,99,235,.3);border-radius:8px;font-family:'Manrope',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;}
+    .btn-add{padding:.55rem 1.1rem;background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);border-radius:8px;font-family:'Manrope',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s;}
+    .btn-add:hover{background:rgba(16,185,129,.2);}
+    .att-btn{padding:.3rem .65rem;border-radius:6px;font-size:.75rem;font-weight:600;font-family:'Manrope',sans-serif;cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--muted);margin-right:.3rem;transition:all .15s;}
+    .att-btn:hover{color:#fff;}
+    .att-present:hover{background:rgba(16,185,129,.2);color:#10b981;border-color:rgba(16,185,129,.4);}
+    .att-late:hover{background:rgba(245,158,11,.2);color:#f59e0b;border-color:rgba(245,158,11,.4);}
+    .att-absent:hover{background:rgba(239,68,68,.2);color:#ef4444;border-color:rgba(239,68,68,.4);}
+    /* Students table */
+    .students-table{width:100%;border-collapse:collapse;}
+    .students-table th{padding:.75rem 1rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);}
+    .students-table td{padding:.85rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.875rem;color:#fff;}
+    .students-table tr:last-child td{border-bottom:none;}
+    .student-row{cursor:pointer;transition:background .15s;}
+    .student-row:hover td{background:rgba(255,255,255,.03);}
+    /* Assignment cards */
+    .assignment-group{margin-bottom:1.5rem;}
+    .assignment-group-title{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;}
+    .assignment-card{background:var(--ink);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:.75rem;transition:all .2s;}
+    .assignment-card:hover{border-color:rgba(37,99,235,.3);}
+    .assignment-card-title{font-weight:700;font-size:.95rem;color:#fff;margin-bottom:.25rem;}
+    .assignment-card-desc{font-size:.85rem;color:var(--muted);margin-bottom:.75rem;line-height:1.4;}
+    .assignment-meta{display:flex;flex-wrap:wrap;gap:.5rem .75rem;font-size:.8rem;color:var(--muted);margin-bottom:.75rem;}
+    .assignment-meta span{display:flex;align-items:center;gap:.3rem;}
+    .assignment-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+    /* Empty state */
+    .empty-state{text-align:center;padding:3rem 1rem;color:var(--muted);}
+    .empty-state .empty-icon{font-size:2.5rem;margin-bottom:.75rem;}
+    .empty-state p{font-size:.9rem;}
+
+    </style>
+    <link rel="stylesheet" href="professional-ui.css">
+    <link rel="stylesheet" href="theme-light.css">
+    <script defer src="professional-ui.js"></script>
+    <link rel="stylesheet" href="ui-system.css">
+</head>
+<body>
+<button class="mobile-toggle" id="mobileToggle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<div class="app">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <img src="assets/logo-code-mark.png" alt="IT School">
+            <span>IT&nbsp;<b>School</b></span>
+        </div>
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar" id="teacherAvatar">ВТ</div>
+            <div class="sidebar-pname" id="teacherName">Викладач</div>
+            <span class="sidebar-prole role-teacher">Викладач</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Навчання</div>
+            <button class="nav-item active" onclick="showSection('overview')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Огляд
+            </button>
+            <button class="nav-item" onclick="showSection('courses')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Мої курси
+            </button>
+            <button class="nav-item" onclick="showSection('students')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Студенти
+            </button>
+            <button class="nav-item" onclick="showSection('assignments')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Завдання
+            </button>
+            <button class="nav-item" onclick="showSection('grades')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Оцінки
+            </button>
+            <button class="nav-item" onclick="showSection('attendance')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Відвідуваність
+            </button>
+            <button class="nav-item" onclick="showSection('inbox')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                Повідомлення
+            </button>
+            <div class="nav-section-label" style="margin-top:.75rem;">Навігація</div>
+            <a href="courses.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Каталог курсів
+            </a>
+            <a href="schedule.html">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Розклад
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="#" onclick="logout(); return false;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Вийти
+            </a>
+        </div>
+    </aside>
+
+    <main class="main" id="mainContent">
+        <!-- Overview -->
+        <div class="section-card active" id="section-overview">
+            <div class="section-header">
+                <div class="section-title">Огляд</div>
+            </div>
+            <div class="stats-grid" id="teacherStatsGrid">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+            <div class="overview-panels" id="overviewPanels" style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-top:.5rem;">
+                <div class="ov-panel">
+                    <div class="ov-panel-head">
+                        <span>Мої курси</span>
+                        <a onclick="showSection('courses')" style="font-size:.78rem;color:#3b82f6;cursor:pointer;">Усі →</a>
+                    </div>
+                    <div id="ovCoursesList"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+                <div class="ov-panel">
+                    <div class="ov-panel-head">
+                        <span>Завдання на перевірці</span>
+                        <a onclick="showSection('assignments')" style="font-size:.78rem;color:#3b82f6;cursor:pointer;">Усі →</a>
+                    </div>
+                    <div id="ovPendingList"><div class="loading"><div class="spinner"></div></div></div>
+                </div>
+            </div>
+        </div>
+        <!-- Courses -->
+        <div class="section-card" id="section-courses">
+            <div class="section-header">
+                <div class="section-title">Мої курси</div>
+                <!-- Course creation is admin-only (RBAC). Teachers manage topics/materials/assignments within their courses. -->
+            </div>
+            <div id="teacherCoursesList"><div class="loading"><div class="spinner"></div><p>Завантаження...</p></div></div>
+        </div>
+        <!-- Students -->
+        <div class="section-card" id="section-students">
+            <div class="section-header">
+                <div class="section-title">Студенти</div>
+                <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+                    <select id="studentsCourseFilter" class="form-input" style="max-width:220px;" onchange="filterStudentsByCourse(this.value)"><option value="all">Всі курси</option></select>
+                </div>
+            </div>
+            <div id="studentsContent"><div class="loading"><div class="spinner"></div><p>Завантаження...</p></div></div>
+        </div>
+        <!-- Assignments -->
+        <div class="section-card" id="section-assignments">
+            <div class="section-header">
+                <div class="section-title">Завдання</div>
+                <button class="btn btn-primary" onclick="openAddAssignmentModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Нове завдання
+                </button>
+            </div>
+            <div id="assignmentsContent"><div class="loading"><div class="spinner"></div><p>Завантаження...</p></div></div>
+        </div>
+        <!-- Grades -->
+        <div class="section-card" id="section-grades">
+            <div class="section-header">
+                <div class="section-title">Оцінки</div>
+                <select id="gradesCourseSelect" class="form-input" style="max-width:220px;" onchange="loadGradesForCourse(this.value)"><option value="">Оберіть курс</option></select>
+            </div>
+            <div id="gradesContent"><div class="loading"><div class="spinner"></div><p>Оберіть курс для перегляду оцінок</p></div></div>
+        </div>
+        <!-- Attendance -->
+        <div class="section-card" id="section-attendance">
+            <div class="section-header">
+                <div class="section-title">Відвідуваність</div>
+                <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+                    <select id="attendanceCourseSelect" class="form-input" style="max-width:200px;" onchange="loadAttendance()"><option value="">Оберіть курс</option></select>
+                    <input type="date" id="attendanceDateSelect" class="form-input" style="max-width:160px;" onchange="loadAttendance()">
+                </div>
+            </div>
+            <div id="attendanceContent"><div style="color:var(--muted);padding:1rem;">Оберіть курс та дату</div></div>
+        </div>
+        <!-- Inbox -->
+        <div class="section-card" id="section-inbox">
+            <div class="section-header">
+                <div class="section-title">Повідомлення студентів</div>
+            </div>
+            <div class="inbox-list" id="inboxList"><div class="loading"><div class="spinner"></div><p>Завантаження...</p></div></div>
+        </div>
+    </main>
+</div>
+
+    <script>
+        (function(){
+            var toggle = document.getElementById('mobileToggle');
+            var sidebar = document.getElementById('sidebar');
+            if(toggle) toggle.addEventListener('click', function(){ sidebar.classList.toggle('active'); });
+            document.addEventListener('click', function(e){
+                if(window.innerWidth <= 1024 && sidebar && !sidebar.contains(e.target) && toggle && !toggle.contains(e.target))
+                    sidebar.classList.remove('active');
+            });
+        })();
+    </script>
+    <script src="config.js"></script>
+    <script src="mockData.js"></script>
+    <script src="api.js"></script>
+    <script>
+        let currentTeacher = null;
+        let currentTeacherStudents = [];
+        let pendingCount = 0;
+        let teacherCourses = [];
+        let currentInfoCourse = null;
+        let moduleTestQuestionDraft = [];
+        let assignmentTestQuestionDraft = [];
+        let currentSubmissionsAssignmentId = null;
+        let currentSubmissionsTitle = '';
+        let currentReportType = null;
+        let currentReportTitle = 'report';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!requireAuth()) return;
+            showDemoBanner();
+            currentTeacher = await fetchCurrentUser();
+            if (!currentTeacher || currentTeacher.role !== 'teacher') {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            const initials = currentTeacher.full_name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2);
+            const teacherAvatar = document.getElementById('teacherAvatar');
+            teacherAvatar.textContent = initials;
+            teacherAvatar.title = 'Відкрити профіль';
+            teacherAvatar.addEventListener('click', openTeacherProfileModal);
+            document.getElementById('teacherName').textContent = currentTeacher.full_name;
+            loadOverview();
+            // Pre-count pending inbox
+            checkInboxBadge();
+            await loadTeacherCoursesForFilter();
+            await loadInfoCourseSelect();
+            await loadPublicNotifications();
+        });
+
+        // ── Nav ─────────────────────────────────────────────────────
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const id = link.getAttribute('href').substring(1);
+                document.querySelectorAll('.sidebar-nav .nav-item').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                if (id === 'assignments') loadAssignments();
+                if (id === 'info') loadCourseInfoEditor();
+                if (id === 'notifications') loadPublicNotifications();
+                if (id === 'inbox')      loadInbox();
+                if (id === 'students')   loadStudents();
+                if (id === 'reports')    loadReport('attendance');
+            });
+        });
+
+        // ── Overview Stats ──────────────────────────────────────────
+        // ── Section Navigation ──────────────────────────────────────────
+        function showSection(id) {
+            document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById('section-' + id);
+            if (target) target.classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(b => {
+                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + id + "'")) {
+                    b.classList.add('active');
+                }
+            });
+            if (id === 'courses')    loadTeacherCourses();
+            if (id === 'assignments') loadAssignments();
+            if (id === 'students')   loadStudents();
+            if (id === 'inbox')      loadInbox();
+            if (id === 'reports')    loadReport('attendance');
+            if (id === 'info')       loadCourseInfoEditor();
+            if (id === 'notifications') loadPublicNotifications();
+            if (id === 'grades' || id === 'attendance' || id === 'materials') populateCourseSelects();
+        }
+
+        // ── Teacher Courses List ─────────────────────────────────────
+        async function loadTeacherCourses() {
+            const list = document.getElementById('teacherCoursesList');
+            if (!list) return;
+            list.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження...</p></div>';
+            let courses;
+            try {
+                courses = await apiGet('/api/teacher/courses') || [];
+                teacherCourses = courses;
+            } catch(e) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Помилка завантаження: ${e.message}</p></div>`;
+                return;
+            }
+            if (!courses.length) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>У вас ще немає призначених курсів.<br>Курси призначає адміністратор.</p></div>';
+                return;
+            }
+            const colors = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#06b6d4','#ec4899'];
+            list.innerHTML = `<div style="display:grid;gap:1rem;">` + courses.map((c,i) => {
+                const accent = colors[i % colors.length];
+                return `
+                <div class="course-card-rich">
+                    <div class="course-accent" style="background:${accent};"></div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="course-card-title">${c.title || 'Без назви'}</div>
+                        <div class="course-card-desc">${c.description || 'Опис відсутній'}</div>
+                        <div class="course-card-stats">
+                            <span>${c.students_count ?? 0} студентів</span>
+                            <span>${c.groups_count ?? 0} груп</span>
+                            <span>${c.assignments_count ?? 0} завдань</span>
+                        </div>
+                    </div>
+                    <div class="course-card-actions">
+                        <button class="cc-btn primary" onclick="window.location.href='course-view.html?id=${c.id}'">Відкрити</button>
+                        <button class="cc-btn" onclick="openEditCourseModal(${c.id})">Редагувати</button>
+                    </div>
+                </div>`;
+            }).join('') + `</div>`;
+        }
+
+        async function loadOverview() {
+            const grid = document.getElementById('teacherStatsGrid');
+            let stats;
+            try {
+                stats = await apiGet('/api/teacher/stats');
+            } catch(e) {
+                grid.innerHTML = `<div style="color:var(--error);padding:1rem;">Помилка завантаження: ${e.message}</div>`;
+                return;
+            }
+            if (!stats) {
+                grid.innerHTML = '<div style="color:var(--muted);padding:1rem;">Немає даних</div>';
+                return;
+            }
+            const icons = {
+                students:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+                groups:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>',
+                pending:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+                overdue:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+                questions:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+                attendance:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+            };
+            const cards = [
+                { icon:icons.students,   value: stats.total_students,       label:'Студентів',           color:'rgba(37,99,235,.12)',  vcolor:'#3b82f6' },
+                { icon:icons.groups,     value: stats.total_groups,         label:'Груп',                color:'rgba(16,185,129,.12)', vcolor:'#10b981' },
+                { icon:icons.pending,    value: stats.pending_assignments,  label:'На перевірці',        color:'rgba(245,158,11,.12)', vcolor:'#f59e0b' },
+                { icon:icons.overdue,    value: stats.overdue_assignments,  label:'Прострочено',         color:'rgba(239,68,68,.12)',  vcolor:'#ef4444' },
+                { icon:icons.questions,  value: stats.pending_questions,    label:'Нових питань',        color:'rgba(139,92,246,.12)', vcolor:'#8b5cf6' },
+                { icon:icons.attendance, value: (stats.avg_attendance||0)+'%', label:'Відвідуваність',   color:'rgba(6,182,212,.12)',  vcolor:'#06b6d4' },
+            ];
+            grid.innerHTML = cards.map(c=>`
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:${c.color}">${c.icon}</div>
+                    <div class="stat-value" style="color:${c.vcolor}">${c.value}</div>
+                    <div class="stat-label">${c.label}</div>
+                </div>`).join('');
+
+            // Populate overview panels
+            loadOverviewPanels();
+        }
+
+        async function loadOverviewPanels() {
+            // Courses
+            try {
+                const courses = await apiGet('/api/teacher/courses') || [];
+                const cl = document.getElementById('ovCoursesList');
+                cl.innerHTML = courses.length
+                    ? courses.slice(0,5).map(c=>`<div class="ov-mini-item"><span class="ov-mini-title">${c.title}</span><span class="ov-mini-meta">${c.students_count||0} студ.</span></div>`).join('')
+                    : '<div style="color:var(--muted);font-size:.85rem;padding:.5rem 0;">Курсів ще немає</div>';
+            } catch(e) {}
+            // Pending assignments
+            try {
+                const asgs = await apiGet('/api/assignments') || [];
+                const pl = document.getElementById('ovPendingList');
+                const now = new Date();
+                const sorted = asgs.filter(a=>a.due_date).sort((a,b)=>new Date(a.due_date)-new Date(b.due_date)).slice(0,5);
+                pl.innerHTML = sorted.length
+                    ? sorted.map(a=>{
+                        const overdue = new Date(a.due_date) < now;
+                        return `<div class="ov-mini-item"><span class="ov-mini-title">${a.title}</span><span class="ov-mini-meta" style="color:${overdue?'#ef4444':'var(--muted)'}">${new Date(a.due_date).toLocaleDateString('uk-UA',{day:'numeric',month:'short'})}</span></div>`;
+                    }).join('')
+                    : '<div style="color:var(--muted);font-size:.85rem;padding:.5rem 0;">Завдань немає</div>';
+            } catch(e) {}
+        }
+
+        // ── Inbox ───────────────────────────────────────────────────
+        async function loadInbox() {
+            const list = document.getElementById('inboxList');
+            list.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження...</p></div>';
+            let messages;
+            try {
+                messages = await apiGet('/api/messages/inbox');
+            } catch(e) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Помилка завантаження: ${e.message}</p></div>`;
+                return;
+            }
+            if (!messages || messages.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Немає нових питань від студентів</p></div>';
+                return;
+            }
+            pendingCount = messages.filter(m => m.status === 'pending').length;
+            updateInboxBadge();
+            list.innerHTML = messages.map(msg => {
+                const date = msg.timestamp ? new Date(msg.timestamp).toLocaleString('uk-UA', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+                const senderName = (typeof escapeHtml==='function'?escapeHtml:(x=>x))(msg.sender_name || 'Студент');
+                const initials = senderName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                const telegramNote = msg.telegram_id ? 'Telegram підключено — відповідь прийде в бот' : 'Telegram не підключено';
+                const replyHtml = msg.reply ? `<div class="mail-reply-preview"><strong>Ваша відповідь:</strong> ${(typeof escapeHtml==='function'?escapeHtml:(x=>x))(msg.reply)}</div>` : '';
+                return `
+                <div class="mail-item ${msg.status}" id="mail-${msg.id}">
+                    <div class="mail-header">
+                        <div class="mail-sender">
+                            <div class="mail-avatar">${initials}</div>
+                            <div>
+                                <div class="mail-sender-name">${senderName}</div>
+                                <div class="mail-sender-email">${(typeof escapeHtml==='function'?escapeHtml:(x=>x))(msg.sender_email)}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:.75rem;">
+                            <span class="mail-time">${date}</span>
+                            <span class="mail-status ${msg.status}">${msg.status === 'pending' ? ' Очікує' : 'Відповідь надіслано'}</span>
+                        </div>
+                    </div>
+                    <div class="mail-body">${(typeof escapeHtml==='function'?escapeHtml:(x=>x))(msg.content)}</div>
+                    ${replyHtml}
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-size:.8rem;color:var(--muted);">${telegramNote}</span>
+                        ${msg.status === 'pending' ? `<button class="btn-reply-open" onclick="toggleReplyForm(${msg.id})"> Відповісти</button>` : ''}
+                    </div>
+                    <div class="reply-form" id="replyForm-${msg.id}">
+                        <textarea class="reply-textarea" id="replyText-${msg.id}" placeholder="Напишіть відповідь студенту..." rows="4"></textarea>
+                        <div class="reply-actions">
+                            <button class="btn-reply" onclick="sendReply(${msg.id}, ${msg.telegram_id})"> Надіслати відповідь</button>
+                            <button onclick="toggleReplyForm(${msg.id})" style="padding:.75rem 1rem;border:1px solid var(--border);border-radius:10px;background:var(--ink-card);color:var(--text-primary);cursor:pointer;">Скасувати</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadPublicNotifications() {
+            const list = document.getElementById('publicNotificationsList');
+            if (!list) return;
+            list.innerHTML = '<div class="loader"> Завантаження...</div>';
+            try {
+                const notifications = await apiGet('/api/messages/public') || [];
+                if (!notifications.length) {
+                    list.innerHTML = '<div class="loader" style="color:var(--muted);">Поки що немає публічних сповіщень</div>';
+                    return;
+                }
+                list.innerHTML = notifications.map(note => `
+                    <div class="notification-card">
+                        <div class="notification-meta">
+                            <span>${note.sender_name || 'Викладач'}</span>
+                            <span>${new Date(note.timestamp).toLocaleString('uk-UA', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        <div class="notification-title">${note.title}</div>
+                        <div class="notification-message">${note.message}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = '<div class="loader" style="color:var(--error);">Не вдалося завантажити сповіщення</div>';
+            }
+        }
+
+        async function sendBroadcast() {
+            const title = document.getElementById('broadcastTitle').value.trim();
+            const targetRole = document.getElementById('broadcastRole').value || 'student';
+            const message = document.getElementById('broadcastMessage').value.trim();
+            if (!title || !message) {
+                showToast('Введіть заголовок і текст сповіщення', 'warning');
+                return;
+            }
+            try {
+                await apiPost('/api/messages/public', {
+                    title,
+                    message,
+                    target_role: targetRole,
+                });
+                document.getElementById('broadcastTitle').value = '';
+                document.getElementById('broadcastMessage').value = '';
+                showToast('Сповіщення надіслано', 'success');
+                await loadPublicNotifications();
+            } catch (error) {
+                showToast(`Помилка: ${error.message}`, 'error');
+            }
+        }
+
+        function toggleReplyForm(id) {
+            const form = document.getElementById(`replyForm-${id}`);
+            form.classList.toggle('open');
+        }
+
+        async function sendReply(messageId, telegramId) {
+            const text = document.getElementById(`replyText-${messageId}`).value.trim();
+            if (!text) { showToast('Введіть текст відповіді', 'warning'); return; }
+            await replyToMessage(messageId, text);
+            const telegramMsg = telegramId ? ' та надіслано в Telegram студенту!' : ' (Telegram не підключений)';
+            showToast('Відповідь збережена' + telegramMsg, 'success');
+            await loadInbox();
+        }
+
+        async function checkInboxBadge() {
+            const messages = await apiGet('/api/messages/inbox');
+            if (!messages) return;
+            pendingCount = messages.filter(m => m.status === 'pending').length;
+            updateInboxBadge();
+        }
+
+        function updateInboxBadge() {
+            const link = document.getElementById('inboxNavLink');
+            const existingBadge = link.querySelector('.inbox-badge');
+            if (existingBadge) existingBadge.remove();
+            if (pendingCount > 0) {
+                link.innerHTML = ` Інбокс питань <span class="inbox-badge">${pendingCount}</span>`;
+            }
+        }
+
+        // ── Students ────────────────────────────────────────────────
+        async function loadStudents() {
+            const container = document.getElementById('studentsContent');
+            container.innerHTML = '<div class="loader"> Завантаження...</div>';
+            const students = await apiGet('/api/teacher/students');
+            if (!students || students.length === 0) {
+                container.innerHTML = '<div class="loader">Студентів не знайдено</div>';
+                return;
+            }
+            let preparedStudents = students;
+            if (!students.some(s => Array.isArray(s.course_ids))) {
+                try {
+                    const groups = await apiGet('/api/groups') || [];
+                    const byGroupName = new Map(groups.map(g => [g.name, g.course_ids || []]));
+                    preparedStudents = students.map(s => ({
+                        ...s,
+                        course_ids: byGroupName.get(s.group) || []
+                    }));
+                } catch (e) {
+                    preparedStudents = students.map(s => ({ ...s, course_ids: [] }));
+                }
+            }
+            const selectedCourse = document.getElementById('studentsCourseFilter')?.value || 'all';
+            const filteredStudents = selectedCourse === 'all'
+                ? preparedStudents
+                : preparedStudents.filter(s => Array.isArray(s.course_ids) && s.course_ids.includes(parseInt(selectedCourse, 10)));
+
+            if (!filteredStudents.length) {
+                container.innerHTML = '<div class="loader">Для обраного курсу студентів не знайдено</div>';
+                return;
+            }
+
+            currentTeacherStudents = filteredStudents;
+            const gradeClass = g => (!g || g === 0) ? 'grade-none' : g >= 90 ? 'grade-a' : g >= 70 ? 'grade-b' : 'grade-c';
+            container.innerHTML = `
+                <div class="table-scroll"><table class="students-table">
+                    <thead>
+                        <tr>
+                            <th>Студент</th>
+                            <th>Email</th>
+                            <th>Група</th>
+                            <th>Telegram</th>
+                            <th>Середня оцінка</th>
+                            <th>Відвідуваність</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredStudents.map(s => `
+                            <tr class="student-row" onclick="openStudentDetail(${s.id})">
+                                <td><strong>${escapeHtml(s.full_name)}</strong></td>
+                                <td style="color:var(--muted);font-size:.875rem;">${escapeHtml(s.email)}</td>
+                                <td><span class="badge-tag badge-muted">${escapeHtml(s.group)}</span></td>
+                                <td>${s.telegram_linked ? '<span class="badge-tag badge-blue">Підключено</span>' : '<span style="color:var(--muted);">—</span>'}</td>
+                                <td><span class="grade-badge ${gradeClass(s.avg_grade)}">${s.avg_grade}%</span></td>
+                                <td><span class="grade-badge ${gradeClass(s.attendance)}">${s.attendance}%</span></td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>`;
+        }
+
+        function openStudentDetail(studentId) {
+            const student = currentTeacherStudents.find(s => s.id === studentId);
+            if (!student) return;
+            const modal = document.getElementById('genericModal');
+            const panel = document.getElementById('genericModalPanel');
+            panel.innerHTML = `
+                <div class="modal-head">
+                    <div>
+                        <h2 style="font-size:1.4rem;font-weight:800;">${student.full_name}</h2>
+                        <p style="color:var(--muted);margin-top:.25rem;">${student.group || '—'}</p>
+                    </div>
+                    <button class="modal-close" onclick="closeGenericModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="stats-grid" style="margin-bottom:1rem;">
+                        <div class="stat-card"><div class="stat-value">${student.avg_grade || 0}%</div><div class="stat-label">Середня оцінка</div></div>
+                        <div class="stat-card"><div class="stat-value">${student.attendance || 0}%</div><div class="stat-label">Відвідуваність</div></div>
+                        <div class="stat-card"><div class="stat-value">${student.telegram_linked ? 'Так' : 'Ні'}</div><div class="stat-label">Telegram</div></div>
+                    </div>
+                    <div class="editor-grid">
+                        <div><strong>Email:</strong> ${student.email}</div>
+                        <div><strong>Група:</strong> ${student.group || '—'}</div>
+                        <div><strong>Студент ID:</strong> ${student.id}</div>
+                        <div><strong>Зв'язок Telegram:</strong> ${student.telegram_linked ? 'Підключено' : 'Не підключено'}</div>
+                    </div>
+                </div>
+            `;
+            modal.classList.add('open');
+        }
+
+        function openTeacherProfileModal() {
+            if (!currentTeacher) return;
+            const modal = document.getElementById('genericModal');
+            const panel = document.getElementById('genericModalPanel');
+            panel.innerHTML = `
+                <div class="modal-head">
+                    <div>
+                        <h2 style="font-size:1.4rem;font-weight:800;">Мій профіль</h2>
+                        <p style="color:var(--muted);margin-top:.25rem;">Актуальна інформація про викладача</p>
+                    </div>
+                    <button class="modal-close" onclick="closeGenericModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="editor-grid">
+                        <div><strong>ПІБ:</strong> ${currentTeacher.full_name}</div>
+                        <div><strong>Email:</strong> ${currentTeacher.email}</div>
+                        <div><strong>Телефон:</strong> ${currentTeacher.phone || '—'}</div>
+                        <div><strong>Telegram:</strong> ${currentTeacher.telegram_id ? 'Підключено' : 'Не підключено'}</div>
+                    </div>
+                    <div style="margin-top:1rem;color:rgba(255,255,255,.6);line-height:1.6;">Тут показано тільки службову інформацію про викладача.</div>
+                </div>
+            `;
+            modal.classList.add('open');
+        }
+
+        function closeGenericModal() {
+            document.getElementById('genericModal')?.classList.remove('open');
+        }
+
+        async function loadTeacherCoursesForFilter() {
+            const select = document.getElementById('studentsCourseFilter');
+            if (!select) return;
+            try {
+                teacherCourses = await apiGet('/api/teacher/courses') || [];
+                select.innerHTML = '<option value="all">Усі курси</option>' + teacherCourses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+            } catch (e) {
+                console.warn('Cannot load teacher courses for filter', e);
+                select.innerHTML = '<option value="all">Усі курси</option>';
+            }
+        }
+
+        async function loadInfoCourseSelect() {
+            const select = document.getElementById('infoCourseSelect');
+            if (!select) return;
+            try {
+                if (!teacherCourses.length) {
+                    teacherCourses = await apiGet('/api/teacher/courses') || [];
+                }
+                select.innerHTML = '<option value="">Оберіть курс</option>' + teacherCourses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+                if (!currentInfoCourse && teacherCourses.length) {
+                    currentInfoCourse = teacherCourses[0].id;
+                    select.value = String(currentInfoCourse);
+                }
+            } catch (error) {
+                select.innerHTML = '<option value="">Немає курсів</option>';
+            }
+        }
+
+        function getStoredCourseAssets(courseId) {
+            try {
+                const raw = localStorage.getItem('teacher_course_assets') || '{}';
+                const parsed = JSON.parse(raw);
+                return parsed[String(courseId)] || { materials: [], presentations: [], tests: [] };
+            } catch (_error) {
+                return { materials: [], presentations: [], tests: [] };
+            }
+        }
+
+        function setStoredCourseAssets(courseId, assets) {
+            const raw = localStorage.getItem('teacher_course_assets') || '{}';
+            const parsed = JSON.parse(raw);
+            parsed[String(courseId)] = assets;
+            localStorage.setItem('teacher_course_assets', JSON.stringify(parsed));
+        }
+
+        function getStoredAssignmentEnhancements() {
+            try {
+                return JSON.parse(localStorage.getItem('teacher_assignment_enhancements') || '{}');
+            } catch (_error) {
+                return {};
+            }
+        }
+
+        function setStoredAssignmentEnhancements(data) {
+            localStorage.setItem('teacher_assignment_enhancements', JSON.stringify(data));
+        }
+
+        function getAssignmentEnhancement(assignmentId) {
+            const all = getStoredAssignmentEnhancements();
+            return all[String(assignmentId)] || { files: [], tests: [] };
+        }
+
+        function saveAssignmentEnhancement(assignmentId, payload) {
+            const all = getStoredAssignmentEnhancements();
+            all[String(assignmentId)] = payload;
+            setStoredAssignmentEnhancements(all);
+        }
+
+        function removeAssignmentEnhancement(assignmentId) {
+            const all = getStoredAssignmentEnhancements();
+            delete all[String(assignmentId)];
+            setStoredAssignmentEnhancements(all);
+        }
+
+        function getTestQuestionsCount(testLike) {
+            if (!testLike) return 0;
+            if (Array.isArray(testLike.questions)) return testLike.questions.length;
+            return testLike.question ? 1 : 0;
+        }
+
+        function renderModuleQuestionDraftList() {
+            const container = document.getElementById('moduleQuestionDraftList');
+            if (!container) return;
+            if (!moduleTestQuestionDraft.length) {
+                container.innerHTML = '<div style="color:var(--muted);font-size:.9rem;">Питання ще не додані</div>';
+                return;
+            }
+            container.innerHTML = moduleTestQuestionDraft.map((q, index) => `
+                <div class="test-item">
+                    <div>
+                        <strong>Питання ${index + 1}</strong>
+                        <div style="color:rgba(255,255,255,.6);font-size:.9rem;">${q.question}</div>
+                        <div style="color:var(--muted);font-size:.8rem;">${q.options.join(', ')} | Правильно: ${q.correct}</div>
+                    </div>
+                    <button class="btn-reply-open" onclick="removeModuleQuestionDraft(${index})">Видалити</button>
+                </div>
+            `).join('');
+        }
+
+        function addModuleQuestionDraft() {
+            const question = document.getElementById('testQuestion')?.value.trim();
+            const options = (document.getElementById('testOptions')?.value || '').split(',').map(item => item.trim()).filter(Boolean);
+            const correct = document.getElementById('testCorrect')?.value.trim();
+            if (!question || options.length < 2 || !correct) {
+                showToast('Заповніть питання, мінімум 2 варіанти і правильну відповідь', 'warning');
+                return;
+            }
+            moduleTestQuestionDraft.push({ question, options, correct });
+            document.getElementById('testQuestion').value = '';
+            document.getElementById('testOptions').value = '';
+            document.getElementById('testCorrect').value = '';
+            renderModuleQuestionDraftList();
+        }
+
+        function removeModuleQuestionDraft(index) {
+            moduleTestQuestionDraft.splice(index, 1);
+            renderModuleQuestionDraftList();
+        }
+
+        function renderAssignmentQuestionDraftList() {
+            const container = document.getElementById('assignmentQuestionDraftList');
+            if (!container) return;
+            if (!assignmentTestQuestionDraft.length) {
+                container.innerHTML = '<div style="color:var(--muted);font-size:.9rem;">Питання для тесту ще не додані</div>';
+                return;
+            }
+            container.innerHTML = assignmentTestQuestionDraft.map((q, index) => `
+                <div class="test-item">
+                    <div>
+                        <strong>Питання ${index + 1}</strong>
+                        <div style="color:rgba(255,255,255,.6);font-size:.9rem;">${q.question}</div>
+                        <div style="color:var(--muted);font-size:.8rem;">${q.options.join(', ')} | Правильно: ${q.correct}</div>
+                    </div>
+                    <button type="button" class="btn-reply-open" onclick="removeAssignmentQuestionDraft(${index})">Видалити</button>
+                </div>
+            `).join('');
+        }
+
+        function addAssignmentQuestionDraft() {
+            const question = document.getElementById('assignmentTestQuestion')?.value.trim();
+            const options = (document.getElementById('assignmentTestOptions')?.value || '').split(',').map(item => item.trim()).filter(Boolean);
+            const correct = document.getElementById('assignmentTestCorrect')?.value.trim();
+            if (!question || options.length < 2 || !correct) {
+                showToast('Заповніть питання, мінімум 2 варіанти і правильну відповідь', 'warning');
+                return;
+            }
+            assignmentTestQuestionDraft.push({ question, options, correct });
+            document.getElementById('assignmentTestQuestion').value = '';
+            document.getElementById('assignmentTestOptions').value = '';
+            document.getElementById('assignmentTestCorrect').value = '';
+            renderAssignmentQuestionDraftList();
+        }
+
+        function removeAssignmentQuestionDraft(index) {
+            assignmentTestQuestionDraft.splice(index, 1);
+            renderAssignmentQuestionDraftList();
+        }
+
+        async function loadCourseInfoEditor() {
+            const container = document.getElementById('infoContent');
+            const select = document.getElementById('infoCourseSelect');
+            if (!container || !select) return;
+            const courseId = parseInt(select.value || currentInfoCourse || '', 10);
+            if (!courseId) {
+                container.innerHTML = '<div class="loader">Оберіть курс для редагування</div>';
+                return;
+            }
+            currentInfoCourse = courseId;
+            moduleTestQuestionDraft = [];
+            try {
+                const course = (await apiGet('/api/courses')).find(item => item.id === courseId) || { id: courseId, title: '', description: '' };
+                const topics = await apiGet(`/api/courses/${courseId}/topics`) || [];
+                const assets = getStoredCourseAssets(courseId);
+                container.innerHTML = `
+                    <div class="editor-grid">
+                        <div>
+                            <label class="form-label">Назва курсу</label>
+                            <input id="courseInfoTitle" class="form-input" value="${course.title || ''}">
+                        </div>
+                        <div>
+                            <label class="form-label">Оновити опис</label>
+                            <input id="courseInfoDescription" class="form-input" value="${course.description || ''}" placeholder="Короткий опис курсу">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+                        <button class="btn-add" onclick="saveCourseInfo(${courseId})"> Зберегти курс</button>
+                        <button class="btn-add" style="background:linear-gradient(135deg,#0f766e,#14b8a6);" onclick="openTopicCreateModal(${courseId})"> Нова тема</button>
+                    </div>
+                    <div>
+                        <div style="font-weight:700;margin-bottom:.5rem;">Теми курсу</div>
+                        <div id="topicList" class="topic-list">
+                            ${topics.length ? topics.map(topic => `
+                                <div class="topic-item">
+                                    <div>
+                                        <strong>${topic.title}</strong>
+                                        <div style="font-size:.8rem;color:var(--muted);">${topic.discipline_name || '—'}</div>
+                                    </div>
+                                    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                                        <button class="btn-reply-open" onclick="openTopicEditModal(${topic.id}, ${JSON.stringify(topic.title)}, ${topic.discipline_id ?? 'null'}, ${JSON.stringify(topic.discipline_name || '')})">Редагувати</button>
+                                        <button class="btn-reply-open" style="border-color:rgba(239,68,68,.2);color:var(--error);" onclick="deleteTopic(${topic.id})">Видалити</button>
+                                    </div>
+                                </div>
+                            `).join('') : '<div class="loader">Поки що немає тем</div>'}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:700;margin-bottom:.5rem;">Текстові матеріали</div>
+                        <div class="editor-grid">
+                            <div>
+                                <label class="form-label">Назва матеріалу</label>
+                                <input id="materialTitle" class="form-input" placeholder="Наприклад: Конспект лекції 1">
+                            </div>
+                            <div>
+                                <label class="form-label">Текст / посилання</label>
+                                <input id="materialBody" class="form-input" placeholder="Текст або URL до матеріалу">
+                            </div>
+                        </div>
+                        <button class="btn-add" style="margin-top:.75rem;" onclick="saveCourseAsset(${courseId}, 'materials')"> Додати матеріал</button>
+                        <div id="materialList" class="asset-list">
+                            ${assets.materials.length ? assets.materials.map((item, index) => `
+                                <div class="asset-item"><div><strong>${item.title}</strong><span style="color:var(--muted);font-size:.9rem;">${item.body}</span></div><button class="btn-reply-open" onclick="removeCourseAsset(${courseId}, 'materials', ${index})">Видалити</button></div>
+                            `).join('') : '<div class="loader">Матеріали ще не додані</div>'}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:700;margin-bottom:.5rem;">Презентації</div>
+                        <div class="editor-grid">
+                            <div>
+                                <label class="form-label">Назва презентації</label>
+                                <input id="presentationTitle" class="form-input" placeholder="Наприклад: Вступ до курсу">
+                            </div>
+                            <div>
+                                <label class="form-label">Файл або посилання</label>
+                                <input id="presentationBody" class="form-input" placeholder="pptx, pdf або URL">
+                            </div>
+                        </div>
+                        <button class="btn-add" style="margin-top:.75rem;" onclick="saveCourseAsset(${courseId}, 'presentations')"> Додати презентацію</button>
+                        <div id="presentationList" class="asset-list">
+                            ${assets.presentations.length ? assets.presentations.map((item, index) => `
+                                <div class="asset-item"><div><strong>${item.title}</strong><span style="color:var(--muted);font-size:.9rem;">${item.body}</span></div><button class="btn-reply-open" onclick="removeCourseAsset(${courseId}, 'presentations', ${index})">Видалити</button></div>
+                            `).join('') : '<div class="loader">Презентації ще не додані</div>'}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-weight:700;margin-bottom:.5rem;">Модульні тести</div>
+                        <div class="editor-grid">
+                            <div>
+                                <label class="form-label">Назва тесту</label>
+                                <input id="testTitle" class="form-input" placeholder="Наприклад: Модуль 1 — HTML/CSS">
+                            </div>
+                        </div>
+                        <div class="editor-grid" style="margin-top:.75rem;">
+                            <div>
+                                <label class="form-label">Питання</label>
+                                <input id="testQuestion" class="form-input" placeholder="Текст питання">
+                            </div>
+                            <div>
+                                <label class="form-label">Варіанти відповіді (через кому)</label>
+                                <input id="testOptions" class="form-input" placeholder="A, B, C, D">
+                            </div>
+                            <div>
+                                <label class="form-label">Правильна відповідь</label>
+                                <input id="testCorrect" class="form-input" placeholder="Наприклад: B">
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.75rem;">
+                            <button class="btn-add" type="button" onclick="addModuleQuestionDraft()"> Додати питання</button>
+                            <button class="btn-add" style="background:linear-gradient(135deg,#4f46e5,#4338ca);" onclick="saveModuleTest(${courseId})"> Зберегти тест</button>
+                        </div>
+                        <div id="moduleQuestionDraftList" class="test-list" style="margin-top:.75rem;"></div>
+                        <div id="testList" class="test-list">
+                            ${assets.tests.length ? assets.tests.map((item, index) => `
+                                <div class="test-item">
+                                    <div>
+                                        <strong>${item.title}</strong>
+                                        <div style="color:var(--muted);font-size:.9rem;">Питань: ${getTestQuestionsCount(item)}</div>
+                                        <div style="color:var(--muted);font-size:.8rem;">${Array.isArray(item.questions) ? (item.questions[0]?.question || '—') : (item.question || '—')}</div>
+                                    </div>
+                                    <button class="btn-reply-open" onclick="removeCourseAsset(${courseId}, 'tests', ${index})">Видалити</button>
+                                </div>
+                            `).join('') : '<div class="loader">Тести ще не створені</div>'}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `<div class="loader">Не вдалося завантажити інформацію: ${error.message}</div>`;
+            }
+            renderModuleQuestionDraftList();
+        }
+
+        async function saveCourseInfo(courseId) {
+            const title = document.getElementById('courseInfoTitle').value.trim();
+            const description = document.getElementById('courseInfoDescription').value.trim();
+            try {
+                await apiPut(`/api/courses/${courseId}`, { title, description });
+                showToast('Інформацію курсу збережено', 'success');
+                teacherCourses = teacherCourses.map(course => course.id === courseId ? { ...course, title, description } : course);
+                await loadInfoCourseSelect();
+                await loadCoursesForAssignment();
+                await loadTeacherCoursesForFilter();
+                await loadCourseInfoEditor();
+            } catch (error) {
+                showToast(`Помилка: ${error.message}`, 'error');
+            }
+        }
+
+        async function openTopicCreateModal(courseId) {
+            const disciplines = (await apiGet('/api/disciplines') || []).filter(item => item.course_id === courseId);
+            const modal = document.getElementById('genericModal');
+            const panel = document.getElementById('genericModalPanel');
+            panel.innerHTML = `
+                <div class="modal-head">
+                    <div><h2 style="font-size:1.4rem;font-weight:800;">Нова тема</h2><p style="color:var(--muted);margin-top:.25rem;">Створення теми для обраного курсу</p></div>
+                    <button class="modal-close" onclick="closeGenericModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="editor-grid">
+                        <div><label class="form-label">Назва теми</label><input id="topicCreateTitle" class="form-input" placeholder="Наприклад: Практика Flexbox"></div>
+                        <div>
+                            <label class="form-label">Дисципліна</label>
+                            <select id="topicCreateDiscipline" class="form-select">
+                                ${disciplines.length ? disciplines.map(item => `<option value="${item.id}">${item.name || item.course_title || 'Дисципліна'}</option>`).join('') : '<option value="">Немає доступних дисциплін</option>'}
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem;">
+                        <button class="btn-reply-open" onclick="closeGenericModal()">Скасувати</button>
+                        <button class="btn-reply" onclick="createTopic(${courseId})">Створити</button>
+                    </div>
+                </div>
+            `;
+            modal.classList.add('open');
+        }
+
+        async function createTopic(courseId) {
+            const title = document.getElementById('topicCreateTitle').value.trim();
+            const disciplineId = parseInt(document.getElementById('topicCreateDiscipline').value, 10);
+            if (!title || Number.isNaN(disciplineId)) {
+                showToast('Заповніть назву теми та дисципліну', 'warning');
+                return;
+            }
+            try {
+                await apiPost(`/api/courses/${courseId}/topics`, { title, discipline_id: disciplineId });
+                closeGenericModal();
+                showToast('Тему створено', 'success');
+                await loadCourseInfoEditor();
+            } catch (error) {
+                showToast(`Помилка: ${error.message}`, 'error');
+            }
+        }
+
+        async function openTopicEditModal(topicId, title, disciplineId, disciplineName) {
+            const disciplines = (await apiGet('/api/disciplines') || []).filter(item => item.course_id === currentInfoCourse);
+            const modal = document.getElementById('genericModal');
+            const panel = document.getElementById('genericModalPanel');
+            panel.innerHTML = `
+                <div class="modal-head">
+                    <div><h2 style="font-size:1.4rem;font-weight:800;">Редагувати тему</h2><p style="color:var(--muted);margin-top:.25rem;">Оновлення назви або дисципліни</p></div>
+                    <button class="modal-close" onclick="closeGenericModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="editor-grid">
+                        <div><label class="form-label">Назва</label><input id="topicEditTitle" class="form-input" value="${title}"></div>
+                        <div>
+                            <label class="form-label">Дисципліна</label>
+                            <select id="topicEditDiscipline" class="form-select">
+                                ${disciplines.length ? disciplines.map(item => `<option value="${item.id}" ${item.id === disciplineId ? 'selected' : ''}>${item.name || item.course_title || 'Дисципліна'}</option>`).join('') : `<option value="${disciplineId || ''}">${disciplineName || 'Дисципліна'}</option>`}
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem;">
+                        <button class="btn-reply-open" onclick="closeGenericModal()">Скасувати</button>
+                        <button class="btn-reply" onclick="saveTopic(${topicId})">Зберегти</button>
+                    </div>
+                </div>
+            `;
+            modal.classList.add('open');
+        }
+
+        async function saveTopic(topicId) {
+            const title = document.getElementById('topicEditTitle').value.trim();
+            const disciplineId = parseInt(document.getElementById('topicEditDiscipline').value, 10);
+            try {
+                const payload = { title };
+                if (!Number.isNaN(disciplineId)) {
+                    payload.discipline_id = disciplineId;
+                }
+                await apiPut(`/api/courses/topics/${topicId}`, payload);
+                closeGenericModal();
+                showToast('Тему оновлено', 'success');
+                await loadCourseInfoEditor();
+            } catch (error) {
+                showToast(`Помилка: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteTopic(topicId) {
+            try {
+                await apiDelete(`/api/courses/topics/${topicId}`);
+                showToast('Тему видалено', 'success');
+                await loadCourseInfoEditor();
+            } catch (error) {
+                showToast(`Помилка: ${error.message}`, 'error');
+            }
+        }
+
+        function getCourseAssetList(courseId, kind) {
+            const assets = getStoredCourseAssets(courseId);
+            return assets[kind] || [];
+        }
+
+        async function saveCourseAsset(courseId, kind) {
+            const titleInput = document.getElementById(kind === 'materials' ? 'materialTitle' : 'presentationTitle');
+            const bodyInput = document.getElementById(kind === 'materials' ? 'materialBody' : 'presentationBody');
+            const title = titleInput.value.trim();
+            const body = bodyInput.value.trim();
+            if (!title || !body) {
+                showToast('Заповніть назву та вміст', 'warning');
+                return;
+            }
+            const assets = getStoredCourseAssets(courseId);
+            assets[kind] = assets[kind] || [];
+            assets[kind].unshift({ title, body, created_at: new Date().toISOString() });
+            setStoredCourseAssets(courseId, assets);
+            titleInput.value = '';
+            bodyInput.value = '';
+            showToast('Матеріал збережено', 'success');
+            await loadCourseInfoEditor();
+        }
+
+        async function removeCourseAsset(courseId, kind, index) {
+            const assets = getStoredCourseAssets(courseId);
+            assets[kind] = assets[kind] || [];
+            assets[kind].splice(index, 1);
+            setStoredCourseAssets(courseId, assets);
+            await loadCourseInfoEditor();
+        }
+
+        async function saveModuleTest(courseId) {
+            const title = document.getElementById('testTitle').value.trim();
+            if (!title) {
+                showToast('Вкажіть назву тесту', 'warning');
+                return;
+            }
+            if (!moduleTestQuestionDraft.length) {
+                const question = document.getElementById('testQuestion').value.trim();
+                const options = document.getElementById('testOptions').value.split(',').map(item => item.trim()).filter(Boolean);
+                const correct = document.getElementById('testCorrect').value.trim();
+                if (question && options.length >= 2 && correct) {
+                    moduleTestQuestionDraft.push({ question, options, correct });
+                }
+            }
+            if (!moduleTestQuestionDraft.length) {
+                showToast('Додайте хоча б одне питання до тесту', 'warning');
+                return;
+            }
+            const assets = getStoredCourseAssets(courseId);
+            assets.tests = assets.tests || [];
+            assets.tests.unshift({ title, questions: [...moduleTestQuestionDraft], created_at: new Date().toISOString() });
+            setStoredCourseAssets(courseId, assets);
+            moduleTestQuestionDraft = [];
+            document.getElementById('testTitle').value = '';
+            document.getElementById('testQuestion').value = '';
+            document.getElementById('testOptions').value = '';
+            document.getElementById('testCorrect').value = '';
+            showToast('Модульний тест додано', 'success');
+            await loadCourseInfoEditor();
+        }
+
+        // ── Assignments ─────────────────────────────────────────────
+        async function loadAssignments() {
+            const container = document.getElementById('assignmentsContent');
+            container.innerHTML = '<div class="loader"> Завантаження...</div>';
+            
+            const assignments = await apiGet('/api/assignments');
+            if (!assignments || assignments.length === 0) {
+                container.innerHTML = '<div class="loader">Завдань не знайдено</div>';
+                return;
+            }
+
+            const formatDate = (d) => d ? new Date(d).toLocaleDateString('uk-UA', {day:'numeric', month:'short', year:'numeric'}) : 'Без терміну';
+
+            const grouped = assignments.reduce((acc, item) => {
+                const key = item.course_name || 'Без курсу';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(item);
+                return acc;
+            }, {});
+
+            container.innerHTML = `
+                <div style="display:grid;gap:1.25rem;">
+                    ${Object.entries(grouped).map(([courseName, courseAssignments]) => `
+                        <section style="class="assignment-group" style="">
+                            <h3 style="margin-bottom:1rem;">${courseName}</h3>
+                            <div style="display:grid;gap:1rem;">
+                                ${courseAssignments.map(a => `
+                                    ${(() => {
+                                        const meta = getAssignmentEnhancement(a.id);
+                                        const filesCount = (meta.files || []).length;
+                                        const questionsCount = (meta.tests || []).reduce((sum, test) => sum + getTestQuestionsCount(test), 0);
+                                        return `
+                                    <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: grid; gap: .75rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                                            <div>
+                                                <h4 style="font-weight: 700; margin-bottom: 0.25rem;">${a.title}</h4>
+                                                <p style="color: var(--muted); font-size: 0.9rem;">${a.description || 'Опис відсутній'}</p>
+                                            </div>
+                                            <span style="background: rgba(16,185,129,.1); color: var(--success); padding: 0.5rem 0.75rem; border-radius: 10px; font-size: 0.8rem; font-weight: 600;"> Опубліковано</span>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; font-size: 0.9rem; color: rgba(255,255,255,.6);">
+                                            <div><strong>${a.discipline_name || '—'}</strong></div>
+                                            <div><strong>${formatDate(a.due_date)}</strong></div>
+                                            <div><strong>${a.max_score || 100} балів</strong></div>
+                                            <div><strong>${filesCount} файлів</strong></div>
+                                            <div><strong>${questionsCount} тестових питань</strong></div>
+                                        </div>
+                                        <div style="display: flex; gap: 0.75rem;">
+                                            <button onclick="viewSubmissions(${a.id}, '${a.title.replace(/'/g, "\\'")}')"
+                                                style="padding: 0.75rem 1.5rem; background: rgba(37,99,235,.1); color: var(--blue); border: 1px solid rgba(37,99,235,.2); border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                                Переглянути відповіді
+                                            </button>
+                                            <button onclick="deleteAssignment(${a.id}, '${a.title.replace(/'/g, "\\'")}')"
+                                                style="padding: 0.75rem 1.1rem; background: rgba(239,68,68,.1); color: var(--error); border: 1px solid rgba(239,68,68,.25); border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                                Видалити
+                                            </button>
+                                        </div>
+                                    </div>
+                                        `;
+                                    })()}
+                                `).join('')}
+                            </div>
+                        </section>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function deleteAssignment(assignmentId, title) {
+            const confirmed = window.confirm(`Видалити завдання "${title}"? Цю дію не можна скасувати.`);
+            if (!confirmed) return;
+            try {
+                await apiDelete(`/api/assignments/${assignmentId}`);
+                removeAssignmentEnhancement(assignmentId);
+                showToast('Завдання видалено', 'success');
+                await loadAssignments();
+            } catch (error) {
+                showToast(`Помилка: ${error.message}`, 'error');
+            }
+        }
+
+        async function openCreateAssignmentModal() {
+            assignmentTestQuestionDraft = [];
+            const modal = `
+                <div id="assignmentModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+                    <div style="background: var(--ink-card); padding: 2rem; border-radius: 16px; max-width: 760px; width: 90%; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); color: var(--text-primary);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                            <h2 style="font-size: 1.5rem; font-weight: 700;">Створити завдання</h2>
+                            <button onclick="document.getElementById('assignmentModal').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">×</button>
+                        </div>
+                        <form id="createAssignmentForm" style="display: grid; gap: 1.5rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem;">Назва завдання</label>
+                                <input id="assignmentTitle" type="text" placeholder="Наприклад: REST API з FastAPI" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background:var(--ink-soft); color:var(--text-primary);" required>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem;">Опис</label>
+                                <textarea id="assignmentDescription" placeholder="Детальний опис завдання..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; min-height: 100px; resize: vertical; background:var(--ink-soft); color:var(--text-primary);" required></textarea>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem;">Курс</label>
+                                <select id="assignmentCourse" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background:var(--ink-soft); color:var(--text-primary);" required>
+                                    <option value="">Виберіть курс...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem;">Тема</label>
+                                <select id="assignmentTopic" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background:var(--ink-soft); color:var(--text-primary);" required>
+                                    <option value="">Спочатку оберіть курс...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem;">Термін виконання</label>
+                                <input id="assignmentDueDate" type="date" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background:var(--ink-soft); color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem;">Максимальний бал</label>
+                                <input id="assignmentMaxScore" type="number" min="1" value="100" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; background:var(--ink-soft); color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem;">Файли до завдання</label>
+                                <input id="assignmentFiles" type="file" multiple class="styled-file-input" style="width: 100%; padding: 0.55rem; border: 1px solid var(--border); border-radius: 10px; background:var(--ink-soft); color:var(--text-primary); font-size:.85rem;">
+                            </div>
+                            <div style="border:1px solid var(--border);border-radius:10px;padding:1rem;background:var(--ink-card);">
+                                <div style="font-weight:700;margin-bottom:.75rem;"> Тест до завдання</div>
+                                <div class="editor-grid">
+                                    <div>
+                                        <label class="form-label">Назва тесту</label>
+                                        <input id="assignmentTestTitle" class="form-input" placeholder="Наприклад: Перевірка після завдання">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Питання</label>
+                                        <input id="assignmentTestQuestion" class="form-input" placeholder="Текст питання">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Варіанти відповіді (через кому)</label>
+                                        <input id="assignmentTestOptions" class="form-input" placeholder="A, B, C, D">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Правильна відповідь</label>
+                                        <input id="assignmentTestCorrect" class="form-input" placeholder="Наприклад: B">
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.75rem;">
+                                    <button type="button" class="btn-add" onclick="addAssignmentQuestionDraft()"> Додати питання</button>
+                                </div>
+                                <div id="assignmentQuestionDraftList" class="test-list" style="margin-top:.75rem;"></div>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                                <button type="button" onclick="document.getElementById('assignmentModal').remove()" style="padding: 0.75rem 1.5rem; background: rgba(255,255,255,.08); color:#fff; border: 1px solid var(--border); border-radius: 10px; font-weight: 600; cursor: pointer; font-family:'Manrope',sans-serif;">Скасувати</button>
+                                <button type="submit" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, var(--blue), #1d4ed8); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;"> Опублікувати</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modal);
+            renderAssignmentQuestionDraftList();
+
+            await loadCoursesForAssignment();
+            const courseSelect = document.getElementById('assignmentCourse');
+            courseSelect.addEventListener('change', async (e) => {
+                const selectedCourseId = parseInt(e.target.value, 10);
+                if (!selectedCourseId) {
+                    const topicSelect = document.getElementById('assignmentTopic');
+                    topicSelect.innerHTML = '<option value="">Спочатку оберіть курс...</option>';
+                    return;
+                }
+                await loadTopicsForAssignment(selectedCourseId);
+            });
+            
+            document.getElementById('createAssignmentForm').onsubmit = async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('assignmentTitle').value;
+                const description = document.getElementById('assignmentDescription').value;
+                const topicRaw = document.getElementById('assignmentTopic').value;
+                const topic_id = parseInt(topicRaw, 10);
+                const due_date = document.getElementById('assignmentDueDate').value || null;
+                const max_score = parseInt(document.getElementById('assignmentMaxScore').value || '100', 10);
+                const attachmentNames = Array.from(document.getElementById('assignmentFiles')?.files || []).map(file => file.name);
+                const assignmentTestTitle = document.getElementById('assignmentTestTitle').value.trim() || 'Тест до завдання';
+                const assignmentTests = assignmentTestQuestionDraft.length
+                    ? [{ title: assignmentTestTitle, questions: [...assignmentTestQuestionDraft] }]
+                    : [];
+                if (!topicRaw || Number.isNaN(topic_id)) {
+                    showToast('Оберіть тему для завдання', 'warning');
+                    return;
+                }
+                
+                try {
+                    const result = await apiPost('/api/assignments/', {
+                        title, description, topic_id, due_date, max_score,
+                        attachment_names: attachmentNames,
+                        tests: assignmentTests,
+                    });
+                    if (result?.id) {
+                        saveAssignmentEnhancement(result.id, {
+                            files: attachmentNames,
+                            tests: assignmentTests,
+                        });
+                    }
+                    showToast(' Завдання опубліковано!', 'success');
+                    document.getElementById('assignmentModal').remove();
+                    loadAssignments();
+                } catch (error) {
+                    showToast('Помилка: ' + error.message, 'error');
+                }
+            };
+        }
+
+        async function loadCoursesForAssignment() {
+            const courseSelect = document.getElementById('assignmentCourse');
+            if (!courseSelect) return;
+
+            let courses = teacherCourses;
+            if (!Array.isArray(courses) || courses.length === 0) {
+                courses = await apiGet('/api/teacher/courses') || [];
+            }
+
+            if (!courses.length) {
+                courseSelect.innerHTML = '<option value="">Немає доступних курсів</option>';
+                const topicSelect = document.getElementById('assignmentTopic');
+                topicSelect.innerHTML = '<option value="">Немає доступних тем</option>';
+                return;
+            }
+
+            courseSelect.innerHTML = '<option value="">Виберіть курс...</option>' + courses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+        }
+
+        async function loadTopicsForAssignment(courseId) {
+            const topicSelect = document.getElementById('assignmentTopic');
+            if (!topicSelect) return;
+
+            topicSelect.innerHTML = '<option value="">Завантаження тем...</option>';
+
+            try {
+                const topics = await apiGet(`/api/courses/${courseId}/topics`);
+                if (!Array.isArray(topics) || topics.length === 0) {
+                    topicSelect.innerHTML = '<option value="">Немає доступних тем</option>';
+                    return;
+                }
+
+                topicSelect.innerHTML = '<option value="">Виберіть тему...</option>' + topics.map(topic => {
+                    const suffix = topic.discipline_name ? ` (${topic.discipline_name})` : '';
+                    return `<option value="${topic.id}">${topic.title}${suffix}</option>`;
+                }).join('');
+            } catch (e) {
+                console.warn('Cannot load topics for assignment', e);
+                topicSelect.innerHTML = '<option value="">Немає доступних тем</option>';
+            }
+        }
+
+        async function viewSubmissions(assignmentId, title) {
+            currentSubmissionsAssignmentId = assignmentId;
+            currentSubmissionsTitle = title;
+            const modal = `
+                <div id="submissionsModal" onclick="if(event.target===this)this.remove()" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: flex-start; justify-content: center; z-index: 2000; overflow-y: auto; padding: 2rem 1rem;">
+                    <div style="background: var(--ink-card); border-radius: 16px; max-width: 700px; width: 100%; margin: auto; border: 1px solid var(--border); color: var(--text-primary); max-height: calc(100vh - 4rem); display: flex; flex-direction: column;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--ink-card); border-radius: 16px 16px 0 0; z-index: 1;">
+                            <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">${title}</h2>
+                            <button onclick="document.getElementById('submissionsModal').remove()" title="Закрити" style="background: rgba(255,255,255,.06); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 8px; font-size: 1.25rem; line-height: 1; cursor: pointer; color: var(--text-primary); flex-shrink: 0;">×</button>
+                        </div>
+                        <div id="submissionsContent" style="display: grid; gap: 1rem; padding: 1.5rem; overflow-y: auto;">
+                            <div class="loader"> Завантаження...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modal);
+            
+            const container = document.getElementById('submissionsContent');
+            const submissions = await apiGet(`/api/assignments/${assignmentId}/submissions`);
+            
+            if (!submissions || submissions.length === 0) {
+                container.innerHTML = '<div class="loader">Немає відповідей</div>';
+                return;
+            }
+            
+            const formatDate = (d) => new Date(d).toLocaleDateString('uk-UA', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+            const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const statusUa = { graded: 'Оцінено', reviewed: 'Переглянуто', submitted: 'Здано' };
+            const lblStyle = 'display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:.25rem;';
+
+            container.innerHTML = `
+                <div style="display: grid; gap: 1rem;">
+                    ${submissions.map(s => `
+                        <div style="border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <div style="font-weight: 700;">${esc(s.student_name)}</div>
+                                <span style="background: rgba(6,182,212,.1); color: var(--blue); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600;"> ${formatDate(s.submitted_at)}</span>
+                            </div>
+                            <div style="background: var(--ink-soft); padding: 1rem; border-radius: 10px; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); font-size: 0.9rem; line-height: 1.5; border: 1px solid var(--border);">
+                                ${esc(s.content)}
+                            </div>
+                            <div style="margin-top:.75rem;color:rgba(255,255,255,.6);font-size:.9rem;">
+                                 Файл: <strong>${esc(s.file_name) || 'не додано'}</strong>
+                            </div>
+                            <div style="margin-top:.75rem;color:rgba(255,255,255,.6);font-size:.9rem;">
+                                Статус: <strong>${statusUa[s.grade_status] || statusUa.submitted}</strong> ${s.grade_score !== null && s.grade_score !== undefined ? `| Оцінка: <strong>${s.grade_score}</strong>` : ''}
+                            </div>
+                            <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem;align-items:flex-end;">
+                                <div>
+                                    <label style="${lblStyle}">Бал (0–100)</label>
+                                    <input id="score_${s.submission_id}" type="number" min="0" max="100" placeholder="0–100" style="padding:.5rem;border:1px solid var(--border);border-radius:.5rem;max-width:120px;background:var(--ink-soft);color:var(--text-primary);" value="${s.grade_score ?? ''}">
+                                </div>
+                                <div>
+                                    <label style="${lblStyle}">Статус</label>
+                                    <select id="status_${s.submission_id}" style="padding:.5rem;border:1px solid var(--border);border-radius:.5rem;background:var(--ink-soft);color:var(--text-primary);">
+                                        <option value="graded" ${s.grade_status === 'graded' ? 'selected' : ''}>Оцінено</option>
+                                        <option value="reviewed" ${s.grade_status === 'reviewed' ? 'selected' : ''}>Переглянуто</option>
+                                    </select>
+                                </div>
+                                <div style="flex:1;min-width:200px;">
+                                    <label style="${lblStyle}">Коментар</label>
+                                    <input id="feedback_${s.submission_id}" type="text" placeholder="Коментар для студента" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:.5rem;background:var(--ink-soft);color:var(--text-primary);" value="${esc(s.grade_feedback)}">
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;">
+                                <button onclick="gradeSubmission(${s.submission_id})" style="padding:.5rem .9rem;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#10b981;border-radius:.5rem;cursor:pointer;font-weight:600;">Зберегти оцінку</button>
+                                <button onclick="resetSubmission(${s.submission_id})" style="padding:.5rem .9rem;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;border-radius:.5rem;cursor:pointer;font-weight:600;">Дозволити перездачу</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function gradeSubmission(submissionId) {
+            const scoreRaw = document.getElementById(`score_${submissionId}`).value;
+            const status = document.getElementById(`status_${submissionId}`).value || null;
+            const feedback = document.getElementById(`feedback_${submissionId}`).value || null;
+            const score = scoreRaw === '' ? null : parseInt(scoreRaw, 10);
+            try {
+                await apiPost(`/api/assignments/submissions/${submissionId}/grade`, { score, status, feedback });
+                showToast('Оцінку збережено', 'success');
+                if (currentSubmissionsAssignmentId) {
+                    document.getElementById('submissionsModal')?.remove();
+                    await viewSubmissions(currentSubmissionsAssignmentId, currentSubmissionsTitle || 'Відповіді');
+                }
+            } catch (e) {
+                showToast(`Помилка: ${e.message}`, 'error');
+            }
+        }
+
+        async function resetSubmission(submissionId) {
+            try {
+                await apiPost(`/api/assignments/submissions/${submissionId}/reset`, {});
+                showToast('Відправлення розблоковано', 'success');
+                if (currentSubmissionsAssignmentId) {
+                    document.getElementById('submissionsModal')?.remove();
+                    await viewSubmissions(currentSubmissionsAssignmentId, currentSubmissionsTitle || 'Відповіді');
+                }
+            } catch (e) {
+                showToast(`Помилка: ${e.message}`, 'error');
+            }
+        }
+
+        async function openEditCourseModal(courseId) {
+            const course = teacherCourses.find(c => c.id === courseId) || {};
+            const modal = `
+                <div id="editCourseModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-start;justify-content:center;z-index:2100;overflow-y:auto;padding:2rem 0;">
+                    <div style="background:var(--ink-card);padding:2rem;border-radius:16px;max-width:600px;width:90%;border:1px solid var(--border);margin:auto;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                            <h2 style="font-size:1.4rem;font-weight:700;">Редагувати курс</h2>
+                            <button onclick="document.getElementById('editCourseModal').remove()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--muted);">×</button>
+                        </div>
+                        <div style="display:grid;gap:1rem;">
+                            <div>
+                                <label style="display:block;margin-bottom:.4rem;font-weight:600;">Назва курсу</label>
+                                <input id="editCourseTitleInput" type="text" value="${(course.title || '').replace(/"/g,'&quot;')}" style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:10px;background:var(--ink-soft);color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label style="display:block;margin-bottom:.4rem;font-weight:600;">Опис</label>
+                                <textarea id="editCourseDescInput" style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:10px;min-height:90px;background:var(--ink-soft);color:var(--text-primary);">${course.description || ''}</textarea>
+                            </div>
+                            <div style="display:flex;justify-content:flex-end;gap:.5rem;">
+                                <button onclick="document.getElementById('editCourseModal').remove()" style="padding:.7rem 1.1rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Закрити</button>
+                                <button id="saveEditCourseBtn" style="padding:.7rem 1.2rem;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Зберегти курс</button>
+                            </div>
+
+                            <div style="border-top:1px solid var(--border);margin-top:.5rem;padding-top:1rem;">
+                                <div style="font-weight:700;margin-bottom:.75rem;">Навчальні матеріали</div>
+                                <div style="display:grid;gap:.6rem;">
+                                    <div>
+                                        <label style="display:block;margin-bottom:.3rem;font-size:.85rem;font-weight:600;">Назва матеріалу</label>
+                                        <input id="newMaterialTitle" type="text" placeholder="Наприклад: Конспект лекції 1" style="width:100%;padding:.6rem;border:1px solid var(--border);border-radius:10px;background:var(--ink-soft);color:var(--text-primary);">
+                                    </div>
+                                    <div>
+                                        <label style="display:block;margin-bottom:.3rem;font-size:.85rem;font-weight:600;">Текст або посилання</label>
+                                        <textarea id="newMaterialBody" placeholder="Текст матеріалу або URL" style="width:100%;padding:.6rem;border:1px solid var(--border);border-radius:10px;min-height:70px;background:var(--ink-soft);color:var(--text-primary);"></textarea>
+                                    </div>
+                                    <div style="display:flex;justify-content:flex-end;">
+                                        <button id="addMaterialBtn" style="padding:.55rem 1.1rem;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#10b981;border-radius:10px;font-weight:600;cursor:pointer;">+ Додати матеріал</button>
+                                    </div>
+                                </div>
+                                <div id="courseMaterialsList" style="margin-top:.75rem;display:grid;gap:.5rem;">
+                                    <div style="color:var(--muted);font-size:.85rem;">Завантаження матеріалів...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', modal);
+
+            await renderCourseMaterials(courseId);
+
+            document.getElementById('addMaterialBtn').onclick = async () => {
+                const title = document.getElementById('newMaterialTitle').value.trim();
+                const body = document.getElementById('newMaterialBody').value.trim();
+                if (!title) { showToast('Вкажіть назву матеріалу', 'error'); return; }
+                try {
+                    await apiPost(`/api/courses/${courseId}/materials`, { title, body });
+                    document.getElementById('newMaterialTitle').value = '';
+                    document.getElementById('newMaterialBody').value = '';
+                    showToast('Матеріал додано', 'success');
+                    await renderCourseMaterials(courseId);
+                } catch(err) {
+                    showToast('Помилка: ' + err.message, 'error');
+                }
+            };
+
+            document.getElementById('saveEditCourseBtn').onclick = async () => {
+                const title = document.getElementById('editCourseTitleInput').value.trim();
+                const description = document.getElementById('editCourseDescInput').value.trim();
+                if (!title) return;
+                try {
+                    await apiPut('/api/courses/' + courseId, { title, description });
+                    showToast('Курс оновлено', 'success');
+                    document.getElementById('editCourseModal').remove();
+                    await loadTeacherCoursesForFilter();
+                    await loadTeacherCourses();
+                } catch(err) {
+                    showToast('Помилка: ' + err.message, 'error');
+                }
+            };
+        }
+
+        async function renderCourseMaterials(courseId) {
+            const list = document.getElementById('courseMaterialsList');
+            if (!list) return;
+            try {
+                const materials = await apiGet(`/api/courses/${courseId}/materials`) || [];
+                if (!materials.length) {
+                    list.innerHTML = '<div style="color:var(--muted);font-size:.85rem;">Матеріали ще не додані</div>';
+                    return;
+                }
+                const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                list.innerHTML = materials.map(m => `
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;padding:.6rem .75rem;background:var(--ink-soft);border:1px solid var(--border);border-radius:10px;">
+                        <div style="min-width:0;">
+                            <div style="font-weight:600;">${esc(m.title)}</div>
+                            ${m.body ? `<div style="color:var(--muted);font-size:.82rem;white-space:pre-wrap;word-break:break-word;">${esc(m.body)}</div>` : ''}
+                        </div>
+                        <button onclick="deleteCourseMaterial(${courseId}, ${m.id})" style="flex-shrink:0;padding:.35rem .7rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#ef4444;border-radius:8px;cursor:pointer;font-size:.8rem;">Видалити</button>
+                    </div>
+                `).join('');
+            } catch(err) {
+                list.innerHTML = `<div style="color:var(--error);font-size:.85rem;">Помилка завантаження: ${err.message}</div>`;
+            }
+        }
+
+        async function deleteCourseMaterial(courseId, materialId) {
+            try {
+                await apiDelete(`/api/courses/${courseId}/materials/${materialId}`);
+                showToast('Матеріал видалено', 'success');
+                await renderCourseMaterials(courseId);
+            } catch(err) {
+                showToast('Помилка: ' + err.message, 'error');
+            }
+        }
+
+
+        function openCreateCourseModal() {
+            const modal = `
+                <div id="courseModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2100;">
+                    <div style="background: var(--ink-card); padding: 2rem; border-radius: 16px; max-width: 560px; width: 90%; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border); color: var(--text-primary);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                            <h2 style="font-size:1.4rem;font-weight:700;">Створити курс</h2>
+                            <button onclick="document.getElementById('courseModal').remove()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--muted);">×</button>
+                        </div>
+                        <form id="createCourseForm" style="display:grid;gap:1rem;">
+                            <div>
+                                <label style="display:block;margin-bottom:.4rem;font-weight:600;">Назва курсу</label>
+                                <input id="courseTitleInput" type="text" required placeholder="Наприклад: Advanced JavaScript" style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:10px;background:var(--ink-soft);color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label style="display:block;margin-bottom:.4rem;font-weight:600;">Опис</label>
+                                <textarea id="courseDescInput" placeholder="Короткий опис курсу" style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:10px;min-height:100px;background:var(--ink-soft);color:var(--text-primary);"></textarea>
+                            </div>
+                            <div style="display:flex;justify-content:flex-end;gap:.5rem;">
+                                <button type="button" onclick="document.getElementById('courseModal').remove()" style="padding:.7rem 1.1rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;cursor:pointer;">Скасувати</button>
+                                <button type="submit" style="padding:.7rem 1.2rem;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Створити</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modal);
+            document.getElementById('createCourseForm').onsubmit = async (e) => {
+                e.preventDefault();
+                const title = document.getElementById('courseTitleInput').value.trim();
+                const description = document.getElementById('courseDescInput').value.trim();
+                if (!title) return;
+                try {
+                    await apiPost('/api/courses', { title, description });
+                    showToast('Курс створено', 'success');
+                    document.getElementById('courseModal').remove();
+                    await loadTeacherCoursesForFilter();
+                    await loadTeacherCourses();
+                } catch (err) {
+                    showToast(`Помилка: ${err.message}`, 'error');
+                }
+            };
+        }
+
+        async function loadReport(type) {
+            const container = document.getElementById('reportsContent');
+            container.innerHTML = 'Завантаження...';
+            currentReportType = type;
+            try {
+                const report = await fetchReportData(type);
+                currentReportTitle = report?.title || type;
+                if (!report || !report.columns || !report.rows) {
+                    container.innerHTML = 'Немає даних';
+                    document.getElementById('downloadReportBtn').style.display = 'none';
+                    return;
+                }
+                container.innerHTML = `
+                    <div style="margin-bottom:.5rem;font-weight:700;">${report.title}</div>
+                    <div style="overflow:auto;">
+                        <table id="reportDataTable" style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr>${report.columns.map(c => `<th style="text-align:left;padding:.5rem;border-bottom:1px solid var(--border);">${c}</th>`).join('')}</tr>
+                            </thead>
+                            <tbody>
+                                ${report.rows.map(row => `<tr>${report.columns.map(c => `<td style="padding:.5rem;border-bottom:1px solid rgba(255,255,255,.05);">${row[c] ?? '—'}</td>`).join('')}</tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                document.getElementById('downloadReportBtn').style.display = 'inline-block';
+            } catch (e) {
+                container.innerHTML = `Помилка: ${e.message}`;
+                document.getElementById('downloadReportBtn').style.display = 'none';
+            }
+        }
+
+        function downloadReportTableCSV() {
+            const table = document.getElementById('reportDataTable');
+            if (!table) {
+                showToast('Спочатку оберіть і завантажте звіт', 'warning');
+                return;
+            }
+            const delimiter = ';';
+            const rows = Array.from(table.querySelectorAll('tr')).map(tr => {
+                const cells = Array.from(tr.querySelectorAll('th,td')).map(cell => {
+                    const text = (cell.innerText || cell.textContent || '')
+                        .replace(/\r?\n|\r/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .replace(/"/g, '""');
+                    return `"${text}"`;
+                });
+                return cells.join(delimiter);
+            });
+            const csvContent = '\uFEFF' + rows.join('\r\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `${currentReportType || 'report'}_${timestamp}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`Звіт "${currentReportTitle}" скачано!`, 'success');
+        }
+
+        function showToast(msg, type) {
+            const toast = document.createElement('div');
+            toast.textContent = msg;
+            toast.style.cssText = `position: fixed; bottom: 2rem; right: 2rem; padding: 1rem 2rem; border-radius: 10px; font-weight: 600; z-index: 3000; 
+                background: ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--error)' : 'var(--warning)'}; 
+                color: #fff;`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+
+        // ── Alias: openAddAssignmentModal → openCreateAssignmentModal ──
+        function openAddAssignmentModal() { openCreateAssignmentModal(); }
+
+        // ── Filter students by course ───────────────────────────────
+        function filterStudentsByCourse(courseId) { loadStudents(); }
+
+        // ── Grades for course ───────────────────────────────────────
+        async function loadGradesForCourse(courseId) {
+            const container = document.getElementById('gradesContent');
+            if (!courseId) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Оберіть курс зі списку вище для перегляду оцінок</p></div>';
+                return;
+            }
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження журналу...</p></div>';
+            try {
+                const cid = parseInt(courseId);
+                const allAsg = await apiGet('/api/assignments') || [];
+                const courseObj = (teacherCourses || []).find(c => c.id === cid);
+                const courseName = courseObj ? courseObj.title : null;
+                let assignments = allAsg.filter(a => a.course_id === cid);
+                // Fallback: match by course name if course_id didn't match
+                if (!assignments.length && courseName) {
+                    assignments = allAsg.filter(a => (a.course_name || '').toLowerCase() === courseName.toLowerCase());
+                }
+                const students = await apiGet('/api/teacher/students') || [];
+
+                if (!assignments.length) {
+                    container.innerHTML = `<div class="empty-state" style="padding:3rem;text-align:center;">
+                        <div style="font-size:2.5rem;margin-bottom:.75rem;"></div>
+                        <div style="font-weight:600;margin-bottom:.4rem;">У цьому курсі ще немає завдань</div>
+                        <div style="font-size:.85rem;color:var(--muted);margin-bottom:1.25rem;">Створіть завдання, щоб виставляти оцінки студентам</div>
+                        <button class="btn btn-primary" onclick="showSection('assignments')" style="padding:.6rem 1.4rem;">+ Створити завдання</button>
+                    </div>`;
+                    return;
+                }
+
+                const subsByAsg = {};
+                await Promise.all(assignments.map(async a => {
+                    try { subsByAsg[a.id] = await apiGet(`/api/assignments/${a.id}/submissions`) || []; }
+                    catch(e){ subsByAsg[a.id] = []; }
+                }));
+
+                const scoreMap = {};
+                students.forEach(s => scoreMap[s.id] = {});
+                Object.entries(subsByAsg).forEach(([asgId, subs]) => {
+                    subs.forEach(sub => {
+                        if (!scoreMap[sub.student_id]) scoreMap[sub.student_id] = {};
+                        scoreMap[sub.student_id][asgId] = { score: sub.grade_score, status: sub.grade_status };
+                    });
+                });
+
+                const cellHtml = c => {
+                    if (!c) return '<span style="color:var(--muted);">—</span>';
+                    if (c.score != null) {
+                        const cls = c.score>=90?'grade-a':c.score>=70?'grade-b':'grade-c';
+                        return `<span class="grade-badge ${cls}">${c.score}</span>`;
+                    }
+                    return '<span class="grade-badge grade-b">здано</span>';
+                };
+
+                container.innerHTML = `
+                    <div class="table-wrap" style="overflow-x:auto;">
+                        <table class="data-table">
+                            <thead><tr>
+                                <th style="position:sticky;left:0;background:#151b2e;">Студент</th>
+                                ${assignments.map(a=>`<th title="${a.title}">${a.title.length>16?a.title.slice(0,14)+'…':a.title}</th>`).join('')}
+                                <th>Середнє</th>
+                            </tr></thead>
+                            <tbody>${students.map(s => {
+                                const row = scoreMap[s.id] || {};
+                                const scores = Object.values(row).filter(c=>c.score!=null).map(c=>c.score);
+                                const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : null;
+                                const avgCls = avg==null?'grade-none':avg>=90?'grade-a':avg>=70?'grade-b':'grade-c';
+                                return `<tr>
+                                    <td style="position:sticky;left:0;background:#0f1425;font-weight:600;">${s.full_name}</td>
+                                    ${assignments.map(a=>`<td style="text-align:center;">${cellHtml(row[a.id])}</td>`).join('')}
+                                    <td style="text-align:center;"><span class="grade-badge ${avgCls}">${avg!=null?avg+'%':'—'}</span></td>
+                                </tr>`;
+                            }).join('')}</tbody>
+                        </table>
+                    </div>`;
+            } catch(e) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Помилка: ${e.message}</p></div>`;
+            }
+        }
+
+        // ── Attendance ──────────────────────────────────────────────
+        async function loadAttendance() {
+            const container = document.getElementById('attendanceContent');
+            const courseId = document.getElementById('attendanceCourseSelect')?.value;
+            const dateFilter = document.getElementById('attendanceDateSelect')?.value;
+            if (!courseId) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Оберіть курс для перегляду відвідуваності</p></div>';
+                return;
+            }
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження...</p></div>';
+            try {
+                // Get schedule lessons (attendance is per-lesson, identified by schedule_id)
+                const allSchedule = await apiGet('/api/schedule') || [];
+                // Filter lessons by course via discipline → course mapping is not direct; show all teacher lessons
+                let lessons = allSchedule;
+                if (dateFilter) {
+                    lessons = lessons.filter(s => (s.date || '').startsWith(dateFilter));
+                }
+                lessons = lessons.sort((a,b)=> new Date(b.date) - new Date(a.date)).slice(0, 20);
+
+                if (!lessons.length) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Занять не знайдено' + (dateFilter ? ' на обрану дату' : '') + '</p></div>';
+                    return;
+                }
+
+                // For each lesson, fetch roster
+                const blocks = [];
+                for (const lesson of lessons.slice(0, 8)) {
+                    let roster = [];
+                    try { roster = await apiGet(`/api/attendance/teacher/roster/${lesson.id}`) || []; } catch(e) {}
+                    const dateStr = lesson.date ? new Date(lesson.date).toLocaleDateString('uk-UA',{day:'numeric',month:'long',weekday:'short'}) : '—';
+                    const timeStr = (lesson.time||'').slice(0,5);
+                    const rows = roster.length
+                        ? roster.map(r => {
+                            const st = r.status || r.attendance_status || 'none';
+                            const badge = st==='present'?'grade-a':st==='late'?'grade-b':st==='absent'?'grade-c':'grade-none';
+                            const label = st==='present'?'Присутній':st==='late'?'Запізнився':st==='absent'?'Відсутній':'— Не позначено';
+                            return `<tr>
+                                <td><strong>${r.student_name || r.full_name || '—'}</strong></td>
+                                <td>
+                                    <button class="att-btn att-present" onclick="markAttendance(${lesson.id}, ${r.student_id}, 'present')">Присутній</button>
+                                    <button class="att-btn att-late" onclick="markAttendance(${lesson.id}, ${r.student_id}, 'late')">Запізнився</button>
+                                    <button class="att-btn att-absent" onclick="markAttendance(${lesson.id}, ${r.student_id}, 'absent')">Відсутній</button>
+                                </td>
+                                <td><span class="grade-badge ${badge}">${label}</span></td>
+                            </tr>`;
+                        }).join('')
+                        : '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:1rem;">Немає студентів у групі</td></tr>';
+                    blocks.push(`
+                        <div style="margin-bottom:1.5rem;">
+                            <div style="font-weight:700;font-size:.95rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;">
+                                ${dateStr} ${timeStr ? '· '+timeStr : ''} <span style="font-size:.78rem;color:var(--muted);font-weight:500;">${lesson.discipline_name || lesson.group || ''}</span>
+                            </div>
+                            <div class="table-wrap">
+                                <table class="data-table">
+                                    <thead><tr><th>Студент</th><th>Позначити</th><th>Статус</th></tr></thead>
+                                    <tbody>${rows}</tbody>
+                                </table>
+                            </div>
+                        </div>`);
+                }
+                container.innerHTML = blocks.join('');
+            } catch(e) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Помилка: ${e.message}</p></div>`;
+            }
+        }
+
+        async function markAttendance(scheduleId, studentId, status) {
+            try {
+                await apiPost(`/api/attendance/teacher/mark/${scheduleId}/${studentId}`, { status });
+                showToast('Відмічено: ' + (status==='present'?'присутній':status==='late'?'запізнився':'відсутній'), 'success');
+                await loadAttendance();
+            } catch(e) {
+                showToast('Помилка: ' + e.message, 'error');
+            }
+        }
+
+        // ── Populate attendance/grades course selects on section open ─
+        async function populateCourseSelects() {
+            if (!teacherCourses.length) {
+                try { teacherCourses = await apiGet('/api/teacher/courses') || []; } catch(e) {}
+            }
+            const opts = teacherCourses.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+            const selects = ['gradesCourseSelect','attendanceCourseSelect','materialsCourseFilter'];
+            selects.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    // For grades: no empty placeholder, auto-select first
+                    if (id === 'gradesCourseSelect') {
+                        el.innerHTML = opts || '<option value="">Немає курсів</option>';
+                    } else {
+                        el.innerHTML = '<option value="">Оберіть курс</option>' + opts;
+                    }
+                }
+            });
+            // Auto-load grades for the first course that has assignments
+            const gradesSel = document.getElementById('gradesCourseSelect');
+            if (teacherCourses.length && gradesSel && !gradesSel.dataset.loaded) {
+                gradesSel.dataset.loaded = '1';
+                try {
+                    const allAsg = await apiGet('/api/assignments') || [];
+                    const courseWithAsg = teacherCourses.find(c =>
+                        allAsg.some(a => a.course_id === c.id || (a.course_name||'').toLowerCase() === (c.title||'').toLowerCase())
+                    );
+                    const chosen = courseWithAsg || teacherCourses[0];
+                    gradesSel.value = chosen.id;
+                    loadGradesForCourse(chosen.id);
+                } catch(e) {
+                    gradesSel.value = teacherCourses[0].id;
+                    loadGradesForCourse(teacherCourses[0].id);
+                }
+            }
+        }
+
+        // ── Materials ───────────────────────────────────────────────
+        async function loadMaterialsForCourse(courseId) {
+            const container = document.getElementById('materialsContent');
+            if (!courseId) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Оберіть курс для перегляду матеріалів</p></div>';
+                return;
+            }
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження матеріалів...</p></div>';
+            try {
+                const data = await apiGet(`/api/courses/${courseId}/topics`) || [];
+                if (!data.length) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Матеріалів для цього курсу ще немає</p></div>';
+                    return;
+                }
+                container.innerHTML = `<div style="display:grid;gap:.75rem;">` + data.map(t => `
+                    <div class="course-card">
+                        <div class="course-card-info">
+                            <div class="course-title">${t.title || t.name || '—'}</div>
+                            <div class="course-desc">Тема #${t.id}</div>
+                        </div>
+                    </div>`).join('') + '</div>';
+            } catch(e) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.55;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>Помилка: ${e.message}</p></div>`;
+            }
+        }
+
+        function openAddMaterialModal() {
+            showToast('Функція додавання матеріалів — доступна в розділі "Мої курси" → редагування курсу', 'info');
+        }
+
+        function logout() {
+            if (typeof clearAuth === 'function') {
+                clearAuth();
+            }
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>
