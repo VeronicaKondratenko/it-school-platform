@@ -139,12 +139,30 @@ def _thread_to_response(thread: QuestionThread, include_messages: bool = False) 
     )
 
 
+async def _teacher_can_access_thread(db: AsyncSession, teacher_id: int, thread: QuestionThread) -> bool:
+    """Return True when a teacher should see/respond to a thread.
+
+    Primary rule: the thread is directly addressed to this teacher.
+    Fallback rule: older/partially-created threads may have target_user_id=NULL;
+    in that case, show the thread to teachers who lead the related course.
+    The fallback is intentionally NOT used when the thread is addressed to a
+    different teacher, so one teacher does not read another teacher's inbox.
+    """
+    if thread.target_type != "teacher":
+        return False
+    if thread.target_user_id == teacher_id:
+        return True
+    if thread.target_user_id is None and thread.course_id is not None:
+        return thread.course_id in await get_teacher_course_ids(db, teacher_id)
+    return False
+
+
 async def _assert_can_view(db: AsyncSession, user: User, thread: QuestionThread) -> None:
     if user.role == UserRole.admin:
         return
     if user.role == UserRole.student and thread.student_id == user.id:
         return
-    if user.role == UserRole.teacher and thread.target_type == "teacher" and thread.target_user_id == user.id:
+    if user.role == UserRole.teacher and await _teacher_can_access_thread(db, user.id, thread):
         return
     raise HTTPException(status_code=403, detail="You do not have access to this question")
 
@@ -212,6 +230,9 @@ async def create_question(
     link = "/questions.html"
     if target_type == "teacher":
         await _notify(db, target_user_id, "Нове питання від студента", payload.title.strip(), "/teacher-questions.html")
+        # Admins also get a light notification, because the admin page is the
+        # central oversight place for all appeals, including teacher questions.
+        await _notify_admins(db, "Нове питання студент → викладач", payload.title.strip(), "/admin-questions.html")
     else:
         await _notify_admins(db, "Нове звернення до адміністратора", payload.title.strip(), "/admin-questions.html")
 
@@ -255,12 +276,10 @@ async def teacher_questions(
 ):
     if current_user.role != UserRole.teacher:
         raise HTTPException(status_code=403, detail="Teacher access required")
+    teacher_course_ids = await get_teacher_course_ids(db, current_user.id)
     stmt = (
         select(QuestionThread)
-        .where(
-            QuestionThread.target_type == "teacher",
-            QuestionThread.target_user_id == current_user.id,
-        )
+        .where(QuestionThread.target_type == "teacher")
         .options(
             selectinload(QuestionThread.student),
             selectinload(QuestionThread.target_user),
@@ -272,7 +291,13 @@ async def teacher_questions(
     if status_filter:
         stmt = stmt.where(QuestionThread.status == status_filter)
     result = await db.execute(stmt)
-    return [_thread_to_response(t) for t in result.scalars().all()]
+    threads = []
+    for thread in result.scalars().all():
+        if thread.target_user_id == current_user.id:
+            threads.append(thread)
+        elif thread.target_user_id is None and thread.course_id in teacher_course_ids:
+            threads.append(thread)
+    return [_thread_to_response(t) for t in threads]
 
 
 @router.get("/admin", response_model=list[QuestionThreadResponse])

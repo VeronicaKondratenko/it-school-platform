@@ -1207,18 +1207,66 @@ function notificationDestinationForRole(role) {
 }
 
 function initGlobalNotificationsBell() {
-    // The floating "!" bell was removed: on the questions page it linked to
-    // itself and added no real value. This now just cleans up any bell/timer
-    // that may already be on the page (e.g. from a cached older version).
-    const existing = document.getElementById('globalNotificationBell');
-    if (existing) existing.remove();
-    if (window.__itSchoolNotificationTimer) {
-        clearInterval(window.__itSchoolNotificationTimer);
-        window.__itSchoolNotificationTimer = null;
-    }
+    // Remove the old floating bell if a browser cached it from earlier builds.
+    const oldFloating = document.getElementById('globalNotificationBell');
+    if (oldFloating) oldFloating.remove();
+
+    if (!getToken()) return;
+
+    const ensureStyles = () => {
+        if (document.getElementById('notificationBadgeStyles')) return;
+        const st = document.createElement('style');
+        st.id = 'notificationBadgeStyles';
+        st.textContent = `
+            .nav-notification-badge{
+                display:inline-flex;align-items:center;justify-content:center;
+                min-width:1.35rem;height:1.35rem;padding:0 .36rem;margin-left:auto;
+                border-radius:999px;background:#2563eb;color:#fff!important;
+                font-size:.72rem;font-weight:800;line-height:1;box-shadow:0 0 0 2px rgba(37,99,235,.18);
+            }
+            .nav-item .nav-notification-badge,.sidebar-nav a .nav-notification-badge{margin-left:auto;}
+            .nav-unread-pulse{position:relative;}
+            .nav-unread-pulse::after{content:'';position:absolute;right:.65rem;top:.65rem;width:.45rem;height:.45rem;border-radius:999px;background:#60a5fa;}
+        `;
+        document.head.appendChild(st);
+    };
+
+    const removeBadges = () => {
+        document.querySelectorAll('.nav-notification-badge').forEach(x => x.remove());
+        document.querySelectorAll('.nav-unread-pulse').forEach(x => x.classList.remove('nav-unread-pulse'));
+    };
+
+    const targetHref = notificationDestinationForRole(getRole());
+    const updateBadges = async () => {
+        try {
+            const unread = await fetchNotifications(true);
+            const count = Array.isArray(unread) ? unread.length : 0;
+            ensureStyles();
+            removeBadges();
+            if (!count) return;
+
+            const links = Array.from(document.querySelectorAll('a[href]')).filter(a => {
+                const href = (a.getAttribute('href') || '').split('#')[0];
+                return href === targetHref;
+            });
+            links.forEach(link => {
+                link.classList.add('nav-unread-pulse');
+                const badge = document.createElement('span');
+                badge.className = 'nav-notification-badge';
+                badge.textContent = count > 99 ? '99+' : String(count);
+                link.appendChild(badge);
+            });
+        } catch (e) {
+            // Never break the page because notifications failed.
+            console.warn('Notifications badge failed:', e);
+        }
+    };
+
+    if (window.__itSchoolNotificationTimer) clearInterval(window.__itSchoolNotificationTimer);
+    updateBadges();
+    window.__itSchoolNotificationTimer = setInterval(updateBadges, 30000);
 }
 
 window.addEventListener('load', () => {
-    // Ensure no stale notification bell remains.
     initGlobalNotificationsBell();
 });
