@@ -5,7 +5,17 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.future import select
 from ..database import get_db
-from ..models import User, Schedule, Attendance, AttendanceStatus, Message, MessageStatus, UserRole
+from ..models import (
+    User,
+    Schedule,
+    Attendance,
+    AttendanceStatus,
+    UserRole,
+    StudyGroup,
+    QuestionThread,
+    QuestionMessage,
+    Notification,
+)
 from datetime import datetime, timedelta
 from sqlalchemy.orm import selectinload
 
@@ -65,7 +75,10 @@ async def _get_telegram_user(db, telegram_id: int):
     result = await db.execute(
         select(User)
         .where(User.telegram_id == telegram_id)
-        .options(selectinload(User.groups))
+        .options(
+            selectinload(User.groups).selectinload(StudyGroup.courses),
+            selectinload(User.groups).selectinload(StudyGroup.teacher),
+        )
     )
     return result.scalars().first()
 
@@ -121,6 +134,127 @@ async def _send_week_schedule(message: types.Message, db, user: User):
     response = _format_week_schedule(schedule_items)
     response += "\nДля відмітки оберіть кнопку 'Відмітка'."
     await message.answer(response, reply_markup=get_main_kb())
+
+
+def _make_question_title(text: str, prefix: str = "Питання з Telegram") -> str:
+    clean = " ".join((text or "").split())
+    if not clean:
+        return prefix
+    return clean[:80] if len(clean) <= 80 else clean[:77] + "..."
+
+
+async def _notify(db, user_id: int | None, title: str, body: str, link: str) -> None:
+    if not user_id:
+        return
+    db.add(Notification(user_id=user_id, title=title[:180], body=(body or "")[:1000], link=link))
+
+
+async def _notify_admins(db, title: str, body: str, link: str = "/admin-questions.html") -> None:
+    result = await db.execute(select(User.id).where(User.role == UserRole.admin))
+    for row in result.all():
+        await _notify(db, row[0], title, body, link)
+
+
+def _pick_group_teacher_and_course(user: User):
+    """Choose the safest teacher/course target for a Telegram question.
+
+    In this LMS, teachers are linked through study groups. Telegram has no
+    course dropdown, so we route to the first teacher assigned to the student's
+    group and use the first course of that group as context.
+    """
+    for group in list(user.groups or []):
+        if group.teacher_id:
+            courses = list(getattr(group, "courses", []) or [])
+            course_id = courses[0].id if courses else None
+            return group.teacher_id, course_id
+    return None, None
+
+
+async def _create_bot_question_thread(db, user: User, recipient: str, question: str):
+    """Create a structured QuestionThread from a Telegram question.
+
+    The web pages for admin/teacher questions read the `question_threads` table.
+    Older bot logic saved Telegram questions into the legacy `messages` table,
+    so they were saved but never appeared in the new questions module. This is
+    the key delivery fix.
+    """
+    title = _make_question_title(question)
+    target_type = recipient if recipient in {"teacher", "admin"} else "admin"
+    target_user_id = None
+    course_id = None
+    role_name = "адміністратора"
+
+    if target_type == "teacher":
+        target_user_id, course_id = _pick_group_teacher_and_course(user)
+        if not target_user_id:
+            # Do not lose the question when no teacher is assigned.
+            target_type = "admin"
+            role_name = "адміністратора"
+        else:
+            role_name = "викладача"
+
+    thread = QuestionThread(
+        student_id=user.id,
+        target_type=target_type,
+        target_user_id=target_user_id,
+        course_id=course_id,
+        title=title,
+        category="telegram",
+        status="new",
+        priority="normal",
+    )
+    db.add(thread)
+    await db.flush()
+
+    db.add(QuestionMessage(
+        thread_id=thread.id,
+        sender_id=user.id,
+        sender_role="student",
+        message_text=question,
+        is_ai_response=False,
+    ))
+
+    if target_type == "teacher":
+        await _notify(db, target_user_id, "Нове питання з Telegram", title, "/teacher-questions.html")
+        await _notify_admins(db, "Нове питання студент → викладач", title, "/admin-questions.html")
+    else:
+        await _notify_admins(db, "Нове звернення з Telegram", title, "/admin-questions.html")
+
+    await db.commit()
+    return thread, role_name
+
+
+async def _store_bot_ai_history(db, user: User, question: str, answer: str) -> None:
+    """Store a Telegram AI request so admin can see it in AI-запити."""
+    title = _make_question_title(question, prefix="AI-запит з Telegram")
+    thread = QuestionThread(
+        student_id=user.id,
+        target_type="ai",
+        target_user_id=None,
+        course_id=None,
+        title=title,
+        category="telegram_ai",
+        status="answered",
+        priority="normal",
+    )
+    db.add(thread)
+    await db.flush()
+    db.add(QuestionMessage(
+        thread_id=thread.id,
+        sender_id=user.id,
+        sender_role="student",
+        message_text=question,
+        is_ai_response=False,
+    ))
+    db.add(QuestionMessage(
+        thread_id=thread.id,
+        sender_id=None,
+        sender_role="ai",
+        message_text=answer,
+        is_ai_response=True,
+    ))
+    await _notify_admins(db, "Новий AI-запит з Telegram", title, "/admin-questions.html")
+    await db.commit()
 
 @router.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -485,7 +619,14 @@ async def cmd_ask_legacy(message: types.Message, command: CommandObject = None):
     question = command.args.strip()
     await message.answer("Думаю...")
     ai_result = await ai_service.classify_and_respond(question)
-    await message.answer(ai_result["response"], reply_markup=get_main_kb())
+    answer = ai_result["response"]
+    await message.answer(answer, reply_markup=get_main_kb())
+
+    async for db in get_db():
+        user = await _get_telegram_user(db, message.from_user.id)
+        if user:
+            await _store_bot_ai_history(db, user, question, answer)
+        break
 
 
 @router.callback_query(F.data.startswith("ask_to:"))
@@ -519,7 +660,13 @@ async def on_ask_question(message: types.Message, state: FSMContext):
     if recipient == "ai":
         await message.answer("Думаю...")
         ai_result = await ai_service.classify_and_respond(question)
-        await message.answer(ai_result["response"], reply_markup=get_main_kb())
+        answer = ai_result["response"]
+        await message.answer(answer, reply_markup=get_main_kb())
+        async for db in get_db():
+            user = await _get_telegram_user(db, message.from_user.id)
+            if user:
+                await _store_bot_ai_history(db, user, question, answer)
+            break
         await state.clear()
         return
 
@@ -530,31 +677,12 @@ async def on_ask_question(message: types.Message, state: FSMContext):
             await state.clear()
             break
 
-        receiver_id = None
-        role_name = "адміністратора"
-
-        if recipient == "teacher":
-            teacher_ids = [g.teacher_id for g in user.groups if g.teacher_id is not None]
-            receiver_id = teacher_ids[0] if teacher_ids else None
-            role_name = "викладача"
-        elif recipient == "admin":
-            admin_result = await db.execute(select(User).where(User.role == UserRole.admin).order_by(User.id))
-            admin_user = admin_result.scalars().first()
-            receiver_id = admin_user.id if admin_user else None
-            role_name = "адміністратора"
-
-        msg = Message(
-            sender_id=user.id,
-            receiver_id=receiver_id,
-            content=question,
-            status=MessageStatus.pending,
-            is_escalated=True,
-        )
-        db.add(msg)
-        await db.commit()
+        thread, role_name = await _create_bot_question_thread(db, user, recipient, question)
 
         await message.answer(
-            f"Запитання відправлено до {role_name}. Очікуйте відповідь у боті.",
+            f"Запитання відправлено до {role_name}. "
+            f"Його також видно у веб-кабінеті в розділі «Питання/Звернення».\n"
+            f"Номер звернення: #{thread.id}",
             reply_markup=get_main_kb(),
         )
         await state.clear()
