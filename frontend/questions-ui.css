@@ -175,3 +175,154 @@
 [data-theme='light'] .q-page .q-field label{
   color:#64748b!important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   FINAL DEMO FIX: questions pages must visually match the system in
+   light mode. The application keeps the sidebar dark navy in all modes,
+   while the content area becomes light. Also prevents clipped table text.
+   ═══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .q-page .sidebar {
+  background:#1a2744 !important;
+  border-color:rgba(255,255,255,.06) !important;
+  color:#ffffff !important;
+}
+[data-theme="light"] .q-page .sidebar-logo,
+[data-theme="light"] .q-page .sidebar-profile,
+[data-theme="light"] .q-page .sidebar-bottom {
+  border-color:rgba(255,255,255,.08) !important;
+}
+[data-theme="light"] .q-page .sidebar-logo span,
+[data-theme="light"] .q-page .sidebar-logo span b,
+[data-theme="light"] .q-page .sidebar-pname {
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+}
+[data-theme="light"] .q-page .nav-section-label {
+  color:rgba(255,255,255,.38) !important;
+  -webkit-text-fill-color:rgba(255,255,255,.38) !important;
+}
+[data-theme="light"] .q-page .sidebar-nav a,
+[data-theme="light"] .q-page .nav-item,
+[data-theme="light"] .q-page .sidebar-bottom a {
+  color:rgba(255,255,255,.66) !important;
+  -webkit-text-fill-color:rgba(255,255,255,.66) !important;
+  background:transparent !important;
+}
+[data-theme="light"] .q-page .sidebar-nav a:hover,
+[data-theme="light"] .q-page .nav-item:hover,
+[data-theme="light"] .q-page .sidebar-bottom a:hover {
+  background:rgba(255,255,255,.08) !important;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+}
+[data-theme="light"] .q-page .sidebar-nav a.active,
+[data-theme="light"] .q-page .nav-item.active {
+  background:rgba(59,130,246,.20) !important;
+  color:#93c5fd !important;
+  -webkit-text-fill-color:#93c5fd !important;
+  border-color:rgba(59,130,246,.35) !important;
+}
+[data-theme="light"] .q-page .sidebar svg {
+  color:currentColor !important;
+  stroke:currentColor !important;
+}
+[data-theme="light"] .q-page .role-admin {
+  background:rgba(139,92,246,.16) !important;
+  color:#ddd6fe !important;
+  -webkit-text-fill-color:#ddd6fe !important;
+  border-color:rgba(167,139,250,.35) !important;
+}
+[data-theme="light"] .q-page .role-teacher {
+  background:rgba(16,185,129,.16) !important;
+  color:#bbf7d0 !important;
+  -webkit-text-fill-color:#bbf7d0 !important;
+  border-color:rgba(16,185,129,.35) !important;
+}
+[data-theme="light"] .q-page .role-student {
+  background:rgba(37,99,235,.16) !important;
+  color:#bfdbfe !important;
+  -webkit-text-fill-color:#bfdbfe !important;
+  border-color:rgba(96,165,250,.35) !important;
+}
+[data-theme="light"] .q-page .q-section-subtitle,
+[data-theme="light"] .q-page .q-meta,
+[data-theme="light"] .q-page .q-hint,
+[data-theme="light"] .q-page .q-field label,
+[data-theme="light"] .q-page .stat-label {
+  color:#64748b !important;
+  -webkit-text-fill-color:#64748b !important;
+}
+[data-theme="light"] .q-page .q-table-wrap {
+  background:#ffffff !important;
+  border-color:#e2e8f0 !important;
+  overflow-x:visible !important;
+}
+.q-page .q-layout-admin .q-table {
+  min-width:100% !important;
+  table-layout:fixed !important;
+}
+.q-page .q-layout-admin .q-table th,
+.q-page .q-layout-admin .q-table td {
+  white-space:normal !important;
+  word-break:break-word !important;
+  overflow-wrap:anywhere !important;
+  vertical-align:top !important;
+  line-height:1.45 !important;
+}
+.q-page .q-layout-admin .q-table th:nth-child(1),
+.q-page .q-layout-admin .q-table td:nth-child(1){width:18%;}
+.q-page .q-layout-admin .q-table th:nth-child(2),
+.q-page .q-layout-admin .q-table td:nth-child(2){width:16%;}
+.q-page .q-layout-admin .q-table th:nth-child(3),
+.q-page .q-layout-admin .q-table td:nth-child(3){width:20%;}
+.q-page .q-layout-admin .q-table th:nth-child(4),
+.q-page .q-layout-admin .q-table td:nth-child(4){width:22%;}
+.q-page .q-layout-admin .q-table th:nth-child(5),
+.q-page .q-layout-admin .q-table td:nth-child(5){width:14%;}
+.q-page .q-layout-admin .q-table th:nth-child(6),
+.q-page .q-layout-admin .q-table td:nth-child(6){width:10%;}
+.q-page .q-layout-admin .q-badge {
+  white-space:normal !important;
+  line-height:1.25 !important;
+  text-align:center;
+}
+[data-theme="light"] .q-page .q-table th {
+  background:#f8fafc !important;
+  color:#64748b !important;
+  -webkit-text-fill-color:#64748b !important;
+  border-color:#e2e8f0 !important;
+}
+[data-theme="light"] .q-page .q-table td {
+  color:#0f172a !important;
+  -webkit-text-fill-color:#0f172a !important;
+  border-color:#e2e8f0 !important;
+}
+[data-theme="light"] .q-page .q-table tbody tr:hover td {
+  background:#f8fafc !important;
+}
+[data-theme="light"] .q-page .q-empty {
+  background:#f8fafc !important;
+  border-color:#e2e8f0 !important;
+  color:#64748b !important;
+  -webkit-text-fill-color:#64748b !important;
+}
+[data-theme="light"] .q-page .btn,
+[data-theme="light"] .q-page .btn-secondary,
+[data-theme="light"] .q-page .q-tab {
+  background:#ffffff !important;
+  color:#0f172a !important;
+  -webkit-text-fill-color:#0f172a !important;
+  border-color:#dbe3ef !important;
+}
+[data-theme="light"] .q-page .q-tab.active {
+  background:rgba(37,99,235,.10) !important;
+  color:#2563eb !important;
+  -webkit-text-fill-color:#2563eb !important;
+  border-color:rgba(37,99,235,.35) !important;
+}
+[data-theme="light"] .q-page .btn-primary {
+  background:#2563eb !important;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  border-color:#2563eb !important;
+}

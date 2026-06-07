@@ -894,3 +894,75 @@
 [data-theme="light"] .cv-modal-box { background: #ffffff; }
 [data-theme="light"] .cv-code { background: #f1f5f9; color: #0f172a; border-color: rgba(15,23,42,0.1); }
 [data-theme="light"] .cv-textarea, [data-theme="light"] .cv-input { background: #f8fafc; color: #0f172a; border-color: rgba(15,23,42,0.12); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   FINAL DEMO FIX: admin light-theme readability
+   Prevent white text on white surfaces in admin reports, dynamic buttons,
+   inline report tables and modal controls.
+   ═══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .btn,
+[data-theme="light"] .btn-sm,
+[data-theme="light"] .btn-cancel,
+[data-theme="light"] button.btn,
+[data-theme="light"] button.btn-sm {
+    background: rgba(15,23,42,0.05) !important;
+    color: #0f172a !important;
+    border-color: rgba(15,23,42,0.14) !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+[data-theme="light"] .btn:hover,
+[data-theme="light"] .btn-sm:hover,
+[data-theme="light"] .btn-cancel:hover {
+    background: rgba(15,23,42,0.09) !important;
+    color: #0f172a !important;
+}
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .btn-submit,
+[data-theme="light"] button.btn-primary,
+[data-theme="light"] button.btn-submit {
+    background: linear-gradient(135deg,#2563eb,#1d4ed8) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+[data-theme="light"] .btn-edit,
+[data-theme="light"] button.btn-edit,
+[data-theme="light"] .btn-sm.btn-edit {
+    background: rgba(37,99,235,0.10) !important;
+    color: #2563eb !important;
+    border-color: rgba(37,99,235,0.28) !important;
+    -webkit-text-fill-color: #2563eb !important;
+}
+[data-theme="light"] .section-card,
+[data-theme="light"] .section-card * {
+    text-shadow: none !important;
+}
+[data-theme="light"] .section-title,
+[data-theme="light"] .modal-title,
+[data-theme="light"] .form-label,
+[data-theme="light"] .data-table,
+[data-theme="light"] .table-wrap,
+[data-theme="light"] #reportsContent,
+[data-theme="light"] #reportsContent div,
+[data-theme="light"] #reportsContent table,
+[data-theme="light"] #reportsContent th,
+[data-theme="light"] #reportsContent td {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+[data-theme="light"] #reportsContent th {
+    color: #475569 !important;
+    -webkit-text-fill-color: #475569 !important;
+}
+[data-theme="light"] #reportsContent .btn-sm,
+[data-theme="light"] #reportsContent button {
+    min-height: 38px;
+    line-height: 1.25;
+    white-space: normal;
+}
+[data-theme="light"] .badge-muted,
+[data-theme="light"] .group-badge {
+    background: rgba(15,23,42,0.05) !important;
+    color: #475569 !important;
+    border-color: rgba(15,23,42,0.12) !important;
+}
