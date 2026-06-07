@@ -45,6 +45,15 @@
 </div></div><script>(function(){var toggle=document.getElementById('mobileToggle');var sidebar=document.getElementById('sidebar');if(toggle)toggle.addEventListener('click',function(){sidebar.classList.toggle('active')});document.addEventListener('click',function(e){if(window.innerWidth<=1024&&sidebar&&!sidebar.contains(e.target)&&toggle&&!toggle.contains(e.target))sidebar.classList.remove('active')});})();</script><script src="config.js"></script><script src="mockData.js"></script><script src="api.js"></script>
 <script>
 if(!requireAuth()) throw new Error('auth');
+const __pageRole = getRole();
+if (__pageRole === 'admin') {
+  window.location.replace('admin-questions.html');
+} else if (__pageRole === 'teacher') {
+  window.location.replace('teacher-questions.html');
+} else if (__pageRole !== 'student') {
+  window.location.replace('index.html');
+}
+if (__pageRole === 'student') {
 let teacherOptions=[]; let threads=[]; let currentFilter='all';
 const statusLabels={new:'Нове',waiting_answer:'Очікує відповіді',answered:'Відповідь надано',closed:'Закрито'};
 function toast(t){const d=document.createElement('div');d.className='q-toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
@@ -86,6 +95,6 @@ document.getElementById('courseSelect').addEventListener('change',renderTeacherS
 document.querySelectorAll('.q-tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.q-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentFilter=b.dataset.filter;renderList();}));
 document.getElementById('questionForm').addEventListener('submit',async e=>{e.preventDefault(); const payload={target_type:targetType.value,title:title.value.trim(),message:message.value.trim(),category:category.value,priority:priority.checked?'high':'normal'}; if(payload.target_type==='teacher'){ const cid=Number(courseSelect.value); const tid=Number(teacherSelect.value); if(!cid) return toast('Оберіть курс для питання викладачу'); if(!tid) return toast('Оберіть викладача для цього курсу'); payload.course_id=cid; payload.target_user_id=tid; } if(payload.title.length<3||payload.message.length<3) return toast('Тема і текст мають містити щонайменше 3 символи'); let created; try{ created=await createQuestion(payload); }catch(err){ return toast(err.message||'Не вдалося надіслати питання'); } toast('Питання надіслано'); e.target.reset(); updateTargetFields(); renderTeacherSelect(); try{ await loadQuestions(); if(created&&created.id) await openThread(created.id); }catch(_){/* question is saved; ignore post-send UI refresh hiccups */} });
 updateTargetFields(); loadCourses(); loadQuestions();
-</script>
+}
 </script>
 </body></html>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
@@ -66,25 +66,52 @@ async def create_user(
 @router.put("/users/{user_id}", response_model=UserResponseAdmin)
 async def update_user(
     user_id: int,
-    body: Optional[AdminUserUpdate] = None,
+    body: AdminUserUpdate = Body(default_factory=AdminUserUpdate),
     role: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(get_current_admin)
 ):
+    """Update a user from the admin panel.
+
+    This endpoint is intentionally explicit and conservative: older builds accepted
+    a loose optional body, which made some frontend saves look successful while the
+    changed fields were not applied reliably.  We accept JSON body fields used by
+    the admin modal and write only allowed attributes.
+    """
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    update_data = body.dict(exclude_unset=True) if body is not None else {}
+    # Pydantic v2: model_dump; fallback keeps compatibility with v1 if needed.
+    if hasattr(body, "model_dump"):
+        update_data = body.model_dump(exclude_unset=True)
+    else:
+        update_data = body.dict(exclude_unset=True)
+
     if role is not None:
         update_data["role"] = role
+
+    allowed_fields = {"full_name", "email", "patronymic", "date_of_birth", "phone", "photo_url", "role"}
+    update_data = {k: v for k, v in update_data.items() if k in allowed_fields}
+
+    # Normalize strings from forms.
+    for key in ("full_name", "email", "patronymic", "phone", "photo_url"):
+        if key in update_data and isinstance(update_data[key], str):
+            update_data[key] = update_data[key].strip()
+
+    if "full_name" in update_data and not update_data["full_name"]:
+        raise HTTPException(status_code=400, detail="Full name cannot be empty")
+    if "email" in update_data and not update_data["email"]:
+        raise HTTPException(status_code=400, detail="Email cannot be empty")
 
     if user.id == current_admin.id and "role" in update_data:
         raise HTTPException(status_code=400, detail="You cannot change your own role")
 
     if "email" in update_data:
-        existing = await db.execute(select(User).where(User.email == update_data["email"], User.id != user_id))
+        existing = await db.execute(
+            select(User).where(User.email == update_data["email"], User.id != user_id)
+        )
         if existing.scalars().first():
             raise HTTPException(status_code=400, detail="Email already registered")
 

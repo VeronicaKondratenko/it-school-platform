@@ -754,7 +754,7 @@
             btn.textContent = 'Збереження...';
             btn.disabled = true;
             try {
-                await apiPut(`/api/admin/users/${userId}`, {
+                const payload = {
                     full_name: document.getElementById('editFullName').value.trim(),
                     email: document.getElementById('editEmail').value.trim(),
                     patronymic: document.getElementById('editPatronymic').value.trim() || null,
@@ -762,7 +762,12 @@
                     phone: document.getElementById('editPhone').value.trim() || null,
                     photo_url: document.getElementById('editPhotoUrl').value.trim() || null,
                     role: document.getElementById('editRole').value,
-                });
+                };
+                const updatedUser = await apiPut(`/api/admin/users/${userId}`, payload);
+                if (updatedUser && updatedUser.id) {
+                    const idx = allUsers.findIndex(u => u.id === updatedUser.id);
+                    if (idx >= 0) allUsers[idx] = { ...allUsers[idx], ...updatedUser };
+                }
                 closeModal();
                 showToast('Користувача оновлено', 'success');
                 await Promise.all([loadUsers(), loadStats()]);

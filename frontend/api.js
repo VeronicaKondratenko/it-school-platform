@@ -1067,22 +1067,39 @@ function initStudentChatWidget() {
 // links (Оцінки/Завдання/Матеріали) that would otherwise bounce them back.
 function adjustNavForRole() {
     const role = (typeof getRole === 'function') ? getRole() : null;
-    if (role !== 'admin' && role !== 'teacher') return;
+    if (!role || role === 'student') return;
 
     const dashHref = role === 'admin' ? 'admin-dashboard.html' : 'teacher-dashboard.html';
+    const questionsHref = role === 'admin' ? 'admin-questions.html' : 'teacher-questions.html';
+
     document.querySelectorAll('.sidebar a, aside a, nav a').forEach(a => {
         const href = (a.getAttribute('href') || '').toLowerCase();
         const label = (a.textContent || '').trim().toLowerCase();
+
+        // Shared student pages should never send staff to the student cabinet.
         if (href.endsWith('dashboard.html') && !href.includes('admin') && !href.includes('teacher')) {
             a.setAttribute('href', dashHref);
         }
-        // Hide student-only destinations that redirect staff away.
-        if (role === 'admin' && (href.endsWith('assignments.html') || href.endsWith('grades.html') || href.endsWith('materials.html')
-            || label === 'завдання' || label === 'оцінки' || label === 'матеріали')) {
+
+        // Staff questions must open the staff module, not the student questions page.
+        if (href.endsWith('questions.html') || label === 'питання' || label === 'звернення') {
+            a.setAttribute('href', questionsHref);
+        }
+
+        // Hide student-only destinations from admin/teacher sidebars on shared pages.
+        const isStudentOnly = href.endsWith('assignments.html') || href.endsWith('grades.html') || href.endsWith('materials.html')
+            || label === 'завдання' || label === 'оцінки' || label === 'матеріали';
+        if (isStudentOnly) {
             a.style.display = 'none';
         }
     });
 }
+
+// Apply on every page that includes api.js. This keeps sidebars stable by role,
+// including shared pages such as profile/courses/schedule.
+document.addEventListener('DOMContentLoaded', () => {
+    try { adjustNavForRole(); } catch (_) {}
+});
 
 // ─── Export Reports (Teacher) ────────────────────────────────────────
 
