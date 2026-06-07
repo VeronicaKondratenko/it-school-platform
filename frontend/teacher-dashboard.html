@@ -170,13 +170,55 @@
     .empty-state .empty-icon{font-size:2.5rem;margin-bottom:.75rem;}
     .empty-state p{font-size:.9rem;}
 
+
+    /* v17: teacher dashboard theme consistency and readable loaders */
+    .teacher-dashboard-page{background:var(--ink);}
+    .teacher-dashboard-page .main{background:transparent;}
+    .teacher-dashboard-page .loading,.teacher-dashboard-page .loader{min-height:72px;}
+    [data-theme="light"] .teacher-dashboard-page{background:#eef2f7!important;color:#0f172a!important;}
+    [data-theme="light"] .teacher-dashboard-page .main{background:#eef2f7!important;}
+    [data-theme="light"] .teacher-dashboard-page .section-card,
+    [data-theme="light"] .teacher-dashboard-page .stat-card,
+    [data-theme="light"] .teacher-dashboard-page .ov-panel,
+    [data-theme="light"] .teacher-dashboard-page .table-wrap,
+    [data-theme="light"] .teacher-dashboard-page .course-card-rich,
+    [data-theme="light"] .teacher-dashboard-page .modal-box{
+        background:#ffffff!important;color:#0f172a!important;border-color:rgba(15,23,42,.10)!important;
+    }
+    [data-theme="light"] .teacher-dashboard-page .section-title,
+    [data-theme="light"] .teacher-dashboard-page .course-card-title,
+    [data-theme="light"] .teacher-dashboard-page .mail-from,
+    [data-theme="light"] .teacher-dashboard-page .ov-mini-title,
+    [data-theme="light"] .teacher-dashboard-page .form-label{
+        color:#0f172a!important;-webkit-text-fill-color:#0f172a!important;
+    }
+    [data-theme="light"] .teacher-dashboard-page .course-card-desc,
+    [data-theme="light"] .teacher-dashboard-page .course-card-stats,
+    [data-theme="light"] .teacher-dashboard-page .mail-question,
+    [data-theme="light"] .teacher-dashboard-page .ov-mini-meta,
+    [data-theme="light"] .teacher-dashboard-page .loading,
+    [data-theme="light"] .teacher-dashboard-page .loader{
+        color:#64748b!important;-webkit-text-fill-color:#64748b!important;
+    }
+    [data-theme="light"] .teacher-dashboard-page .data-table th{background:#f1f5f9!important;color:#475569!important;border-color:rgba(15,23,42,.10)!important;}
+    [data-theme="light"] .teacher-dashboard-page .data-table td{color:#0f172a!important;border-color:rgba(15,23,42,.07)!important;}
+    [data-theme="light"] .teacher-dashboard-page .form-input,
+    [data-theme="light"] .teacher-dashboard-page .grade-input,
+    [data-theme="light"] .teacher-dashboard-page textarea,
+    [data-theme="light"] .teacher-dashboard-page select,
+    [data-theme="light"] .teacher-dashboard-page input{
+        background:#f8fafc!important;color:#0f172a!important;-webkit-text-fill-color:#0f172a!important;border-color:rgba(15,23,42,.14)!important;
+    }
+    [data-theme="light"] .teacher-dashboard-page .cc-btn:not(.primary),
+    [data-theme="light"] .teacher-dashboard-page .btn:not(.btn-primary){background:#f8fafc!important;color:#0f172a!important;border-color:rgba(15,23,42,.14)!important;}
+
     </style>
     <link rel="stylesheet" href="professional-ui.css">
     <link rel="stylesheet" href="theme-light.css">
     <script defer src="professional-ui.js"></script>
     <link rel="stylesheet" href="ui-system.css">
 </head>
-<body>
+<body class="teacher-dashboard-page">
 <button class="mobile-toggle" id="mobileToggle">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </button>
@@ -345,28 +387,55 @@
         let currentReportType = null;
         let currentReportTitle = 'report';
 
+        const TEACHER_SECTIONS = ['overview','courses','students','assignments','grades','attendance','materials','reports','info','notifications','inbox'];
+
+        function normalizeTeacherSection(id) {
+            const clean = String(id || '').replace('#', '').trim();
+            return TEACHER_SECTIONS.includes(clean) ? clean : 'overview';
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (!requireAuth()) return;
             showDemoBanner();
-            currentTeacher = await fetchCurrentUser();
+            try {
+                currentTeacher = await fetchCurrentUser();
+            } catch (error) {
+                console.error('Cannot load current teacher', error);
+                showToast('Не вдалося завантажити профіль викладача. Увійдіть повторно.', 'error');
+                return;
+            }
             if (!currentTeacher || currentTeacher.role !== 'teacher') {
                 window.location.href = 'dashboard.html';
                 return;
             }
-            const initials = currentTeacher.full_name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2);
+
+            const displayName = currentTeacher.full_name || currentTeacher.email || 'Викладач';
+            const initials = displayName.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) || 'ВК';
             const teacherAvatar = document.getElementById('teacherAvatar');
-            teacherAvatar.textContent = initials;
-            teacherAvatar.title = 'Відкрити профіль';
-            teacherAvatar.addEventListener('click', openTeacherProfileModal);
-            document.getElementById('teacherName').textContent = currentTeacher.full_name;
-            loadOverview();
-            // Pre-count pending inbox
-            checkInboxBadge();
-            await loadTeacherCoursesForFilter();
-            await loadInfoCourseSelect();
-            await loadPublicNotifications();
-            const initialSection = (window.location.hash || '').replace('#', '');
-            if (initialSection) showSection(initialSection);
+            if (teacherAvatar) {
+                teacherAvatar.textContent = initials;
+                teacherAvatar.title = 'Відкрити профіль';
+                teacherAvatar.addEventListener('click', openTeacherProfileModal);
+            }
+            const teacherNameEl = document.getElementById('teacherName');
+            if (teacherNameEl) teacherNameEl.textContent = displayName;
+
+            // Show the requested section immediately. Slow API requests must not
+            // leave the page stuck on the overview loader when the user opens
+            // teacher-dashboard.html#grades, #students, etc.
+            showSection(normalizeTeacherSection(window.location.hash), false);
+            window.addEventListener('hashchange', () => showSection(normalizeTeacherSection(window.location.hash), false));
+
+            // Load supporting data independently. A failed legacy endpoint must
+            // not block the whole teacher dashboard.
+            Promise.allSettled([
+                loadTeacherCoursesForFilter(),
+                loadInfoCourseSelect(),
+                loadPublicNotifications(),
+                checkInboxBadge(),
+            ]).then(results => {
+                results.forEach(r => { if (r.status === 'rejected') console.warn('Teacher startup task failed', r.reason); });
+            });
         });
 
         // ── Nav ─────────────────────────────────────────────────────
@@ -383,21 +452,32 @@
 
         // ── Overview Stats ──────────────────────────────────────────
         // ── Section Navigation ──────────────────────────────────────────
-        function showSection(id) {
+        function showSection(id, updateHash = true) {
+            id = normalizeTeacherSection(id);
             if (id === 'inbox') { window.location.href = 'teacher-questions.html'; return; }
+
             document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
             const target = document.getElementById('section-' + id);
             if (target) target.classList.add('active');
+            else document.getElementById('section-overview')?.classList.add('active');
+
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(b => {
-                if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + id + "'")) {
+                const onclick = b.getAttribute('onclick') || '';
+                const href = b.getAttribute('href') || '';
+                if (onclick.includes("'" + id + "'") || href.endsWith('#' + id)) {
                     b.classList.add('active');
                 }
             });
+
+            if (updateHash && window.location.hash !== '#' + id) {
+                history.replaceState(null, '', '#' + id);
+            }
+
+            if (id === 'overview')   loadOverview();
             if (id === 'courses')    loadTeacherCourses();
             if (id === 'assignments') loadAssignments();
             if (id === 'students')   loadStudents();
-            if (id === 'inbox')      loadInbox();
             if (id === 'reports')    loadReport('attendance');
             if (id === 'info')       loadCourseInfoEditor();
             if (id === 'notifications') loadPublicNotifications();
@@ -626,18 +706,25 @@
         }
 
         async function checkInboxBadge() {
-            const messages = await apiGet('/api/messages/inbox');
-            if (!messages) return;
-            pendingCount = messages.filter(m => m.status === 'pending').length;
-            updateInboxBadge();
+            try {
+                const notes = await apiGet('/api/notifications') || [];
+                pendingCount = notes.filter(n => !n.is_read && (n.link || '').includes('teacher-questions')).length;
+                updateInboxBadge();
+            } catch (error) {
+                console.warn('Cannot load teacher notification badge', error);
+            }
         }
 
         function updateInboxBadge() {
-            const link = document.getElementById('inboxNavLink');
+            const link = document.getElementById('inboxNavLink') || document.querySelector('a[href="teacher-questions.html"]');
+            if (!link) return;
             const existingBadge = link.querySelector('.inbox-badge');
             if (existingBadge) existingBadge.remove();
             if (pendingCount > 0) {
-                link.innerHTML = ` Інбокс питань <span class="inbox-badge">${pendingCount}</span>`;
+                const badge = document.createElement('span');
+                badge.className = 'inbox-badge';
+                badge.textContent = String(pendingCount);
+                link.appendChild(badge);
             }
         }
 
