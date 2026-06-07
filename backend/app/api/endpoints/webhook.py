@@ -38,19 +38,22 @@ async def telegram_webhook(request: Request):
     # Parse incoming JSON as Telegram Update
     try:
         update_data = await request.json()
-        update = types.Update(**update_data)
+        # aiogram 3.x (pydantic v2): model_validate is the correct, robust way to
+        # build an Update from raw JSON. Update(**data) fails on nested objects.
+        update = types.Update.model_validate(update_data)
         logger.debug("Telegram update received: %s", update.update_id)
     except Exception as e:
-        logger.warning("Invalid Telegram update format")
+        logger.warning("Invalid Telegram update format: %s", e)
         raise HTTPException(status_code=400, detail=f"Invalid update format: {str(e)}")
-    
-    # Feed update to dispatcher to handle it
+
+    # Feed update to dispatcher to handle it. A failure in a single handler must
+    # NOT return a non-2xx status: Telegram would keep retrying the same update
+    # and the bot would look stuck. Log it and acknowledge with 200.
     try:
         await dp.feed_update(bot, update)
         logger.debug("Telegram update processed")
-    except Exception as e:
-        logger.exception("Error processing Telegram update")
-        raise HTTPException(status_code=500, detail="Error processing update")
-    
+    except Exception:
+        logger.exception("Error processing Telegram update (acknowledged to Telegram anyway)")
+
     # Return 200 OK immediately (Telegram expects quick response)
     return {"ok": True}

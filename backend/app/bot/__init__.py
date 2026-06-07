@@ -68,6 +68,18 @@ async def setup_webhook():
     )
     print(f"Telegram webhook set to {webhook_url}")
 
+    # Diagnostic: surface Telegram's own view of the webhook in the logs.
+    # last_error_message here is the single most useful clue for a silent bot
+    # (e.g. wrong host -> "Wrong response ... 404", bad TLS, connection refused).
+    try:
+        info = await bot.get_webhook_info()
+        print(
+            "Webhook info: url=%s pending=%s last_error=%s"
+            % (info.url, info.pending_update_count, info.last_error_message)
+        )
+    except Exception as e:
+        print(f"Could not fetch webhook info (non-fatal): {e}")
+
 
 async def start_polling():
     """Run dispatcher polling in the background."""

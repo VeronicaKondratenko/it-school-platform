@@ -102,3 +102,50 @@ https://api.telegram.org/bot<TOKEN>/deleteWebhook?drop_pending_updates=true
 - `frontend/api.js`
 - `backend/app/api/endpoints/questions.py`
 - `frontend/questions.html`
+
+---
+
+# Раунд 3: «мертвий» Telegram-бот — глибша діагностика й виправлення
+
+> УВАГА БЕЗПЕКА: токен бота було розкрито у переписці. Негайно зробіть
+> `/revoke` у @BotFather і використовуйте новий токен. Старий вважати
+> скомпрометованим.
+
+## Виправлені дефекти коду
+- `backend/app/api/endpoints/webhook.py`:
+  * парсинг апдейтів переведено на `types.Update.model_validate(...)` замість
+    крихкого `types.Update(**data)` (останнє падає на вкладених об'єктах →
+    Telegram отримує 400, апдейт втрачається, бот «мовчить» у webhook-режимі);
+  * помилка в одному хендлері більше не повертає 5xx (інакше Telegram ретраїть
+    той самий апдейт нескінченно й бот виглядає завислим) — логуємо й
+    відповідаємо 200.
+- `backend/app/bot/__init__.py`: після `set_webhook` логуємо `get_webhook_info`
+  (`url`, `pending_update_count`, `last_error_message`) — у логах Render одразу
+  видно справжню причину мовчання.
+- `backend/requirements.txt`: зафіксовано `aiogram>=3.10,<4` (раніше без версії —
+  свіжий білд міг підтягнути несумісну версію).
+
+## Новий інструмент
+- `backend/diagnose_bot.py` — читає токен зі змінної середовища `TELEGRAM_BOT_TOKEN`
+  (НЕ з коду) і друкує `getMe` + `getWebhookInfo` з поясненням. Запуск:
+  ```
+  # bash
+  TELEGRAM_BOT_TOKEN="<новий-токен>" python diagnose_bot.py
+  # PowerShell
+  $env:TELEGRAM_BOT_TOKEN="<новий-токен>"; python diagnose_bot.py
+  ```
+  Скинути застарілий webhook:  `python diagnose_bot.py --delete-webhook`
+  Перевстановити webhook:      `python diagnose_bot.py --set-webhook https://<backend>/api/webhook/telegram`
+
+## Найімовірніші причини «мертвого» бота (за спаданням імовірності)
+1. Бота не ввімкнено на Render: `ENABLE_BOT=false` / `BOT_MODE=disabled` (дефолт).
+2. Polling на безкоштовному Render: сервіс «засинає» → бот мовчить. Рішення — webhook.
+3. Невірний/застарілий `TELEGRAM_WEBHOOK_URL` (інший хост через суфікс у назві
+   сервісу або старий деплой) → Telegram шле на мертвий URL. Видно в `last_error_message`.
+4. Токен перевипущено/недійсний → `getMe` дає 401.
+
+## Змінені файли (раунд 3)
+- `backend/app/api/endpoints/webhook.py`
+- `backend/app/bot/__init__.py`
+- `backend/requirements.txt`
+- `backend/diagnose_bot.py` (новий)

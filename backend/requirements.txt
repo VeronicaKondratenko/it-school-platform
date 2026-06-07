@@ -12,7 +12,7 @@ psycopg2-binary
 pytest
 httpx
 pytest-asyncio
-aiogram
+aiogram>=3.10,<4
 google-generativeai
 pandas
 openpyxl
