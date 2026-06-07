@@ -1068,9 +1068,10 @@ function initStudentChatWidget() {
 }
 
 // ─── Role-aware sidebar stability ─────────────────────────────────
-// Shared pages (profile/schedule/questions) originally contain student menu markup.
-// For staff users we rebuild the visible sidebar to match their role, so the menu
-// does not randomly change when they open shared pages.
+// Shared pages used to keep their own sidebar markup, so admin/teacher could see
+// a student menu or lose the account block. This block rebuilds staff sidebars in
+// one consistent way, keeps active menu items highlighted, and adds the account
+// avatar/name/role everywhere for staff users.
 function roleNavIcon(name) {
     const icons = {
         overview: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
@@ -1088,60 +1089,213 @@ function roleNavIcon(name) {
     return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.overview}</svg>`;
 }
 
+function roleLabel(role) {
+    return role === 'admin' ? 'Адмін' : role === 'teacher' ? 'Викладач' : 'Студент';
+}
+
+function initialsFromName(name, email) {
+    const raw = String(name || '').trim();
+    if (raw) {
+        const parts = raw.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+        return raw.slice(0, 2).toUpperCase();
+    }
+    return String(email || 'IT').slice(0, 2).toUpperCase();
+}
+
+function currentRolePage() {
+    return (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+}
+
+function adminNavItems() {
+    return [
+        { type: 'label', text: 'Панель адміністратора' },
+        { href: 'admin-dashboard.html#overview', label: 'Огляд', icon: 'overview', active: () => currentRolePage() === 'admin-dashboard.html' && (!location.hash || location.hash === '#overview') },
+        { type: 'label', text: 'Управління' },
+        { href: 'admin-dashboard.html#users', label: 'Користувачі', icon: 'users', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#users' },
+        { href: 'admin-dashboard.html#courses', label: 'Курси', icon: 'course', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#courses' },
+        { href: 'admin-dashboard.html#groups', label: 'Групи', icon: 'group', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#groups' },
+        { href: 'admin-dashboard.html#schedule', label: 'Розклад', icon: 'calendar', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#schedule' },
+        { type: 'label', text: 'Комунікація' },
+        { href: 'admin-questions.html', label: 'Звернення', icon: 'chat', active: () => currentRolePage() === 'admin-questions.html' },
+        { href: 'admin-dashboard.html#notifications', label: 'Сповіщення', icon: 'bell', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#notifications' },
+        { type: 'label', text: 'Аналітика' },
+        { href: 'admin-dashboard.html#reports', label: 'Звіти', icon: 'report', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#reports' },
+        { type: 'label', text: 'Профіль' },
+        { href: 'profile.html', label: 'Профіль', icon: 'profile', active: () => currentRolePage() === 'profile.html' },
+    ];
+}
+
+function teacherNavItems() {
+    return [
+        { type: 'label', text: 'Панель викладача' },
+        { href: 'teacher-dashboard.html#overview', label: 'Огляд', icon: 'overview', active: () => currentRolePage() === 'teacher-dashboard.html' && (!location.hash || location.hash === '#overview') },
+        { type: 'label', text: 'Навчання' },
+        { href: 'teacher-dashboard.html#courses', label: 'Мої курси', icon: 'course', active: () => currentRolePage() === 'teacher-dashboard.html' && location.hash === '#courses' },
+        { href: 'teacher-dashboard.html#students', label: 'Студенти', icon: 'users', active: () => currentRolePage() === 'teacher-dashboard.html' && location.hash === '#students' },
+        { href: 'teacher-dashboard.html#assignments', label: 'Завдання', icon: 'task', active: () => currentRolePage() === 'teacher-dashboard.html' && location.hash === '#assignments' },
+        { href: 'teacher-dashboard.html#grades', label: 'Оцінки', icon: 'grade', active: () => currentRolePage() === 'teacher-dashboard.html' && location.hash === '#grades' },
+        { href: 'teacher-dashboard.html#attendance', label: 'Відвідуваність', icon: 'calendar', active: () => currentRolePage() === 'teacher-dashboard.html' && location.hash === '#attendance' },
+        { type: 'label', text: 'Комунікація' },
+        { href: 'teacher-questions.html', label: 'Звернення студентів', icon: 'chat', active: () => currentRolePage() === 'teacher-questions.html' },
+        { type: 'label', text: 'Профіль' },
+        { href: 'profile.html', label: 'Профіль', icon: 'profile', active: () => currentRolePage() === 'profile.html' },
+    ];
+}
+
+function roleNavItemsFor(role) {
+    if (role === 'admin') return adminNavItems();
+    if (role === 'teacher') return teacherNavItems();
+    return null;
+}
+
+function injectRoleSidebarStyles() {
+    if (document.getElementById('role-sidebar-consistency-style')) return;
+    const s = document.createElement('style');
+    s.id = 'role-sidebar-consistency-style';
+    s.textContent = `
+        body.role-admin .sidebar, body.role-teacher .sidebar{
+            background:#1a2744!important;color:#fff!important;border-right:1px solid rgba(255,255,255,.08)!important;
+        }
+        body.role-admin .sidebar-logo, body.role-teacher .sidebar-logo,
+        body.role-admin .sidebar-profile, body.role-teacher .sidebar-profile,
+        body.role-admin .sidebar-bottom, body.role-teacher .sidebar-bottom{
+            border-color:rgba(255,255,255,.08)!important;
+        }
+        body.role-admin .sidebar-logo span, body.role-teacher .sidebar-logo span,
+        body.role-admin .sidebar-pname, body.role-teacher .sidebar-pname{
+            color:#fff!important;-webkit-text-fill-color:#fff!important;
+        }
+        body.role-admin .sidebar-profile, body.role-teacher .sidebar-profile{
+            padding:1.25rem 1rem!important;text-align:center!important;border-bottom:1px solid rgba(255,255,255,.08)!important;
+        }
+        body.role-admin .sidebar-avatar, body.role-teacher .sidebar-avatar{
+            width:64px!important;height:64px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+            font-family:'Unbounded',sans-serif!important;font-size:1.45rem!important;font-weight:900!important;color:#fff!important;margin:0 auto .75rem!important;
+            box-shadow:0 0 20px rgba(37,99,235,.22)!important;
+        }
+        body.role-admin .sidebar-avatar{background:linear-gradient(135deg,#8b5cf6,#7c3aed)!important;}
+        body.role-teacher .sidebar-avatar{background:linear-gradient(135deg,#10b981,#059669)!important;}
+        body.role-admin .sidebar-pname, body.role-teacher .sidebar-pname{font-weight:800!important;font-size:.95rem!important;margin-bottom:.25rem!important;line-height:1.25!important;}
+        body.role-admin .sidebar-prole, body.role-teacher .sidebar-prole{display:inline-block!important;padding:.22rem .7rem!important;border-radius:999px!important;font-size:.7rem!important;font-weight:800!important;letter-spacing:.04em!important;text-transform:uppercase!important;}
+        body.role-admin .sidebar-prole{background:rgba(139,92,246,.16)!important;color:#ddd6fe!important;border:1px solid rgba(167,139,250,.35)!important;}
+        body.role-teacher .sidebar-prole{background:rgba(16,185,129,.16)!important;color:#bbf7d0!important;border:1px solid rgba(16,185,129,.35)!important;}
+        body.role-admin .nav-section-label, body.role-teacher .nav-section-label{color:rgba(255,255,255,.42)!important;-webkit-text-fill-color:rgba(255,255,255,.42)!important;}
+        body.role-admin .sidebar-nav a, body.role-admin .sidebar-nav .nav-item,
+        body.role-teacher .sidebar-nav a, body.role-teacher .sidebar-nav .nav-item,
+        body.role-admin .sidebar-bottom a, body.role-teacher .sidebar-bottom a{
+            color:rgba(255,255,255,.68)!important;-webkit-text-fill-color:rgba(255,255,255,.68)!important;background:transparent!important;border:1px solid transparent!important;
+        }
+        body.role-admin .sidebar-nav a:hover, body.role-admin .sidebar-nav .nav-item:hover,
+        body.role-teacher .sidebar-nav a:hover, body.role-teacher .sidebar-nav .nav-item:hover,
+        body.role-admin .sidebar-bottom a:hover, body.role-teacher .sidebar-bottom a:hover{
+            background:rgba(255,255,255,.08)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+        }
+        body.role-admin .sidebar-nav a.active, body.role-admin .sidebar-nav .nav-item.active,
+        body.role-teacher .sidebar-nav a.active, body.role-teacher .sidebar-nav .nav-item.active{
+            background:rgba(59,130,246,.20)!important;color:#93c5fd!important;-webkit-text-fill-color:#93c5fd!important;border-color:rgba(59,130,246,.35)!important;
+        }
+        body.role-admin .sidebar svg, body.role-teacher .sidebar svg{color:currentColor!important;stroke:currentColor!important;}
+    `;
+    document.head.appendChild(s);
+}
+
 function renderRoleSidebarNav() {
     const role = (typeof getRole === 'function') ? getRole() : null;
     const nav = document.querySelector('.sidebar-nav');
-    if (!nav) return;
-    const current = (location.pathname.split('/').pop() || '').toLowerCase() + (location.hash || '');
+    const items = roleNavItemsFor(role);
+    if (!nav || !items) return;
+    document.body.classList.add(`role-${role}`);
+    injectRoleSidebarStyles();
+    const html = items.map(it => {
+        if (it.type === 'label') return `<div class="nav-section-label">${escapeHtml(it.text)}</div>`;
+        return `<a class="nav-item role-nav-link" href="${it.href}">${roleNavIcon(it.icon)}<span>${escapeHtml(it.label)}</span></a>`;
+    }).join('');
+    nav.innerHTML = html;
+    updateRoleSidebarActive();
+}
 
-    const item = (href, label, icon, activeTest) => {
-        const active = activeTest ? activeTest(current) : current.startsWith(href.toLowerCase());
-        return `<a class="nav-item ${active ? 'active' : ''}" href="${href}">${roleNavIcon(icon)}${label}</a>`;
-    };
-    const label = (text) => `<div class="nav-section-label">${text}</div>`;
+async function ensureRoleSidebarProfile() {
+    const role = (typeof getRole === 'function') ? getRole() : null;
+    if (role !== 'admin' && role !== 'teacher') return;
+    const sidebar = document.querySelector('.sidebar');
+    const logo = document.querySelector('.sidebar-logo');
+    if (!sidebar || !logo) return;
+    document.body.classList.add(`role-${role}`);
+    injectRoleSidebarStyles();
 
-    if (role === 'admin') {
-        nav.innerHTML = [
-            label('Панель адміністратора'),
-            item('admin-dashboard.html#overview', 'Огляд', 'overview', c => c.startsWith('admin-dashboard.html') && (!location.hash || location.hash === '#overview')),
-            label('Управління'),
-            item('admin-dashboard.html#users', 'Користувачі', 'users', c => location.hash === '#users'),
-            item('admin-dashboard.html#courses', 'Курси', 'course', c => location.hash === '#courses'),
-            item('admin-dashboard.html#groups', 'Групи', 'group', c => location.hash === '#groups'),
-            item('schedule.html', 'Розклад', 'calendar', c => c.startsWith('schedule.html')),
-            label('Комунікація'),
-            item('admin-questions.html', 'Звернення', 'chat', c => c.startsWith('admin-questions.html')),
-            item('admin-dashboard.html#notifications', 'Сповіщення', 'bell', c => location.hash === '#notifications'),
-            label('Аналітика'),
-            item('admin-dashboard.html#reports', 'Звіти', 'report', c => location.hash === '#reports'),
-            label('Профіль'),
-            item('profile.html', 'Профіль', 'profile', c => c.startsWith('profile.html')),
-        ].join('');
-        return;
+    let profile = sidebar.querySelector('.sidebar-profile');
+    if (!profile) {
+        profile = document.createElement('div');
+        profile.className = 'sidebar-profile';
+        logo.insertAdjacentElement('afterend', profile);
     }
-
-    if (role === 'teacher') {
-        nav.innerHTML = [
-            label('Панель викладача'),
-            item('teacher-dashboard.html#overview', 'Огляд', 'overview', c => c.startsWith('teacher-dashboard.html') && (!location.hash || location.hash === '#overview')),
-            label('Навчання'),
-            item('teacher-dashboard.html#courses', 'Мої курси', 'course', c => location.hash === '#courses'),
-            item('teacher-dashboard.html#students', 'Студенти', 'users', c => location.hash === '#students'),
-            item('teacher-dashboard.html#assignments', 'Завдання', 'task', c => location.hash === '#assignments'),
-            item('teacher-dashboard.html#grades', 'Оцінки', 'grade', c => location.hash === '#grades'),
-            item('teacher-dashboard.html#attendance', 'Відвідуваність', 'calendar', c => location.hash === '#attendance'),
-            label('Комунікація'),
-            item('teacher-questions.html', 'Звернення студентів', 'chat', c => c.startsWith('teacher-questions.html')),
-            label('Профіль'),
-            item('profile.html', 'Профіль', 'profile', c => c.startsWith('profile.html')),
-        ].join('');
+    const fallbackName = role === 'admin' ? 'Адміністратор' : 'Викладач';
+    profile.innerHTML = `
+        <div class="sidebar-avatar" id="roleSidebarAvatar">${role === 'admin' ? 'АД' : 'ВК'}</div>
+        <div class="sidebar-pname" id="roleSidebarName">${fallbackName}</div>
+        <span class="sidebar-prole role-${role}" id="roleSidebarBadge">${roleLabel(role)}</span>
+    `;
+    try {
+        const user = await getCurrentUser();
+        const name = user?.full_name || fallbackName;
+        const email = user?.email || '';
+        const initials = initialsFromName(name, email);
+        profile.querySelector('#roleSidebarAvatar').textContent = initials;
+        profile.querySelector('#roleSidebarName').textContent = name;
+        if (role === 'admin') {
+            const el = document.getElementById('adminName');
+            if (el) el.textContent = name;
+            const av = document.getElementById('adminAvatar');
+            if (av) av.textContent = initials;
+        }
+        if (role === 'teacher') {
+            const el = document.getElementById('teacherName');
+            if (el) el.textContent = name;
+        }
+    } catch (_) {
+        // The page should not break if /api/users/me is temporarily unavailable.
     }
+}
+
+function updateRoleSidebarActive() {
+    const role = (typeof getRole === 'function') ? getRole() : null;
+    const items = roleNavItemsFor(role);
+    const nav = document.querySelector('.sidebar-nav');
+    if (!nav || !items) return;
+    const links = [...nav.querySelectorAll('.nav-item')];
+    links.forEach(link => link.classList.remove('active'));
+    items.filter(i => !i.type).forEach((it, idx) => {
+        const link = links[idx];
+        if (link && typeof it.active === 'function' && it.active()) link.classList.add('active');
+    });
+}
+window.updateRoleSidebarActive = updateRoleSidebarActive;
+
+function bindRoleSidebarNavigation() {
+    document.addEventListener('click', async (e) => {
+        const link = e.target.closest && e.target.closest('.role-nav-link');
+        if (!link) return;
+        const href = link.getAttribute('href') || '';
+        if (!href) return;
+        const [targetPage, targetHash=''] = href.split('#');
+        const currentPage = currentRolePage();
+        const samePage = targetPage.toLowerCase() === currentPage;
+        if (samePage && targetHash) {
+            e.preventDefault();
+            history.replaceState(null, '', `${targetPage}#${targetHash}`);
+            if (typeof window.loadSection === 'function') {
+                await window.loadSection(targetHash);
+            }
+            updateRoleSidebarActive();
+        }
+    });
 }
 
 function redirectStaffAwayFromStudentPages() {
     const role = (typeof getRole === 'function') ? getRole() : null;
     if (!role || role === 'student') return;
-    const page = (location.pathname.split('/').pop() || '').toLowerCase();
+    const page = currentRolePage();
     if (page === 'courses.html') {
         window.location.replace(role === 'admin' ? 'admin-dashboard.html#courses' : 'teacher-dashboard.html#courses');
     }
@@ -1150,9 +1304,21 @@ function redirectStaffAwayFromStudentPages() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    try { renderRoleSidebarNav(); redirectStaffAwayFromStudentPages(); } catch (_) {}
-});
+function initRoleSidebarConsistency() {
+    try {
+        redirectStaffAwayFromStudentPages();
+        renderRoleSidebarNav();
+        ensureRoleSidebarProfile();
+        bindRoleSidebarNavigation();
+        setTimeout(updateRoleSidebarActive, 0);
+        setTimeout(updateRoleSidebarActive, 250);
+    } catch (e) {
+        console.warn('Role sidebar consistency failed', e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initRoleSidebarConsistency);
+window.addEventListener('hashchange', updateRoleSidebarActive);
 
 // ─── Export Reports (Teacher) ────────────────────────────────────────
 
