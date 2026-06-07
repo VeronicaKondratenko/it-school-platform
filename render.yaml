@@ -45,6 +45,8 @@ services:
         value: ""
       - key: TELEGRAM_WEBHOOK_SECRET
         value: ""
+      - key: TELEGRAM_DELETE_WEBHOOK_ON_SHUTDOWN
+        value: false
       - key: GEMINI_API_KEY
         value: ""
       - key: SQL_ECHO

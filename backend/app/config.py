@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Webhook settings (optional; if not set, fallback to polling)
     TELEGRAM_WEBHOOK_URL: str = ""
     TELEGRAM_WEBHOOK_SECRET: str = ""
+    # Keep webhook registered during Render restarts/deploys.
+    # If the old instance deletes the webhook on shutdown, the bot can become silent.
+    TELEGRAM_DELETE_WEBHOOK_ON_SHUTDOWN: bool = False
     # Operational toggles (safe defaults for local dev; tighten in production).
     SQL_ECHO: bool = False
     AUTO_CREATE_DB: bool = True
