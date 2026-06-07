@@ -144,7 +144,7 @@ class MaterialResponse(BaseModel):
 # Study Group Schemas
 class StudyGroupBase(BaseModel):
     name: str
-    teacher_id: int
+    teacher_id: Optional[int] = None
     is_active: bool = True
     course_ids: List[int] = Field(default_factory=list)
     student_ids: List[int] = Field(default_factory=list)

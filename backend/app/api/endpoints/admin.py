@@ -15,6 +15,42 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+
+def _serialize_group_for_admin(group: StudyGroup) -> dict:
+    """Return a group shape that matches StudyGroupResponse without lazy loading.
+
+    Admin user endpoints return users with nested groups. Returning raw ORM objects
+    after commit/refresh can trigger async lazy loading (MissingGreenlet) or response
+    validation issues, which browsers often surface as a generic "Failed to fetch"
+    because the 500 response can be blocked by CORS.  Serialize explicitly instead.
+    """
+    courses = list(getattr(group, "courses", []) or [])
+    students = list(getattr(group, "students", []) or [])
+    return {
+        "id": group.id,
+        "name": group.name,
+        "teacher_id": group.teacher_id,
+        "is_active": bool(group.is_active),
+        "course_ids": [c.id for c in courses],
+        "student_ids": [s.id for s in students],
+    }
+
+
+def _serialize_user_for_admin(user: User) -> dict:
+    """Stable response for admin users table and edit modal."""
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "patronymic": user.patronymic,
+        "date_of_birth": user.date_of_birth,
+        "phone": user.phone,
+        "photo_url": user.photo_url,
+        "role": user.role,
+        "groups": [_serialize_group_for_admin(g) for g in (getattr(user, "groups", []) or [])],
+    }
+
+
 # ── List all users ──────────────────────────────────────────────────
 @router.get("/users", response_model=List[UserResponseAdmin])
 async def list_users(
@@ -22,9 +58,12 @@ async def list_users(
     current_admin: User = Depends(get_current_admin)
 ):
     result = await db.execute(
-        select(User).options(selectinload(User.groups))
+        select(User).options(
+            selectinload(User.groups).selectinload(StudyGroup.courses),
+            selectinload(User.groups).selectinload(StudyGroup.students),
+        )
     )
-    return result.scalars().all()
+    return [_serialize_user_for_admin(user) for user in result.scalars().unique().all()]
 
 
 # ── Create user ─────────────────────────────────────────────────────
@@ -55,8 +94,9 @@ async def create_user(
         db.add(new_user)
         await db.commit()
         await db.refresh(new_user)
+        # Return an explicit response shape. A newly created user has no groups yet.
         logger.info("[CREATE USER] created id=%s", new_user.id)
-        return new_user
+        return _serialize_user_for_admin(new_user)
     except Exception as e:
         logger.warning("[CREATE USER] failed for email=%s", user_data.email)
         raise HTTPException(status_code=400, detail=str(e))
@@ -119,8 +159,19 @@ async def update_user(
         setattr(user, key, value)
 
     await db.commit()
-    await db.refresh(user)
-    return user
+
+    # Re-read with all relationships required by UserResponseAdmin.
+    # This avoids async lazy loading during response serialization.
+    refreshed = await db.execute(
+        select(User)
+        .where(User.id == user_id)
+        .options(
+            selectinload(User.groups).selectinload(StudyGroup.courses),
+            selectinload(User.groups).selectinload(StudyGroup.students),
+        )
+    )
+    updated_user = refreshed.scalars().unique().first()
+    return _serialize_user_for_admin(updated_user or user)
 
 
 # ── Delete user ─────────────────────────────────────────────────────

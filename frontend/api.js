@@ -506,14 +506,20 @@ async function apiPut(endpoint, body) {
         return { ok: true, ...body };
     }
     const token = getToken();
-    const resp = await fetch(`${API_BASE}${endpoint}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-    });
+    let resp;
+    try {
+        resp = await fetch(`${API_BASE}${endpoint}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify(body || {})
+        });
+    } catch (networkErr) {
+        console.error('PUT network error:', endpoint, networkErr);
+        throw new Error(`Не вдалося підключитися до backend під час збереження (${endpoint}). Перевірте Render Logs або повторіть після оновлення backend.`);
+    }
     if (resp.status === 401) { logout(); return null; }
     if (!resp.ok) throw await parseApiError(resp, `PUT error ${resp.status}`);
     return resp.json();
@@ -1070,7 +1076,17 @@ function adjustNavForRole() {
     if (!role || role === 'student') return;
 
     const dashHref = role === 'admin' ? 'admin-dashboard.html' : 'teacher-dashboard.html';
+    const coursesHref = role === 'admin' ? 'admin-dashboard.html#courses' : 'teacher-dashboard.html#courses';
+    const scheduleHref = role === 'admin' ? 'admin-dashboard.html#overview' : 'teacher-dashboard.html#attendance';
     const questionsHref = role === 'admin' ? 'admin-questions.html' : 'teacher-questions.html';
+
+    // If staff lands on the student course catalog, immediately send them back
+    // to their role-specific dashboard section. This prevents sidebar switching.
+    const currentPage = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (currentPage === 'courses.html') {
+        window.location.replace(coursesHref);
+        return;
+    }
 
     document.querySelectorAll('.sidebar a, aside a, nav a').forEach(a => {
         const href = (a.getAttribute('href') || '').toLowerCase();
@@ -1079,6 +1095,16 @@ function adjustNavForRole() {
         // Shared student pages should never send staff to the student cabinet.
         if (href.endsWith('dashboard.html') && !href.includes('admin') && !href.includes('teacher')) {
             a.setAttribute('href', dashHref);
+        }
+
+        // Staff must not open the student course catalog from their sidebars.
+        if (href.endsWith('courses.html') || label === 'каталог курсів') {
+            a.setAttribute('href', coursesHref);
+        }
+
+        // Staff schedule links should stay inside staff dashboards where possible.
+        if (href.endsWith('schedule.html') || label === 'розклад') {
+            a.setAttribute('href', scheduleHref);
         }
 
         // Staff questions must open the staff module, not the student questions page.
