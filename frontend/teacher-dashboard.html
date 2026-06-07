@@ -217,13 +217,9 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Відвідуваність
             </button>
-            <button class="nav-item" onclick="showSection('inbox')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
-                Повідомлення
-            </button>
             <a class="nav-item" href="teacher-questions.html">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
-                Питання студентів
+                Звернення студентів
             </a>
             <div class="nav-section-label" style="margin-top:.75rem;">Навігація</div>
             <a href="courses.html">
@@ -317,12 +313,16 @@
             </div>
             <div id="attendanceContent"><div style="color:var(--muted);padding:1rem;">Оберіть курс та дату</div></div>
         </div>
-        <!-- Inbox -->
+        <!-- Legacy inbox: replaced by structured questions module -->
         <div class="section-card" id="section-inbox">
             <div class="section-header">
-                <div class="section-title">Повідомлення студентів</div>
+                <div class="section-title">Звернення студентів</div>
             </div>
-            <div class="inbox-list" id="inboxList"><div class="loading"><div class="spinner"></div><p>Завантаження...</p></div></div>
+            <div style="color:var(--muted);padding:1rem;">
+                Старий розділ «Повідомлення» замінено на структурований модуль звернень.
+                <br><br>
+                <a class="btn btn-primary" href="teacher-questions.html">Відкрити звернення студентів</a>
+            </div>
         </div>
     </main>
 </div>
@@ -381,24 +381,19 @@
         // ── Nav ─────────────────────────────────────────────────────
         document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
             link.addEventListener('click', e => {
+                const href = link.getAttribute('href');
+                // Buttons already use onclick=showSection(...). Real links should navigate normally.
+                if (!href || !href.startsWith('#')) return;
                 e.preventDefault();
-                const id = link.getAttribute('href').substring(1);
-                document.querySelectorAll('.sidebar-nav .nav-item').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
-                if (id === 'assignments') loadAssignments();
-                if (id === 'info') loadCourseInfoEditor();
-                if (id === 'notifications') loadPublicNotifications();
-                if (id === 'inbox')      loadInbox();
-                if (id === 'students')   loadStudents();
-                if (id === 'reports')    loadReport('attendance');
+                const id = href.substring(1);
+                showSection(id);
             });
         });
 
         // ── Overview Stats ──────────────────────────────────────────
         // ── Section Navigation ──────────────────────────────────────────
         function showSection(id) {
+            if (id === 'inbox') { window.location.href = 'teacher-questions.html'; return; }
             document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
             const target = document.getElementById('section-' + id);
             if (target) target.classList.add('active');

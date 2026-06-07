@@ -7,6 +7,7 @@ AI-history and notifications without breaking the old teacher inbox.
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -37,6 +38,7 @@ from ...schemas import (
 from ..access import get_teacher_course_ids
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 VALID_STATUSES = {"new", "waiting_answer", "answered", "closed"}
 VALID_TARGETS = {"admin", "teacher", "ai"}
@@ -57,6 +59,38 @@ async def _notify_admins(db: AsyncSession, title: str, body: str, link: str) -> 
     result = await db.execute(select(User.id).where(User.role == UserRole.admin))
     for row in result.all():
         await _notify(db, row[0], title, body, link)
+
+
+def _short_text(text: str, limit: int = 2800) -> str:
+    text = " ".join((text or "").split())
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3] + "..."
+
+
+async def _send_telegram_message(db: AsyncSession, user_id: Optional[int], text: str) -> None:
+    """Send an optional Telegram notification to a linked user.
+
+    Web notifications are the source of truth. Telegram delivery must never break
+    question replies, because a user might not have linked Telegram, the bot might
+    be disabled in a local environment, or Telegram can temporarily reject the
+    request. Therefore this helper logs and silently continues on failure.
+    """
+    if not user_id:
+        return
+    result = await db.execute(select(User).where(User.id == user_id))
+    target = result.scalars().first()
+    telegram_id = getattr(target, "telegram_id", None) if target else None
+    if not telegram_id:
+        return
+    try:
+        from ...bot import bot  # imported lazily to avoid startup circular imports
+        if not bot:
+            logger.info("Telegram bot is not initialized; skipped message for user_id=%s", user_id)
+            return
+        await bot.send_message(chat_id=int(telegram_id), text=_short_text(text))
+    except Exception as exc:
+        logger.warning("Could not send Telegram notification to user_id=%s: %s", user_id, exc)
 
 
 async def _student_group_for_course(db: AsyncSession, student_id: int, course_id: int) -> Optional[StudyGroup]:
@@ -230,6 +264,11 @@ async def create_question(
     link = "/questions.html"
     if target_type == "teacher":
         await _notify(db, target_user_id, "Нове питання від студента", payload.title.strip(), "/teacher-questions.html")
+        await _send_telegram_message(
+            db,
+            target_user_id,
+            f"Нове питання від студента #{thread.id}: {payload.title.strip()}\n\n{payload.message.strip()}\n\nВідкрийте веб-кабінет → Питання студентів.",
+        )
         # Admins also get a light notification, because the admin page is the
         # central oversight place for all appeals, including teacher questions.
         await _notify_admins(db, "Нове питання студент → викладач", payload.title.strip(), "/admin-questions.html")
@@ -367,15 +406,27 @@ async def reply_question(
         is_ai_response=False,
     ))
 
+    clean_message = payload.message.strip()
+
     if current_user.role == UserRole.student:
         thread.status = "waiting_answer"
         if thread.target_type == "teacher":
             await _notify(db, thread.target_user_id, "Студент уточнив питання", thread.title, "/teacher-questions.html")
+            await _send_telegram_message(
+                db,
+                thread.target_user_id,
+                f"Студент уточнив питання #{thread.id}: {thread.title}\n\n{clean_message}\n\nВідкрийте веб-кабінет → Питання студентів.",
+            )
         elif thread.target_type == "admin":
             await _notify_admins(db, "Студент уточнив звернення", thread.title, "/admin-questions.html")
     else:
         thread.status = "answered"
         await _notify(db, thread.student_id, "Нова відповідь на ваше питання", thread.title, "/questions.html")
+        await _send_telegram_message(
+            db,
+            thread.student_id,
+            f"Вам відповіли на звернення #{thread.id}: {thread.title}\n\n{clean_message}\n\nВідповідь також доступна у веб-кабінеті → Питання.",
+        )
 
     thread.updated_at = datetime.utcnow()
     await db.commit()
@@ -395,6 +446,11 @@ async def close_question(
     thread.updated_at = datetime.utcnow()
     if current_user.id != thread.student_id:
         await _notify(db, thread.student_id, "Питання закрито", thread.title, "/questions.html")
+        await _send_telegram_message(
+            db,
+            thread.student_id,
+            f"Ваше звернення #{thread.id} закрито: {thread.title}",
+        )
     await db.commit()
     return _thread_to_response(await _load_thread(db, thread.id), include_messages=True)
 
@@ -417,8 +473,18 @@ async def assign_question(
     thread.updated_at = datetime.utcnow()
     if thread.target_type == "teacher":
         await _notify(db, thread.target_user_id, "Адміністратор передав вам питання", thread.title, "/teacher-questions.html")
+        await _send_telegram_message(
+            db,
+            thread.target_user_id,
+            f"Адміністратор передав вам звернення #{thread.id}: {thread.title}\n\nВідкрийте веб-кабінет → Питання студентів.",
+        )
     else:
         await _notify_admins(db, "Звернення призначено адміністрації", thread.title, "/admin-questions.html")
     await _notify(db, thread.student_id, "Ваше питання перенаправлено", thread.title, "/questions.html")
+    await _send_telegram_message(
+        db,
+        thread.student_id,
+        f"Ваше звернення #{thread.id} перенаправлено: {thread.title}",
+    )
     await db.commit()
     return _thread_to_response(await _load_thread(db, thread.id), include_messages=True)
