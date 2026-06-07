@@ -400,7 +400,8 @@
             initReportsUI();
             bindSidebarNavigation();
             await preloadAdminData();
-            await loadSection('overview');
+            const initialSection = (window.location.hash || '#overview').replace('#', '') || 'overview';
+            await loadSection(initialSection);
             await checkInboxBadge();
         });
 

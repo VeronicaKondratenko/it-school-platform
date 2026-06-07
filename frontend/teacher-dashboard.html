@@ -374,6 +374,8 @@
             await loadTeacherCoursesForFilter();
             await loadInfoCourseSelect();
             await loadPublicNotifications();
+            const initialSection = (window.location.hash || '').replace('#', '');
+            if (initialSection) showSection(initialSection);
         });
 
         // ── Nav ─────────────────────────────────────────────────────
