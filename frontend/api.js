@@ -1237,8 +1237,13 @@ async function ensureRoleSidebarProfile() {
         <span class="sidebar-prole role-${role}" id="roleSidebarBadge">${roleLabel(role)}</span>
     `;
     try {
-        const user = await getCurrentUser();
-        const name = user?.full_name || fallbackName;
+        // Use the real /api/users/me helper. A previous version called an
+        // undefined getCurrentUser(), so the sidebar silently kept fallback
+        // values such as “Викладач / ВК” while the profile card showed the
+        // real user data. Keep a small cache to avoid duplicate requests.
+        const user = window.__roleSidebarUser || await fetchCurrentUser();
+        window.__roleSidebarUser = user;
+        const name = user?.full_name || user?.email || fallbackName;
         const email = user?.email || '';
         const initials = initialsFromName(name, email);
         profile.querySelector('#roleSidebarAvatar').textContent = initials;
@@ -1252,8 +1257,11 @@ async function ensureRoleSidebarProfile() {
         if (role === 'teacher') {
             const el = document.getElementById('teacherName');
             if (el) el.textContent = name;
+            const av = document.getElementById('teacherAvatar');
+            if (av) av.textContent = initials;
         }
-    } catch (_) {
+    } catch (err) {
+        console.warn('Role sidebar profile could not be refreshed', err);
         // The page should not break if /api/users/me is temporarily unavailable.
     }
 }
@@ -1278,14 +1286,30 @@ function bindRoleSidebarNavigation() {
         if (!link) return;
         const href = link.getAttribute('href') || '';
         if (!href) return;
-        const [targetPage, targetHash=''] = href.split('#');
+        const [targetPageRaw, targetHashRaw=''] = href.split('#');
+        const targetPage = (targetPageRaw || currentRolePage()).toLowerCase();
+        const sectionId = String(targetHashRaw || '').replace('#', '').trim();
         const currentPage = currentRolePage();
-        const samePage = targetPage.toLowerCase() === currentPage;
-        if (samePage && targetHash) {
+        const samePage = targetPage === currentPage;
+        if (samePage && sectionId) {
             e.preventDefault();
-            history.replaceState(null, '', `${targetPage}#${targetHash}`);
-            if (typeof window.loadSection === 'function') {
-                await window.loadSection(targetHash);
+            history.replaceState(null, '', `${targetPage}#${sectionId}`);
+            // Admin dashboard exposes loadSection(); teacher dashboard exposes
+            // showSection(). The previous handler called only loadSection(), so
+            // teacher menu items changed the URL/hash but left the page stuck on
+            // “Огляд”. Support both APIs and fall back to a hashchange event.
+            try {
+                if (typeof window.loadSection === 'function') {
+                    await window.loadSection(sectionId);
+                } else if (typeof window.showSection === 'function') {
+                    window.showSection(sectionId, false);
+                } else {
+                    window.dispatchEvent(new HashChangeEvent('hashchange'));
+                }
+            } catch (err) {
+                console.warn('Role sidebar navigation failed', err);
+                window.location.href = href;
+                return;
             }
             updateRoleSidebarActive();
         }
