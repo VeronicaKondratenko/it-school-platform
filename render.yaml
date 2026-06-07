@@ -26,6 +26,15 @@ services:
         value: 1440
       - key: CORS_ORIGINS
         value: https://it-school-frontend.onrender.com
+      # ── Telegram bot ──────────────────────────────────────────────
+      # Bot is OFF by default. To enable it RELIABLY on Render free tier,
+      # use WEBHOOK mode (polling dies when a free web service sleeps):
+      #   ENABLE_BOT=true
+      #   BOT_MODE=webhook
+      #   TELEGRAM_BOT_TOKEN=<token from @BotFather>
+      #   TELEGRAM_WEBHOOK_URL=https://<this-backend-host>.onrender.com/api/webhook/telegram
+      #   TELEGRAM_WEBHOOK_SECRET=<any long random string>
+      # Set the secret/token in the Render dashboard, NOT in this file.
       - key: ENABLE_BOT
         value: false
       - key: BOT_MODE

@@ -25,18 +25,27 @@ def _normalized_bot_mode() -> str:
 async def init_bot():
     """Initialize bot and dispatcher (called once at startup)."""
     global bot, dp
-    logger.info("Initializing Telegram bot (token loaded: %s)", bool(settings.TELEGRAM_BOT_TOKEN))
-    bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
-    
-    # Set bot commands menu
-    await bot.set_my_commands([
-        types.BotCommand(command="start", description="Запустити бота"),
-        types.BotCommand(command="week", description="Розклад на 7 днів"),
-        types.BotCommand(command="attendance", description="Розклад на 7 днів"),
-        types.BotCommand(command="checkin", description="Відмітка відвідування"),
-        types.BotCommand(command="ask", description="Запитати AI (/ask текст)"),
-        types.BotCommand(command="link", description="Прив'язати акаунт")
-    ])
+    token = (settings.TELEGRAM_BOT_TOKEN or "").strip()
+    if not token:
+        # Without a token any Telegram API call (e.g. set_my_commands) raises,
+        # which previously aborted the whole bot startup silently.
+        raise RuntimeError("TELEGRAM_BOT_TOKEN is empty; set it to enable the bot")
+    logger.info("Initializing Telegram bot (token loaded: %s)", bool(token))
+    bot = Bot(token=token)
+
+    # Set bot commands menu. A transient failure here must NOT kill the bot:
+    # the command menu is cosmetic, the handlers work regardless.
+    try:
+        await bot.set_my_commands([
+            types.BotCommand(command="start", description="Запустити бота"),
+            types.BotCommand(command="week", description="Розклад на 7 днів"),
+            types.BotCommand(command="attendance", description="Розклад на 7 днів"),
+            types.BotCommand(command="checkin", description="Відмітка відвідування"),
+            types.BotCommand(command="ask", description="Запитати AI (/ask текст)"),
+            types.BotCommand(command="link", description="Прив'язати акаунт")
+        ])
+    except Exception as e:
+        logger.warning("Could not set bot commands menu (non-fatal): %s", e)
 
     dp = Dispatcher()
     dp.include_router(router)
@@ -45,18 +54,19 @@ async def init_bot():
 
 async def setup_webhook():
     """Set Telegram webhook and delete polling updates."""
-    if not bot or not settings.TELEGRAM_WEBHOOK_URL:
+    webhook_url = (settings.TELEGRAM_WEBHOOK_URL or "").strip()
+    if not bot or not webhook_url:
         return
-    
+
     # Delete any pending updates from polling
     await bot.delete_webhook(drop_pending_updates=True)
-    
+
     # Set new webhook
     await bot.set_webhook(
-        url=settings.TELEGRAM_WEBHOOK_URL,
-        secret_token=settings.TELEGRAM_WEBHOOK_SECRET or None,
+        url=webhook_url,
+        secret_token=(settings.TELEGRAM_WEBHOOK_SECRET or "").strip() or None,
     )
-    print(f"Telegram webhook set to {settings.TELEGRAM_WEBHOOK_URL}")
+    print(f"Telegram webhook set to {webhook_url}")
 
 
 async def start_polling():
@@ -85,6 +95,8 @@ async def startup_bot():
     bot_mode = _normalized_bot_mode()
     print(f"Telegram bot mode: {bot_mode}")
 
+    webhook_url = (settings.TELEGRAM_WEBHOOK_URL or "").strip()
+
     # Force polling mode when requested.
     if bot_mode == "polling":
         print("Polling mode forced by BOT_MODE")
@@ -92,9 +104,17 @@ async def startup_bot():
         polling_task = asyncio.create_task(start_polling())
         return
 
+    # Explicit webhook mode requires a URL. Don't silently fall back to polling,
+    # which on a sleeping free host looks like a dead bot.
+    if bot_mode == "webhook" and not webhook_url:
+        print("ERROR: BOT_MODE=webhook but TELEGRAM_WEBHOOK_URL is empty. "
+              "Set TELEGRAM_WEBHOOK_URL=https://<backend-host>/api/webhook/telegram")
+        bot_transport_mode = "stopped"
+        return
+
     # Set up webhook if configured, otherwise fall back to polling in auto mode.
-    if settings.TELEGRAM_WEBHOOK_URL:
-        print(f"Setting webhook to: {settings.TELEGRAM_WEBHOOK_URL}")
+    if webhook_url:
+        print(f"Setting webhook to: {webhook_url}")
         try:
             await setup_webhook()
             bot_transport_mode = "webhook"

@@ -27,6 +27,15 @@
 .q-page .sidebar-bottom a{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;color:var(--muted,#94a3b8);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .2s;}
 .q-page .sidebar-bottom a:hover{background:rgba(239,68,68,.1);color:#ef4444;}
 .q-page .main{flex:1;margin-left:260px;padding:2rem;min-height:100vh;overflow-x:hidden;background:var(--ink,#080d1a);}
+/* Layout for pages that use the dashboard "main-wrap + page-banner + page-body" markup
+   (e.g. questions.html). Without these rules the content has no left offset and slides
+   under the fixed 260px sidebar. Mirrors the inline styles used by courses/grades/etc. */
+.q-page .main-wrap{flex:1;margin-left:260px;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;background:var(--ink,#080d1a);}
+.q-page .page-banner{background:linear-gradient(135deg,#0d1b4b 0%,#1a1040 60%,var(--ink) 100%);padding:2.5rem 2rem;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.q-page .page-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 120% at 40% 0%,rgba(37,99,235,.2),transparent);pointer-events:none;}
+.q-page .page-banner h1{font-family:'Unbounded',sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:900;letter-spacing:-.03em;position:relative;z-index:1;color:#fff;}
+.q-page .page-banner p{color:var(--muted);font-size:.95rem;margin-top:.35rem;position:relative;z-index:1;}
+.q-page .page-body{padding:2rem;flex:1;}
 .q-page .section-card{background:var(--ink-soft,#111827);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px;padding:2rem;display:none;margin-bottom:1.5rem;}
 .q-page .section-card.active{display:block;}
 .q-page .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border,rgba(255,255,255,.08));gap:1rem;flex-wrap:wrap;}
@@ -43,11 +52,14 @@
 .q-page .btn-secondary:hover{background:rgba(255,255,255,.08);color:#fff;}
 .q-page .mobile-toggle{display:none;position:fixed;top:1rem;left:1rem;z-index:300;background:#2563eb;border:none;border-radius:10px;padding:.65rem;cursor:pointer;color:#fff;}
 [data-theme='light'] .q-page{background:#eef2f7;color:#0f172a;}
-[data-theme='light'] .q-page .app,[data-theme='light'] .q-page .main{background:#eef2f7;}
+[data-theme='light'] .q-page .app,[data-theme='light'] .q-page .main,[data-theme='light'] .q-page .main-wrap{background:#eef2f7;}
+[data-theme='light'] .q-page .page-banner{background:linear-gradient(135deg,#e8eefc 0%,#eef2f7 60%,#eef2f7 100%);border-bottom-color:#dbe3ef;}
+[data-theme='light'] .q-page .page-banner h1{color:#0f172a;}
+[data-theme='light'] .q-page .page-banner p{color:#5c6a82;}
 [data-theme='light'] .q-page .section-card,[data-theme='light'] .q-page .q-card{background:#fff;border-color:#dbe3ef;box-shadow:0 12px 28px rgba(15,23,42,.06);}
 [data-theme='light'] .q-page .stat-card,[data-theme='light'] .q-page .q-table-wrap,[data-theme='light'] .q-page .q-thread,[data-theme='light'] .q-page .q-message{background:#f8fafc;border-color:#e2e8f0;}
 [data-theme='light'] .q-page .section-title,[data-theme='light'] .q-page .stat-value{color:#0f172a;}
-@media(max-width:1024px){.q-page .main{margin-left:0;padding:1rem;padding-top:4.5rem;}.q-page .sidebar{transform:translateX(-100%);}.q-page .sidebar.active{transform:translateX(0);}.q-page .mobile-toggle{display:flex;}.q-page .stats-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:1024px){.q-page .main{margin-left:0;padding:1rem;padding-top:4.5rem;}.q-page .main-wrap{margin-left:0;}.q-page .page-banner{padding:2rem 1rem;padding-top:4.5rem;}.q-page .page-body{padding:1rem;}.q-page .sidebar{transform:translateX(-100%);}.q-page .sidebar.active{transform:translateX(0);}.q-page .mobile-toggle{display:flex;}.q-page .stats-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:480px){.q-page .stats-grid{grid-template-columns:1fr}.q-page .section-card{padding:1rem}.q-page .sidebar{width:82vw;}}
 
 /* Questions / Appeals module visual integration with the existing IT School UI. */
