@@ -728,11 +728,18 @@ async function askAI(message, courseId = null) {
         }
         return { category, response };
     }
+    const headers = { 'Content-Type': 'application/json' };
+    const token = getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const resp = await fetch(`${API_BASE}/api/chat/ask`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ message, course_id: courseId })
     });
+    if (!resp.ok) {
+        throw await parseApiError(resp, 'Помилка AI-асистента');
+    }
     return resp.json();
 }
 
@@ -811,7 +818,7 @@ function initStudentChatWidget() {
     const widgetHTML = `
         <div id="ai-chat-widget" style="position:fixed;bottom:24px;right:24px;z-index:9999;font-family:Inter,sans-serif;">
             <!-- Chat Window -->
-            <div id="ai-chat-window" style="display:none;width:320px;height:450px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.15);flex-direction:column;overflow:hidden;margin-bottom:16px;border:1px solid #e2e8f0;transition:all 0.3s ease;">
+            <div id="ai-chat-window" style="display:none;width:320px;height:450px;background:#fff;color:#0f172a;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.15);flex-direction:column;overflow:hidden;margin-bottom:16px;border:1px solid #e2e8f0;transition:all 0.3s ease;">
                 <!-- Header -->
                 <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;padding:16px;display:flex;justify-content:space-between;align-items:center;">
                     <div style="display:flex;align-items:center;gap:8px;">
@@ -834,8 +841,8 @@ function initStudentChatWidget() {
                     </div>
                 </div>
                 <!-- Input Area -->
-                <form id="ai-chat-form" style="display:flex;padding:12px;border-top:1px solid #e2e8f0;background:#fff;gap:8px;">
-                    <input type="text" id="ai-chat-input" placeholder="Напишіть повідомлення..." required style="flex:1;padding:10px 14px;border:1px solid #cbd5e1;border-radius:20px;outline:none;font-family:inherit;font-size:14px;">
+                <form id="ai-chat-form" style="display:flex;padding:12px;border-top:1px solid #e2e8f0;background:#fff;color:#0f172a;gap:8px;">
+                    <input type="text" id="ai-chat-input" placeholder="Напишіть повідомлення..." required style="flex:1;padding:10px 14px;border:1px solid #cbd5e1;border-radius:20px;outline:none;font-family:inherit;font-size:14px;color:#0f172a;background:#fff;caret-color:#2563eb;">
                     <button type="submit" id="ai-chat-send" style="background:#2563eb;color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     </button>
@@ -969,7 +976,7 @@ function initStudentChatWidget() {
             appendMessage(result.response || 'Неможливо отримати відповідь', false);
         } catch (error) {
             document.getElementById(loadingId).remove();
-            appendMessage('Помилка з\'єднання з AI. Спробуйте пізніше.', false);
+            appendMessage(error.message || 'Помилка з\'єднання з AI. Спробуйте пізніше.', false);
         } finally {
             input.disabled = false;
             input.focus();

@@ -58,13 +58,13 @@ async def create_telegram_link_code(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Generate a one-time code (valid 10 minutes) to link a Telegram account.
+    """Generate a one-time code (valid 30 minutes) to link a Telegram account.
 
     The user enters this code in the bot via `/link CODE`. Only the SHA-256 hash
     is stored server-side.
     """
     code = f"{secrets.randbelow(1_000_000):06d}"
-    expires_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+    expires_at = datetime.datetime.utcnow() + datetime.timedelta(minutes=30)
 
     # Invalidate any previous unused codes for this user.
     old = await db.execute(
@@ -82,4 +82,4 @@ async def create_telegram_link_code(
         expires_at=expires_at,
     ))
     await db.commit()
-    return {"code": code, "expires_in_minutes": 10}
+    return {"code": code, "expires_in_minutes": 30, "command": f"/link {code}"}

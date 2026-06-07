@@ -145,36 +145,83 @@ async def cmd_start(message: types.Message):
 
 @router.message(Command("link"))
 async def cmd_link(message: types.Message, command: CommandObject):
+    """Link Telegram account using a one-time code from the web profile.
+
+    Important fixes:
+    - the code is normalized, so `/link 123 456` or `/link 123-456` is accepted;
+    - the bot checks the code in several steps and tells the real reason;
+    - the same Telegram account is detached from any previous user before linking;
+    - date comparison is made with naive UTC values to avoid timezone mismatch errors.
+    """
     if not command.args:
         return await message.answer(
             "Щоб прив'язати акаунт, у веб-кабінеті натисніть «Підключити Telegram», "
-            "отримайте одноразовий код і надішліть: /link КОД"
+            "отримайте одноразовий код і надішліть: /link КОД\n\n"
+            "Приклад: /link 123456"
         )
 
     import hashlib, datetime as _dt
     from ..models import TelegramLinkCode
 
-    code = command.args.strip()
+    raw_code = command.args.strip()
+    # The web app generates a 6-digit numeric code. We accept accidental spaces/dashes.
+    code = "".join(ch for ch in raw_code if ch.isdigit())
+    if len(code) != 6:
+        return await message.answer(
+            "Код має складатися з 6 цифр. Згенеруйте новий код у веб-кабінеті та надішліть його так:\n"
+            "/link 123456"
+        )
+
     code_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    now = _dt.datetime.utcnow()
 
     async for db in get_db():
+        # First find the code only by hash. Do not filter used/expired here,
+        # otherwise every case looks like the same vague "expired" error.
         result = await db.execute(
             select(TelegramLinkCode)
-            .where(
-                TelegramLinkCode.code_hash == code_hash,
-                TelegramLinkCode.used_at.is_(None),
-                TelegramLinkCode.expires_at > _dt.datetime.utcnow(),
-            )
+            .where(TelegramLinkCode.code_hash == code_hash)
             .options(selectinload(TelegramLinkCode.user).selectinload(User.groups))
         )
         link = result.scalars().first()
 
-        if not link or not link.user:
-            return await message.answer("Код недійсний або застарів. Згенеруйте новий у веб-кабінеті.")
+        if not link:
+            return await message.answer(
+                "Код не знайдено. Перевірте, що ви ввели саме останній код із веб-кабінету.\n\n"
+                "Також переконайтесь, що сайт і бот підключені до однієї бази даних."
+            )
+
+        if link.used_at is not None:
+            return await message.answer(
+                "Цей код уже був використаний або скасований новим кодом. "
+                "Згенеруйте новий код у веб-кабінеті та введіть саме його."
+            )
+
+        expires_at = link.expires_at
+        if expires_at and expires_at.tzinfo is not None:
+            expires_at = expires_at.astimezone(_dt.timezone.utc).replace(tzinfo=None)
+
+        if expires_at is not None and expires_at <= now:
+            return await message.answer(
+                "Код застарів. Згенеруйте новий код у веб-кабінеті та введіть його протягом часу дії."
+            )
+
+        if not link.user:
+            return await message.answer(
+                "Користувача для цього коду не знайдено. Згенеруйте новий код у веб-кабінеті."
+            )
 
         user = link.user
+
+        # One Telegram chat should belong to only one web account.
+        old_owner_result = await db.execute(
+            select(User).where(User.telegram_id == message.from_user.id, User.id != user.id)
+        )
+        for old_owner in old_owner_result.scalars().all():
+            old_owner.telegram_id = None
+
         user.telegram_id = message.from_user.id
-        link.used_at = _dt.datetime.utcnow()
+        link.used_at = now
         await db.commit()
 
         await message.answer(
