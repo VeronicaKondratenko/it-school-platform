@@ -1207,45 +1207,18 @@ function notificationDestinationForRole(role) {
 }
 
 function initGlobalNotificationsBell() {
-    if (!getToken() || document.getElementById('globalNotificationBell')) return;
-    const bell = document.createElement('button');
-    bell.id = 'globalNotificationBell';
-    bell.type = 'button';
-    bell.setAttribute('aria-label', 'Сповіщення');
-    bell.innerHTML = `
-        <span style="font-size:1.05rem;line-height:1;">!</span>
-        <span id="globalNotificationCount" style="display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#ef4444;color:#fff;font-size:.7rem;font-weight:800;align-items:center;justify-content:center;"></span>
-    `;
-    bell.style.cssText = 'position:fixed;right:1rem;top:1rem;z-index:5000;width:42px;height:42px;border-radius:14px;border:1px solid rgba(37,99,235,.35);background:rgba(37,99,235,.95);color:#fff;box-shadow:0 12px 28px rgba(15,23,42,.35);cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center;';
-    bell.addEventListener('click', () => {
-        window.location.href = notificationDestinationForRole(getRole());
-    });
-    document.body.appendChild(bell);
-
-    async function refresh() {
-        try {
-            const items = await fetchNotifications(true);
-            const count = Array.isArray(items) ? items.length : 0;
-            const badge = document.getElementById('globalNotificationCount');
-            if (!badge) return;
-            if (count > 0) {
-                badge.style.display = 'flex';
-                badge.textContent = count > 9 ? '9+' : String(count);
-            } else {
-                badge.style.display = 'none';
-                badge.textContent = '';
-            }
-        } catch (e) {
-            // Keep silent: notification polling should never break pages.
-            console.debug('Notification polling skipped:', e.message || e);
-        }
+    // The floating "!" bell was removed: on the questions page it linked to
+    // itself and added no real value. This now just cleans up any bell/timer
+    // that may already be on the page (e.g. from a cached older version).
+    const existing = document.getElementById('globalNotificationBell');
+    if (existing) existing.remove();
+    if (window.__itSchoolNotificationTimer) {
+        clearInterval(window.__itSchoolNotificationTimer);
+        window.__itSchoolNotificationTimer = null;
     }
-    refresh();
-    window.__itSchoolNotificationTimer = window.__itSchoolNotificationTimer || setInterval(refresh, 30000);
 }
 
 window.addEventListener('load', () => {
-    if (getToken()) {
-        setTimeout(initGlobalNotificationsBell, 900);
-    }
+    // Ensure no stale notification bell remains.
+    initGlobalNotificationsBell();
 });

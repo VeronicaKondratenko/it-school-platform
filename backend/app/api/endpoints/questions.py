@@ -60,15 +60,20 @@ async def _notify_admins(db: AsyncSession, title: str, body: str, link: str) -> 
 
 
 async def _student_group_for_course(db: AsyncSession, student_id: int, course_id: int) -> Optional[StudyGroup]:
+    # NOTE: must stay consistent with /api/student/courses, which lists the
+    # student's courses WITHOUT an is_active filter. Requiring is_active here
+    # caused a trap: a course shown in the dropdown could be rejected on submit
+    # with 403. We therefore match any group the student belongs to that has the
+    # course, preferring active groups for teacher resolution.
     result = await db.execute(
         select(StudyGroup)
         .join(StudyGroup.students)
         .where(
             User.id == student_id,
-            StudyGroup.is_active == True,  # noqa: E712
             StudyGroup.courses.any(Course.id == course_id),
         )
         .options(selectinload(StudyGroup.courses), selectinload(StudyGroup.teacher))
+        .order_by(StudyGroup.is_active.desc())
     )
     return result.scalars().first()
 
@@ -160,7 +165,7 @@ async def create_question(
 ):
     """Student creates a question for an administrator or a teacher."""
     if current_user.role != UserRole.student:
-        raise HTTPException(status_code=403, detail="Only students can create questions")
+        raise HTTPException(status_code=403, detail="Лише студенти можуть створювати питання")
 
     target_type = payload.target_type.strip().lower()
     target_user_id = payload.target_user_id
@@ -168,17 +173,17 @@ async def create_question(
 
     if target_type == "teacher":
         if not course_id:
-            raise HTTPException(status_code=400, detail="Course is required for teacher questions")
+            raise HTTPException(status_code=400, detail="Для питання викладачу потрібно обрати курс")
         group = await _student_group_for_course(db, current_user.id, course_id)
         if not group:
-            raise HTTPException(status_code=403, detail="You are not enrolled in this course")
+            raise HTTPException(status_code=403, detail="Вас не записано на цей курс, тому написати викладачу не можна")
         if target_user_id is None:
             target_user_id = group.teacher_id
         if not target_user_id:
-            raise HTTPException(status_code=400, detail="This course does not have an assigned teacher")
+            raise HTTPException(status_code=400, detail="Для цього курсу не призначено викладача — напишіть адміністратору")
         if group.teacher_id != target_user_id:
             # Keep the first version safe: student may write only to the teacher of their group/course.
-            raise HTTPException(status_code=403, detail="Selected teacher does not teach this course for your group")
+            raise HTTPException(status_code=403, detail="Обраний викладач не веде цей курс для вашої групи")
 
     if target_type == "admin":
         target_user_id = None
