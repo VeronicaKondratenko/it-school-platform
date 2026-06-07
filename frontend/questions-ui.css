@@ -117,3 +117,61 @@
 .q-page textarea:focus,.q-page select:focus,.q-page input:focus{border-color:rgba(37,99,235,.5);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .q-page .detail{display:none;margin-top:1rem}.q-page .detail.active{display:block}
 .q-page .toast,.q-page .q-toast{position:fixed;right:1rem;bottom:1rem;background:#0f172a;color:#fff;border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem;z-index:6000;box-shadow:0 12px 28px rgba(0,0,0,.35)}
+
+/* Strong form contrast fixes for questions pages.
+   Some global theme files use input/select color rules with !important. These
+   overrides keep text readable in light mode and dark mode, including dynamically
+   inserted reply textareas. */
+.q-page input,
+.q-page textarea,
+.q-page select,
+.q-page .q-input,
+.q-page .q-select,
+.q-page .q-textarea{
+  caret-color:#2563eb;
+}
+.q-page select option{
+  background:#111827;
+  color:#f8fafc;
+}
+.q-page input::placeholder,
+.q-page textarea::placeholder,
+.q-page .q-input::placeholder,
+.q-page .q-textarea::placeholder{
+  color:#94a3b8!important;
+  -webkit-text-fill-color:#94a3b8!important;
+}
+[data-theme='light'] .q-page input,
+[data-theme='light'] .q-page textarea,
+[data-theme='light'] .q-page select,
+[data-theme='light'] .q-page .q-input,
+[data-theme='light'] .q-page .q-select,
+[data-theme='light'] .q-page .q-textarea{
+  background:#ffffff!important;
+  color:#0f172a!important;
+  -webkit-text-fill-color:#0f172a!important;
+  border-color:#dbe3ef!important;
+}
+[data-theme='light'] .q-page select option{
+  background:#ffffff!important;
+  color:#0f172a!important;
+}
+[data-theme='light'] .q-page input::placeholder,
+[data-theme='light'] .q-page textarea::placeholder,
+[data-theme='light'] .q-page .q-input::placeholder,
+[data-theme='light'] .q-page .q-textarea::placeholder{
+  color:#64748b!important;
+  -webkit-text-fill-color:#64748b!important;
+}
+[data-theme='light'] .q-page .q-card-title,
+[data-theme='light'] .q-page .q-detail-title,
+[data-theme='light'] .q-page .q-thread-title,
+[data-theme='light'] .q-page .q-message{
+  color:#0f172a!important;
+}
+[data-theme='light'] .q-page .q-meta,
+[data-theme='light'] .q-page .q-message-who,
+[data-theme='light'] .q-page .q-hint,
+[data-theme='light'] .q-page .q-field label{
+  color:#64748b!important;
+}

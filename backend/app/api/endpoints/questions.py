@@ -20,6 +20,8 @@ from ...auth import get_current_user, get_current_admin
 from ...database import get_db
 from ...models import (
     Course,
+    Discipline,
+    Schedule,
     Notification,
     QuestionMessage,
     QuestionThread,
@@ -91,6 +93,103 @@ async def _send_telegram_message(db: AsyncSession, user_id: Optional[int], text:
         await bot.send_message(chat_id=int(telegram_id), text=_short_text(text))
     except Exception as exc:
         logger.warning("Could not send Telegram notification to user_id=%s: %s", user_id, exc)
+
+
+async def _student_teacher_options(db: AsyncSession, student_id: int) -> list[dict]:
+    """Return courses and concrete teacher choices available to a student.
+
+    This is used by both the web page and Telegram flow. The important detail is
+    that the student must first choose a course and only then a teacher, because a
+    student can study several courses and each course can have a different
+    teacher. We collect teachers from the student's groups and from schedules for
+    the same group/course when schedule-specific teachers exist.
+    """
+    groups_result = await db.execute(
+        select(StudyGroup)
+        .join(StudyGroup.students)
+        .where(User.id == student_id)
+        .options(
+            selectinload(StudyGroup.courses),
+            selectinload(StudyGroup.teacher),
+        )
+        .order_by(StudyGroup.is_active.desc(), StudyGroup.name)
+    )
+    groups = groups_result.scalars().all()
+    group_by_id = {g.id: g for g in groups}
+    options: dict[int, dict] = {}
+
+    def ensure_course(course: Course) -> dict:
+        return options.setdefault(course.id, {
+            "course_id": course.id,
+            "course_title": course.title or f"Курс #{course.id}",
+            "teachers": [],
+            "_seen_teacher_ids": set(),
+        })
+
+    def add_teacher(entry: dict, teacher: User | None, group_name: str | None, source: str) -> None:
+        if not teacher or not getattr(teacher, "id", None):
+            return
+        seen = entry.setdefault("_seen_teacher_ids", set())
+        if teacher.id in seen:
+            return
+        seen.add(teacher.id)
+        name = (teacher.full_name or teacher.email or "Викладач").strip()
+        if teacher.patronymic:
+            name = f"{name} {teacher.patronymic}".strip()
+        entry["teachers"].append({
+            "id": teacher.id,
+            "full_name": name,
+            "email": teacher.email,
+            "group_name": group_name,
+            "label": f"{name} ({group_name})" if group_name else name,
+            "source": source,
+        })
+
+    for group in groups:
+        for course in list(group.courses or []):
+            entry = ensure_course(course)
+            add_teacher(entry, group.teacher, group.name, "group")
+
+    group_ids = list(group_by_id.keys())
+    if group_ids:
+        schedule_result = await db.execute(
+            select(Schedule)
+            .where(Schedule.group_id.in_(group_ids))
+            .options(selectinload(Schedule.teacher), selectinload(Schedule.discipline))
+        )
+        for sched in schedule_result.scalars().all():
+            discipline = sched.discipline
+            course_id = getattr(discipline, "course_id", None) if discipline else None
+            if not course_id or course_id not in options:
+                continue
+            group = group_by_id.get(sched.group_id)
+            add_teacher(options[course_id], sched.teacher, group.name if group else None, "schedule")
+
+    result = []
+    for entry in options.values():
+        entry.pop("_seen_teacher_ids", None)
+        entry["teachers"].sort(key=lambda t: (t.get("full_name") or "").lower())
+        result.append(entry)
+    result.sort(key=lambda x: (x.get("course_title") or "").lower())
+    return result
+
+
+def _course_option(options: list[dict], course_id: int | None) -> Optional[dict]:
+    if course_id is None:
+        return None
+    for item in options:
+        if int(item.get("course_id")) == int(course_id):
+            return item
+    return None
+
+
+def _teacher_option(course_option: dict | None, teacher_id: int | None) -> Optional[dict]:
+    if not course_option or teacher_id is None:
+        return None
+    for teacher in course_option.get("teachers", []):
+        if int(teacher.get("id")) == int(teacher_id):
+            return teacher
+    return None
 
 
 async def _student_group_for_course(db: AsyncSession, student_id: int, course_id: int) -> Optional[StudyGroup]:
@@ -209,6 +308,22 @@ async def _assert_can_reply(db: AsyncSession, user: User, thread: QuestionThread
         raise HTTPException(status_code=400, detail="AI history cannot be replied to here")
 
 
+@router.get("/teacher-options")
+async def question_teacher_options(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return course -> teacher choices for the current student.
+
+    The web form and Telegram bot use the same logic: course first, then teacher.
+    This prevents the old ambiguous case when a student studied several courses
+    and the system silently selected the first available teacher.
+    """
+    if current_user.role != UserRole.student:
+        raise HTTPException(status_code=403, detail="Only students can access teacher options")
+    return {"courses": await _student_teacher_options(db, current_user.id)}
+
+
 @router.post("", response_model=QuestionThreadResponse)
 async def create_question(
     payload: QuestionCreate,
@@ -226,15 +341,19 @@ async def create_question(
     if target_type == "teacher":
         if not course_id:
             raise HTTPException(status_code=400, detail="Для питання викладачу потрібно обрати курс")
-        group = await _student_group_for_course(db, current_user.id, course_id)
-        if not group:
+        options = await _student_teacher_options(db, current_user.id)
+        selected_course = _course_option(options, course_id)
+        if not selected_course:
             raise HTTPException(status_code=403, detail="Вас не записано на цей курс, тому написати викладачу не можна")
-        if target_user_id is None:
-            target_user_id = group.teacher_id
-        if not target_user_id:
+        teachers = selected_course.get("teachers", [])
+        if not teachers:
             raise HTTPException(status_code=400, detail="Для цього курсу не призначено викладача — напишіть адміністратору")
-        if group.teacher_id != target_user_id:
-            # Keep the first version safe: student may write only to the teacher of their group/course.
+        if target_user_id is None:
+            if len(teachers) == 1:
+                target_user_id = teachers[0]["id"]
+            else:
+                raise HTTPException(status_code=400, detail="Оберіть конкретного викладача для цього курсу")
+        if not _teacher_option(selected_course, target_user_id):
             raise HTTPException(status_code=403, detail="Обраний викладач не веде цей курс для вашої групи")
 
     if target_type == "admin":

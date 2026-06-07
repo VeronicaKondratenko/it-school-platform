@@ -12,6 +12,8 @@ from ..models import (
     AttendanceStatus,
     UserRole,
     StudyGroup,
+    Course,
+    Discipline,
     QuestionThread,
     QuestionMessage,
     Notification,
@@ -23,6 +25,8 @@ router = Router()
 
 
 class AskFlow(StatesGroup):
+    choosing_course = State()
+    choosing_teacher = State()
     waiting_question = State()
 
 
@@ -155,43 +159,122 @@ async def _notify_admins(db, title: str, body: str, link: str = "/admin-question
         await _notify(db, row[0], title, body, link)
 
 
-def _pick_group_teacher_and_course(user: User):
-    """Choose the safest teacher/course target for a Telegram question.
+def _format_teacher_name(teacher: User | None) -> str:
+    if not teacher:
+        return "Викладач"
+    name = (teacher.full_name or teacher.email or "Викладач").strip()
+    if getattr(teacher, "patronymic", None):
+        name = f"{name} {teacher.patronymic}".strip()
+    return name
 
-    In this LMS, teachers are linked through study groups. Telegram has no
-    course dropdown, so we route to the first teacher assigned to the student's
-    group and use the first course of that group as context.
+
+def _add_teacher_option(entry: dict, teacher: User | None, group_name: str | None = None, source: str = "group") -> None:
+    if not teacher or not getattr(teacher, "id", None):
+        return
+    seen = entry.setdefault("_seen_teacher_ids", set())
+    if teacher.id in seen:
+        return
+    seen.add(teacher.id)
+    label = _format_teacher_name(teacher)
+    if group_name:
+        label = f"{label} ({group_name})"
+    entry.setdefault("teachers", []).append({
+        "id": teacher.id,
+        "name": _format_teacher_name(teacher),
+        "label": label,
+        "email": teacher.email,
+        "group_name": group_name,
+        "source": source,
+    })
+
+
+async def _get_student_question_targets(db, user: User) -> list[dict]:
+    """Return courses and concrete teacher choices available for a student.
+
+    Telegram cannot show a long web form, so the bot must guide a student step by
+    step: first course, then teacher, then question text. Teachers are collected
+    from the student's groups and, when available, from schedules inside the same
+    group/course. This avoids the old ambiguous behaviour where the bot silently
+    picked the first teacher.
     """
-    for group in list(user.groups or []):
-        if group.teacher_id:
-            courses = list(getattr(group, "courses", []) or [])
-            course_id = courses[0].id if courses else None
-            return group.teacher_id, course_id
-    return None, None
+    options: dict[int, dict] = {}
+    groups = list(user.groups or [])
+    group_by_id = {g.id: g for g in groups}
+
+    for group in groups:
+        for course in list(getattr(group, "courses", []) or []):
+            entry = options.setdefault(course.id, {
+                "course_id": course.id,
+                "course_title": course.title or f"Курс #{course.id}",
+                "teachers": [],
+                "_seen_teacher_ids": set(),
+            })
+            _add_teacher_option(entry, getattr(group, "teacher", None), group.name, "group")
+
+    group_ids = list(group_by_id.keys())
+    if group_ids:
+        schedule_result = await db.execute(
+            select(Schedule)
+            .where(Schedule.group_id.in_(group_ids))
+            .options(selectinload(Schedule.teacher), selectinload(Schedule.discipline))
+        )
+        for sched in schedule_result.scalars().all():
+            discipline = getattr(sched, "discipline", None)
+            course_id = getattr(discipline, "course_id", None)
+            if not course_id or course_id not in options:
+                continue
+            group = group_by_id.get(sched.group_id)
+            _add_teacher_option(options[course_id], getattr(sched, "teacher", None), getattr(group, "name", None), "schedule")
+
+    result = []
+    for entry in options.values():
+        entry.pop("_seen_teacher_ids", None)
+        entry["teachers"].sort(key=lambda t: (t.get("name") or "").lower())
+        result.append(entry)
+    result.sort(key=lambda x: (x.get("course_title") or "").lower())
+    return result
 
 
-async def _create_bot_question_thread(db, user: User, recipient: str, question: str):
-    """Create a structured QuestionThread from a Telegram question.
+def _find_course_option(options: list[dict], course_id: int | None) -> dict | None:
+    if course_id is None:
+        return None
+    for item in options:
+        if int(item.get("course_id")) == int(course_id):
+            return item
+    return None
 
-    The web pages for admin/teacher questions read the `question_threads` table.
-    Older bot logic saved Telegram questions into the legacy `messages` table,
-    so they were saved but never appeared in the new questions module. This is
-    the key delivery fix.
-    """
+
+def _find_teacher_option(course_option: dict | None, teacher_id: int | None) -> dict | None:
+    if not course_option or teacher_id is None:
+        return None
+    for teacher in course_option.get("teachers", []):
+        if int(teacher.get("id")) == int(teacher_id):
+            return teacher
+    return None
+
+
+async def _create_bot_question_thread(db, user: User, recipient: str, question: str, course_id: int | None = None, target_user_id: int | None = None):
+    """Create a structured QuestionThread from a Telegram question."""
     title = _make_question_title(question)
     target_type = recipient if recipient in {"teacher", "admin"} else "admin"
-    target_user_id = None
-    course_id = None
     role_name = "адміністратора"
 
     if target_type == "teacher":
-        target_user_id, course_id = _pick_group_teacher_and_course(user)
-        if not target_user_id:
-            # Do not lose the question when no teacher is assigned.
+        options = await _get_student_question_targets(db, user)
+        course_option = _find_course_option(options, course_id)
+        teacher_option = _find_teacher_option(course_option, target_user_id)
+        if not course_option or not teacher_option:
+            # Do not lose the question if the callback is stale or the student was
+            # removed from a group after choosing a teacher. Route to admin with a
+            # clear category, so the admin can reassign it from the web panel.
             target_type = "admin"
-            role_name = "адміністратора"
+            target_user_id = None
+            course_id = course_id if course_option else None
+            role_name = "адміністратора (викладача не вдалося визначити)"
         else:
-            role_name = "викладача"
+            target_user_id = int(teacher_option["id"])
+            course_id = int(course_option["course_id"])
+            role_name = f"викладача {teacher_option.get('name') or ''}".strip()
 
     thread = QuestionThread(
         student_id=user.id,
@@ -596,15 +679,40 @@ from ..services.ai_service import ai_service
 
 def get_ask_recipient_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="AI", callback_data="ask_to:ai")],
+        [InlineKeyboardButton(text="AI-асистент", callback_data="ask_to:ai")],
         [InlineKeyboardButton(text="Викладач", callback_data="ask_to:teacher")],
-        [InlineKeyboardButton(text="Адмін", callback_data="ask_to:admin")],
+        [InlineKeyboardButton(text="Адміністратор", callback_data="ask_to:admin")],
     ])
+
+
+def _courses_kb(options: list[dict]) -> InlineKeyboardMarkup:
+    rows = []
+    for item in options[:20]:
+        title = item.get("course_title") or f"Курс #{item.get('course_id')}"
+        teachers_count = len(item.get("teachers", []))
+        label = f"{title}"
+        if teachers_count:
+            label += f" · викладачів: {teachers_count}"
+        rows.append([InlineKeyboardButton(text=label[:64], callback_data=f"ask_course:{item['course_id']}")])
+    rows.append([InlineKeyboardButton(text="Написати адміністратору", callback_data="ask_to:admin")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _teachers_kb(course_option: dict) -> InlineKeyboardMarkup:
+    rows = []
+    for teacher in course_option.get("teachers", [])[:20]:
+        rows.append([InlineKeyboardButton(text=(teacher.get("label") or teacher.get("name") or "Викладач")[:64], callback_data=f"ask_teacher:{teacher['id']}")])
+    rows.append([InlineKeyboardButton(text="Назад до вибору курсу", callback_data="ask_back:courses")])
+    rows.append([InlineKeyboardButton(text="Написати адміністратору", callback_data="ask_to:admin")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 @router.message(F.text == "Запитати")
 async def cmd_ask_menu(message: types.Message):
-    await message.answer("Оберіть, кому хочете поставити запитання:", reply_markup=get_ask_recipient_kb())
+    await message.answer(
+        "Оберіть адресата. Якщо питання до викладача, я спочатку попрошу обрати курс, а потім конкретного викладача.",
+        reply_markup=get_ask_recipient_kb(),
+    )
 
 
 @router.message(Command("ask"))
@@ -612,7 +720,7 @@ async def cmd_ask_legacy(message: types.Message, command: CommandObject = None):
     """Backward-compatible /ask command: sends directly to AI."""
     if not command or not command.args:
         await message.answer(
-            "Оберіть адресата через кнопку 'Запитати' або введіть: /ask <ваше питання> (для AI)."
+            "Оберіть адресата через кнопку «Запитати». Для AI також можна ввести: /ask <ваше питання>."
         )
         return
 
@@ -629,6 +737,25 @@ async def cmd_ask_legacy(message: types.Message, command: CommandObject = None):
         break
 
 
+@router.callback_query(F.data == "ask_back:courses")
+async def cb_ask_back_courses(callback: types.CallbackQuery, state: FSMContext):
+    async for db in get_db():
+        user = await _get_telegram_user(db, callback.from_user.id)
+        if not user:
+            await callback.message.answer(_telegram_link_required_text())
+            await callback.answer()
+            return
+        options = await _get_student_question_targets(db, user)
+        if not options:
+            await callback.message.answer("Для ваших курсів не знайдено викладача. Можете написати адміністратору.", reply_markup=get_ask_recipient_kb())
+            await callback.answer()
+            return
+        await state.set_state(AskFlow.choosing_course)
+        await callback.message.answer("Оберіть курс, якого стосується питання:", reply_markup=_courses_kb(options))
+        await callback.answer()
+        return
+
+
 @router.callback_query(F.data.startswith("ask_to:"))
 async def cb_ask_recipient(callback: types.CallbackQuery, state: FSMContext):
     recipient = callback.data.split(":", 1)[1]
@@ -636,15 +763,107 @@ async def cb_ask_recipient(callback: types.CallbackQuery, state: FSMContext):
         await callback.answer("Некоректний адресат", show_alert=True)
         return
 
+    if recipient == "teacher":
+        async for db in get_db():
+            user = await _get_telegram_user(db, callback.from_user.id)
+            if not user:
+                await callback.message.answer(_telegram_link_required_text())
+                await callback.answer()
+                return
+            options = await _get_student_question_targets(db, user)
+            if not options:
+                await callback.message.answer(
+                    "Для ваших курсів не знайдено доступного викладача. Напишіть адміністратору — він передасть питання потрібній людині.",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Написати адміністратору", callback_data="ask_to:admin")]]),
+                )
+                await callback.answer()
+                return
+            await state.update_data(ask_recipient="teacher", ask_course_id=None, ask_teacher_id=None)
+            await state.set_state(AskFlow.choosing_course)
+            await callback.message.answer("Оберіть курс, якого стосується питання:", reply_markup=_courses_kb(options))
+            await callback.answer()
+            return
+
     recipient_titles = {
-        "ai": "AI",
-        "teacher": "Викладач",
-        "admin": "Адмін",
+        "ai": "AI-асистента",
+        "admin": "адміністратора",
     }
-    await state.update_data(ask_recipient=recipient)
+    await state.update_data(ask_recipient=recipient, ask_course_id=None, ask_teacher_id=None)
     await state.set_state(AskFlow.waiting_question)
-    await callback.message.answer(f"Введіть ваше запитання для: {recipient_titles[recipient]}")
+    await callback.message.answer(f"Введіть ваше запитання для {recipient_titles[recipient]}:")
     await callback.answer()
+
+
+@router.callback_query(F.data.startswith("ask_course:"))
+async def cb_ask_course(callback: types.CallbackQuery, state: FSMContext):
+    try:
+        course_id = int(callback.data.split(":", 1)[1])
+    except ValueError:
+        await callback.answer("Некоректний курс", show_alert=True)
+        return
+
+    async for db in get_db():
+        user = await _get_telegram_user(db, callback.from_user.id)
+        if not user:
+            await callback.message.answer(_telegram_link_required_text())
+            await callback.answer()
+            return
+        options = await _get_student_question_targets(db, user)
+        course_option = _find_course_option(options, course_id)
+        if not course_option:
+            await callback.message.answer("Цей курс більше недоступний для вашого акаунта. Оберіть курс ще раз.", reply_markup=_courses_kb(options) if options else get_ask_recipient_kb())
+            await callback.answer()
+            return
+        teachers = course_option.get("teachers", [])
+        if not teachers:
+            await callback.message.answer("Для цього курсу не знайдено викладача. Краще надішліть звернення адміністратору.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Написати адміністратору", callback_data="ask_to:admin")]]))
+            await callback.answer()
+            return
+        await state.update_data(ask_recipient="teacher", ask_course_id=course_id, ask_course_title=course_option.get("course_title"), ask_teacher_id=None)
+        await state.set_state(AskFlow.choosing_teacher)
+        await callback.message.answer(
+            f"Курс: {course_option.get('course_title')}. Тепер оберіть викладача, якому адресувати питання:",
+            reply_markup=_teachers_kb(course_option),
+        )
+        await callback.answer()
+        return
+
+
+@router.callback_query(F.data.startswith("ask_teacher:"))
+async def cb_ask_teacher(callback: types.CallbackQuery, state: FSMContext):
+    try:
+        teacher_id = int(callback.data.split(":", 1)[1])
+    except ValueError:
+        await callback.answer("Некоректний викладач", show_alert=True)
+        return
+
+    data = await state.get_data()
+    course_id = data.get("ask_course_id")
+    if not course_id:
+        await callback.message.answer("Спочатку оберіть курс.", reply_markup=get_ask_recipient_kb())
+        await callback.answer()
+        return
+
+    async for db in get_db():
+        user = await _get_telegram_user(db, callback.from_user.id)
+        if not user:
+            await callback.message.answer(_telegram_link_required_text())
+            await callback.answer()
+            return
+        options = await _get_student_question_targets(db, user)
+        course_option = _find_course_option(options, int(course_id))
+        teacher_option = _find_teacher_option(course_option, teacher_id)
+        if not teacher_option:
+            await callback.message.answer("Цей викладач недоступний для обраного курсу. Оберіть викладача ще раз.", reply_markup=_teachers_kb(course_option) if course_option else get_ask_recipient_kb())
+            await callback.answer()
+            return
+        await state.update_data(ask_recipient="teacher", ask_course_id=int(course_id), ask_teacher_id=teacher_id, ask_teacher_name=teacher_option.get("name"))
+        await state.set_state(AskFlow.waiting_question)
+        await callback.message.answer(
+            f"Адресат: {teacher_option.get('name')}\nКурс: {course_option.get('course_title')}\n\nТепер напишіть текст питання."
+        )
+        await callback.answer()
+        return
 
 
 @router.message(AskFlow.waiting_question)
@@ -677,12 +896,21 @@ async def on_ask_question(message: types.Message, state: FSMContext):
             await state.clear()
             break
 
-        thread, role_name = await _create_bot_question_thread(db, user, recipient, question)
+        course_id = data.get("ask_course_id")
+        teacher_id = data.get("ask_teacher_id")
+        thread, role_name = await _create_bot_question_thread(
+            db,
+            user,
+            recipient,
+            question,
+            course_id=int(course_id) if course_id else None,
+            target_user_id=int(teacher_id) if teacher_id else None,
+        )
 
         await message.answer(
-            f"Запитання відправлено до {role_name}. "
-            f"Його також видно у веб-кабінеті в розділі «Питання/Звернення».\n"
-            f"Номер звернення: #{thread.id}",
+            f"Запитання відправлено до {role_name}.\n"
+            f"Номер звернення: #{thread.id}\n\n"
+            f"Відповідь прийде у веб-кабінет, а якщо Telegram прив'язаний — також сюди.",
             reply_markup=get_main_kb(),
         )
         await state.clear()

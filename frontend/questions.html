@@ -30,7 +30,8 @@
       <section class="q-card"><div class="q-card-header"><div class="q-card-title">Нове питання</div></div><div class="q-card-inner">
         <form id="questionForm">
           <div class="q-field"><label>Кому адресувати</label><select class="q-select" id="targetType"><option value="teacher">Викладачу по курсу</option><option value="admin">Адміністратору</option></select></div>
-          <div class="q-field" id="courseField"><label>Курс</label><select class="q-select" id="courseSelect"><option value="">Завантаження курсів...</option></select><div class="q-hint" id="teacherHint"></div></div>
+          <div class="q-field" id="courseField"><label>Курс</label><select class="q-select" id="courseSelect"><option value="">Завантаження курсів...</option></select><div class="q-hint">Спочатку оберіть курс, щоб система показала доступних викладачів.</div></div>
+          <div class="q-field" id="teacherField"><label>Викладач</label><select class="q-select" id="teacherSelect"><option value="">Оберіть курс</option></select><div class="q-hint" id="teacherHint"></div></div>
           <div class="q-field"><label>Категорія</label><select class="q-select" id="category"><option value="learning">Навчальне питання</option><option value="schedule">Розклад</option><option value="access">Доступ до курсу</option><option value="payment">Оплата</option><option value="certificate">Сертифікат</option><option value="other">Інше</option></select></div>
           <div class="q-field"><label>Тема</label><input class="q-input" id="title" maxlength="180" placeholder="Наприклад: Не відкривається завдання"></div>
           <div class="q-field"><label>Текст питання</label><textarea class="q-textarea" id="message" maxlength="3000" placeholder="Опишіть ситуацію максимально зрозуміло..."></textarea></div>
@@ -44,28 +45,47 @@
 </div></div><script>(function(){var toggle=document.getElementById('mobileToggle');var sidebar=document.getElementById('sidebar');if(toggle)toggle.addEventListener('click',function(){sidebar.classList.toggle('active')});document.addEventListener('click',function(e){if(window.innerWidth<=1024&&sidebar&&!sidebar.contains(e.target)&&toggle&&!toggle.contains(e.target))sidebar.classList.remove('active')});})();</script><script src="config.js"></script><script src="mockData.js"></script><script src="api.js"></script>
 <script>
 if(!requireAuth()) throw new Error('auth');
-let courses=[]; let threads=[]; let currentFilter='all'; let teachersByCourse={};
+let teacherOptions=[]; let threads=[]; let currentFilter='all';
 const statusLabels={new:'Нове',waiting_answer:'Очікує відповіді',answered:'Відповідь надано',closed:'Закрито'};
 function toast(t){const d=document.createElement('div');d.className='q-toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
-async function loadCourses(){
-  try{ courses=await apiGet('/api/student/courses')||[]; const sel=document.getElementById('courseSelect'); sel.innerHTML='';
-    if(!courses.length){ sel.innerHTML='<option value="">Немає доступних курсів</option>'; return; }
-    for(const c of courses){ const id=c.course_id||c.id; const title=c.course_title||c.title; const opt=document.createElement('option'); opt.value=id; opt.textContent=title; sel.appendChild(opt); }
-    await updateTeacherHint();
-  }catch(e){ document.getElementById('courseSelect').innerHTML='<option value="">Помилка завантаження</option>'; }
+function getSelectedCourseOption(){const cid=Number(document.getElementById('courseSelect').value);return teacherOptions.find(c=>Number(c.course_id)===cid)||null;}
+function renderTeacherSelect(){
+  const teacherSel=document.getElementById('teacherSelect');
+  const hint=document.getElementById('teacherHint');
+  const course=getSelectedCourseOption();
+  teacherSel.innerHTML='';
+  if(!course){teacherSel.innerHTML='<option value="">Спочатку оберіть курс</option>';hint.textContent='';return;}
+  const teachers=course.teachers||[];
+  if(!teachers.length){teacherSel.innerHTML='<option value="">Викладача не знайдено</option>';hint.textContent='Для цього курсу не призначено викладача. Краще напишіть адміністратору.';return;}
+  teacherSel.innerHTML='<option value="">Оберіть викладача</option>';
+  teachers.forEach(t=>{const opt=document.createElement('option');opt.value=t.id;opt.textContent=t.label||t.full_name||t.email||`Викладач #${t.id}`;teacherSel.appendChild(opt);});
+  hint.textContent=teachers.length===1?'Для цього курсу доступний один викладач.':'Оберіть конкретного викладача, якому адресувати питання.';
 }
-async function updateTeacherHint(){ const id=document.getElementById('courseSelect').value; const hint=document.getElementById('teacherHint'); if(!id){hint.textContent='';return;} try{ if(!teachersByCourse[id]) teachersByCourse[id]=await apiGet(`/api/courses/${id}/teacher`); const teachers=teachersByCourse[id]?.teachers||[]; hint.textContent=teachers.length?`Питання отримає: ${teachers.map(t=>t.full_name||t.email).join(', ')}`:'Для курсу не знайдено викладача'; }catch{ hint.textContent='Не вдалося визначити викладача'; }}
+async function loadCourses(){
+  const sel=document.getElementById('courseSelect');
+  try{
+    const data=await apiGet('/api/questions/teacher-options');
+    teacherOptions=(data&&data.courses)||[];
+    sel.innerHTML='';
+    if(!teacherOptions.length){sel.innerHTML='<option value="">Немає доступних курсів</option>';renderTeacherSelect();return;}
+    sel.innerHTML='<option value="">Оберіть курс</option>';
+    for(const c of teacherOptions){const opt=document.createElement('option');opt.value=c.course_id;opt.textContent=c.course_title||`Курс #${c.course_id}`;sel.appendChild(opt);}
+    renderTeacherSelect();
+  }catch(e){sel.innerHTML='<option value="">Помилка завантаження</option>';document.getElementById('teacherSelect').innerHTML='<option value="">Недоступно</option>';document.getElementById('teacherHint').textContent='Не вдалося завантажити список курсів і викладачів.';}
+}
+function updateTargetFields(){const isTeacher=document.getElementById('targetType').value==='teacher';document.getElementById('courseField').style.display=isTeacher?'block':'none';document.getElementById('teacherField').style.display=isTeacher?'block':'none';}
 function typeLabel(t){return t==='teacher'?'Викладач':t==='admin'?'Адміністратор':'AI-асистент'}
-function renderList(){ const box=document.getElementById('questionsList'); let rows=threads; if(currentFilter==='ai') rows=rows.filter(x=>x.target_type==='ai'); else if(currentFilter!=='all') rows=rows.filter(x=>x.status===currentFilter); if(!rows.length){box.innerHTML='<div class="q-empty">Питань у цій вкладці немає.</div>'; return;} box.innerHTML=rows.map(q=>`<div class="q-thread" onclick="openThread(${q.id})"><div class="q-thread-top"><div class="q-thread-title">${escapeHtml(q.title)}</div><span class="q-badge q-b-${q.status}">${statusLabels[q.status]||q.status}</span></div><div class="q-meta">${typeLabel(q.target_type)}${q.course_title?' · '+escapeHtml(q.course_title):''}${q.priority==='high'?' · <span class="q-badge q-b-high">Важливе</span>':''}</div><div class="q-meta">${escapeHtml((q.last_message||'').slice(0,140))}</div></div>`).join(''); }
+function renderList(){ const box=document.getElementById('questionsList'); let rows=threads; if(currentFilter==='ai') rows=rows.filter(x=>x.target_type==='ai'); else if(currentFilter!=='all') rows=rows.filter(x=>x.status===currentFilter); if(!rows.length){box.innerHTML='<div class="q-empty">Питань у цій вкладці немає.</div>'; return;} box.innerHTML=rows.map(q=>`<div class="q-thread" onclick="openThread(${q.id})"><div class="q-thread-top"><div class="q-thread-title">${escapeHtml(q.title)}</div><span class="q-badge q-b-${q.status}">${statusLabels[q.status]||q.status}</span></div><div class="q-meta">${typeLabel(q.target_type)}${q.course_title?' · '+escapeHtml(q.course_title):''}${q.target_name?' · '+escapeHtml(q.target_name):''}${q.priority==='high'?' · <span class="q-badge q-b-high">Важливе</span>':''}</div><div class="q-meta">${escapeHtml((q.last_message||'').slice(0,140))}</div></div>`).join(''); }
 async function loadQuestions(){ try{ threads=await apiGet('/api/questions/my')||[]; renderList(); try{ await markAllNotificationsRead(); initGlobalNotificationsBell(); }catch(_){}}catch(e){document.getElementById('questionsList').innerHTML=`<div class="q-empty">${escapeHtml(e.message)}</div>`} }
-async function openThread(id){ const q=await apiGet(`/api/questions/${id}`); const box=document.getElementById('questionDetail'); box.classList.add('active'); box.innerHTML=`<hr style="border-color:var(--border);margin:1rem 0"><h2>${escapeHtml(q.title)}</h2><div class="q-meta">${typeLabel(q.target_type)} · ${statusLabels[q.status]||q.status} ${q.course_title?'· '+escapeHtml(q.course_title):''}</div><div style="margin-top:1rem">${(q.messages||[]).map(m=>`<div class="q-message"><div class="q-message-who">${escapeHtml(m.sender_name||m.sender_role)} · ${new Date(m.created_at).toLocaleString('uk-UA')}</div><div>${escapeHtml(m.message_text)}</div></div>`).join('')}</div>${q.target_type!=='ai'&&q.status!=='closed'?`<div class="field"><label>Уточнення / відповідь</label><textarea id="replyText"></textarea></div><div class="btn-row"><button class="btn btn-primary" onclick="sendReply(${q.id})">Надіслати</button><button class="btn btn-secondary" onclick="closeThread(${q.id})">Закрити</button></div>`:''}`; box.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+async function openThread(id){ const q=await apiGet(`/api/questions/${id}`); const box=document.getElementById('questionDetail'); box.classList.add('active'); box.innerHTML=`<hr style="border-color:var(--border);margin:1rem 0"><h2>${escapeHtml(q.title)}</h2><div class="q-meta">${typeLabel(q.target_type)} · ${statusLabels[q.status]||q.status} ${q.course_title?'· '+escapeHtml(q.course_title):''} ${q.target_name?'· '+escapeHtml(q.target_name):''}</div><div style="margin-top:1rem">${(q.messages||[]).map(m=>`<div class="q-message"><div class="q-message-who">${escapeHtml(m.sender_name||m.sender_role)} · ${new Date(m.created_at).toLocaleString('uk-UA')}</div><div>${escapeHtml(m.message_text)}</div></div>`).join('')}</div>${q.target_type!=='ai'&&q.status!=='closed'?`<div class="q-field"><label>Уточнення / відповідь</label><textarea id="replyText" class="q-textarea"></textarea></div><div class="q-detail-actions"><button class="btn btn-primary" onclick="sendReply(${q.id})">Надіслати</button><button class="btn btn-secondary" onclick="closeThread(${q.id})">Закрити</button></div>`:''}`; box.scrollIntoView({behavior:'smooth',block:'nearest'}); }
 async function sendReply(id){ const txt=document.getElementById('replyText').value.trim(); if(!txt)return toast('Введіть текст'); await replyQuestion(id,txt); toast('Надіслано'); await loadQuestions(); await openThread(id); }
 async function closeThread(id){ await closeQuestion(id); toast('Питання закрито'); await loadQuestions(); document.getElementById('questionDetail').classList.remove('active'); }
 function openAiWidget(){ const btn=document.getElementById('ai-chat-toggle'); if(btn) btn.click(); else toast('AI-віджет завантажується. Спробуйте ще раз.'); }
-document.getElementById('targetType').addEventListener('change',e=>{document.getElementById('courseField').style.display=e.target.value==='teacher'?'block':'none'});
-document.getElementById('courseSelect').addEventListener('change',updateTeacherHint);
+document.getElementById('targetType').addEventListener('change',updateTargetFields);
+document.getElementById('courseSelect').addEventListener('change',renderTeacherSelect);
 document.querySelectorAll('.q-tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.q-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentFilter=b.dataset.filter;renderList();}));
-document.getElementById('questionForm').addEventListener('submit',async e=>{e.preventDefault(); const payload={target_type:targetType.value,title:title.value.trim(),message:message.value.trim(),category:category.value,priority:priority.checked?'high':'normal'}; if(payload.target_type==='teacher'){ const cid=Number(courseSelect.value); if(!cid) return toast('Оберіть курс для питання викладачу'); payload.course_id=cid; } if(payload.title.length<3||payload.message.length<3) return toast('Тема і текст мають містити щонайменше 3 символи'); let created; try{ created=await createQuestion(payload); }catch(err){ return toast(err.message||'Не вдалося надіслати питання'); } toast('Питання надіслано'); e.target.reset(); document.getElementById('courseField').style.display='block'; try{ await loadCourses(); await loadQuestions(); if(created&&created.id) await openThread(created.id); }catch(_){/* question is saved; ignore post-send UI refresh hiccups */} });
-loadCourses(); loadQuestions();
+document.getElementById('questionForm').addEventListener('submit',async e=>{e.preventDefault(); const payload={target_type:targetType.value,title:title.value.trim(),message:message.value.trim(),category:category.value,priority:priority.checked?'high':'normal'}; if(payload.target_type==='teacher'){ const cid=Number(courseSelect.value); const tid=Number(teacherSelect.value); if(!cid) return toast('Оберіть курс для питання викладачу'); if(!tid) return toast('Оберіть викладача для цього курсу'); payload.course_id=cid; payload.target_user_id=tid; } if(payload.title.length<3||payload.message.length<3) return toast('Тема і текст мають містити щонайменше 3 символи'); let created; try{ created=await createQuestion(payload); }catch(err){ return toast(err.message||'Не вдалося надіслати питання'); } toast('Питання надіслано'); e.target.reset(); updateTargetFields(); renderTeacherSelect(); try{ await loadQuestions(); if(created&&created.id) await openThread(created.id); }catch(_){/* question is saved; ignore post-send UI refresh hiccups */} });
+updateTargetFields(); loadCourses(); loadQuestions();
+</script>
 </script>
 </body></html>
