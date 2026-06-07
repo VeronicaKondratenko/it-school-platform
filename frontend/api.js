@@ -815,6 +815,52 @@ function initStudentChatWidget() {
     // Check if already injected
     if (document.getElementById('ai-chat-widget')) return;
 
+    // Strong local styles for the AI widget.
+    // They intentionally use a widget id + !important because global theme files
+    // contain generic input/select rules with !important and can otherwise make
+    // the text white on the white AI input.
+    if (!document.getElementById('ai-chat-widget-safe-styles')) {
+        const chatStyle = document.createElement('style');
+        chatStyle.id = 'ai-chat-widget-safe-styles';
+        chatStyle.textContent = `
+            #ai-chat-widget, #ai-chat-widget * { box-sizing: border-box; }
+            #ai-chat-window { background: #ffffff !important; color: #0f172a !important; }
+            #ai-chat-messages { background: #f8fafc !important; color: #0f172a !important; }
+            #ai-chat-form { background: #ffffff !important; color: #0f172a !important; }
+            #ai-chat-input, #ai-chat-course {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                -webkit-text-fill-color: #0f172a !important;
+                caret-color: #2563eb !important;
+                border-color: #cbd5e1 !important;
+                opacity: 1 !important;
+            }
+            #ai-chat-input::placeholder {
+                color: #64748b !important;
+                -webkit-text-fill-color: #64748b !important;
+                opacity: 1 !important;
+            }
+            #ai-chat-input:focus, #ai-chat-course:focus {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                -webkit-text-fill-color: #0f172a !important;
+                border-color: #2563eb !important;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16) !important;
+            }
+            #ai-chat-input:disabled {
+                background: #f8fafc !important;
+                color: #0f172a !important;
+                -webkit-text-fill-color: #0f172a !important;
+                opacity: .72 !important;
+            }
+            #ai-chat-course option {
+                background: #ffffff !important;
+                color: #0f172a !important;
+            }
+        `;
+        document.head.appendChild(chatStyle);
+    }
+
     const widgetHTML = `
         <div id="ai-chat-widget" style="position:fixed;bottom:24px;right:24px;z-index:9999;font-family:Inter,sans-serif;">
             <!-- Chat Window -->
@@ -829,7 +875,7 @@ function initStudentChatWidget() {
                 </div>
                 <div style="padding:10px 12px;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
                     <label for="ai-chat-course" style="display:block;font-size:12px;color:#475569;margin-bottom:6px;font-weight:600;">Контекст курсу</label>
-                    <select id="ai-chat-course" style="width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;color:#0f172a;background:white;">
+                    <select id="ai-chat-course" style="width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;color:#0f172a!important;-webkit-text-fill-color:#0f172a!important;background:white!important;">
                         <option value="">Без курсу (загальне питання)</option>
                     </select>
                     <div id="ai-chat-course-note" style="font-size:11px;color:#64748b;margin-top:6px;">Курс обирати не обовʼязково. Оберіть його, щоб AI враховував навчальний контекст і правильно переадресовував складні запити викладачу.</div>
@@ -842,7 +888,7 @@ function initStudentChatWidget() {
                 </div>
                 <!-- Input Area -->
                 <form id="ai-chat-form" style="display:flex;padding:12px;border-top:1px solid #e2e8f0;background:#fff;color:#0f172a;gap:8px;">
-                    <input type="text" id="ai-chat-input" placeholder="Напишіть повідомлення..." required style="flex:1;padding:10px 14px;border:1px solid #cbd5e1;border-radius:20px;outline:none;font-family:inherit;font-size:14px;color:#0f172a;background:#fff;caret-color:#2563eb;">
+                    <input type="text" id="ai-chat-input" placeholder="Напишіть повідомлення..." required style="flex:1;padding:10px 14px;border:1px solid #cbd5e1;border-radius:20px;outline:none;font-family:inherit;font-size:14px;color:#0f172a!important;-webkit-text-fill-color:#0f172a!important;background:#fff!important;caret-color:#2563eb!important;">
                     <button type="submit" id="ai-chat-send" style="background:#2563eb;color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     </button>
@@ -867,6 +913,14 @@ function initStudentChatWidget() {
     const form = document.getElementById('ai-chat-form');
     const input = document.getElementById('ai-chat-input');
     const sendBtn = document.getElementById('ai-chat-send');
+
+    // Extra runtime guard for browsers/themes that override input text color.
+    input.style.setProperty('color', '#0f172a', 'important');
+    input.style.setProperty('-webkit-text-fill-color', '#0f172a', 'important');
+    input.style.setProperty('background', '#ffffff', 'important');
+    input.style.setProperty('caret-color', '#2563eb', 'important');
+    input.style.setProperty('opacity', '1', 'important');
+
     const messagesEl = document.getElementById('ai-chat-messages');
     const courseSelect = document.getElementById('ai-chat-course');
     const courseNote = document.getElementById('ai-chat-course-note');
