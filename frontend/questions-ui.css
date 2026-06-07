@@ -1,3 +1,55 @@
+
+/* Self-contained cabinet shell for standalone Questions pages.
+   These pages cannot rely on inline styles from dashboard.html files. */
+.q-page{font-family:'Manrope',sans-serif;background:var(--ink,#080d1a);color:#fff;margin:0;min-height:100vh;}
+.q-page *{box-sizing:border-box;}
+.q-page .app{display:flex;min-height:100vh;background:var(--ink,#080d1a);}
+.q-page .sidebar{width:260px;background:var(--ink-soft,#111827);border-right:1px solid var(--border,rgba(255,255,255,.08));display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:200;transition:transform .3s;overflow-y:auto;}
+.q-page .sidebar-logo{display:flex;align-items:center;gap:.65rem;padding:1.5rem;border-bottom:1px solid var(--border,rgba(255,255,255,.08));flex-shrink:0;}
+.q-page .sidebar-logo img{height:32px!important;width:32px!important;max-width:32px!important;object-fit:contain!important;border-radius:9px;display:block;}
+.q-page .sidebar-logo span{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:-.02em;color:#fff;}
+.q-page .sidebar-logo span b{color:#3b82f6;font-weight:900;}
+.q-page .sidebar-profile{padding:1.25rem 1rem;border-bottom:1px solid var(--border,rgba(255,255,255,.08));text-align:center;}
+.q-page .sidebar-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-size:1.5rem;font-weight:900;color:#fff;margin:0 auto .75rem;cursor:pointer;transition:transform .2s;}
+.q-page .sidebar-avatar:hover{transform:scale(1.05);}
+.q-page .sidebar-pname{font-weight:700;font-size:.95rem;margin-bottom:.2rem;color:#fff;}
+.q-page .sidebar-prole{display:inline-block;padding:.2rem .7rem;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.q-page .role-admin{background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.25);}
+.q-page .role-teacher{background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.25);}
+.q-page .role-student{background:rgba(37,99,235,.12);color:#60a5fa;border:1px solid rgba(37,99,235,.25);}
+.q-page .sidebar-nav{flex:1;padding:.75rem;}
+.q-page .nav-section-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#94a3b8);padding:.5rem 1rem;margin-top:.5rem;}
+.q-page .sidebar-nav a,.q-page .nav-item{display:flex!important;align-items:center;gap:.75rem;padding:.7rem 1rem;border-radius:10px;color:var(--muted,#94a3b8);text-decoration:none;font-size:.875rem;font-weight:500;margin-bottom:.15rem;transition:all .2s;cursor:pointer;border:1px solid transparent;background:transparent;width:100%;text-align:left;font-family:'Manrope',sans-serif;line-height:1.2;}
+.q-page .sidebar-nav a:hover,.q-page .nav-item:hover{background:rgba(255,255,255,.05);color:#fff;}
+.q-page .sidebar-nav a.active,.q-page .nav-item.active{background:rgba(37,99,235,.12);color:#3b82f6;border-color:rgba(37,99,235,.2);}
+.q-page .sidebar-nav svg,.q-page .sidebar-bottom svg{flex:0 0 18px;}
+.q-page .sidebar-bottom{padding:.75rem;border-top:1px solid var(--border,rgba(255,255,255,.08));}
+.q-page .sidebar-bottom a{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:10px;color:var(--muted,#94a3b8);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .2s;}
+.q-page .sidebar-bottom a:hover{background:rgba(239,68,68,.1);color:#ef4444;}
+.q-page .main{flex:1;margin-left:260px;padding:2rem;min-height:100vh;overflow-x:hidden;background:var(--ink,#080d1a);}
+.q-page .section-card{background:var(--ink-soft,#111827);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px;padding:2rem;display:none;margin-bottom:1.5rem;}
+.q-page .section-card.active{display:block;}
+.q-page .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border,rgba(255,255,255,.08));gap:1rem;flex-wrap:wrap;}
+.q-page .section-title{font-family:'Unbounded',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:-.02em;color:#fff;}
+.q-page .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.1rem;margin-bottom:1.5rem;}
+.q-page .stat-card{background:var(--ink,#080d1a);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:14px;padding:1.25rem;text-align:left;transition:all .25s;}
+.q-page .stat-card:hover{border-color:rgba(37,99,235,.3);transform:translateY(-2px);}
+.q-page .stat-value{font-family:'Unbounded',sans-serif;font-size:1.35rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.25rem;color:#fff;}
+.q-page .stat-label{font-size:.8rem;font-weight:700;color:var(--muted,#94a3b8);}
+.q-page .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border-radius:10px;padding:.72rem 1rem;border:1px solid transparent;font-family:'Manrope',sans-serif;font-size:.86rem;font-weight:800;cursor:pointer;text-decoration:none;transition:all .2s;}
+.q-page .btn-primary{background:#2563eb;color:#fff;border-color:#2563eb;}
+.q-page .btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);}
+.q-page .btn-secondary{background:rgba(255,255,255,.05);color:#e5e7eb;border-color:var(--border,rgba(255,255,255,.08));}
+.q-page .btn-secondary:hover{background:rgba(255,255,255,.08);color:#fff;}
+.q-page .mobile-toggle{display:none;position:fixed;top:1rem;left:1rem;z-index:300;background:#2563eb;border:none;border-radius:10px;padding:.65rem;cursor:pointer;color:#fff;}
+[data-theme='light'] .q-page{background:#eef2f7;color:#0f172a;}
+[data-theme='light'] .q-page .app,[data-theme='light'] .q-page .main{background:#eef2f7;}
+[data-theme='light'] .q-page .section-card,[data-theme='light'] .q-page .q-card{background:#fff;border-color:#dbe3ef;box-shadow:0 12px 28px rgba(15,23,42,.06);}
+[data-theme='light'] .q-page .stat-card,[data-theme='light'] .q-page .q-table-wrap,[data-theme='light'] .q-page .q-thread,[data-theme='light'] .q-page .q-message{background:#f8fafc;border-color:#e2e8f0;}
+[data-theme='light'] .q-page .section-title,[data-theme='light'] .q-page .stat-value{color:#0f172a;}
+@media(max-width:1024px){.q-page .main{margin-left:0;padding:1rem;padding-top:4.5rem;}.q-page .sidebar{transform:translateX(-100%);}.q-page .sidebar.active{transform:translateX(0);}.q-page .mobile-toggle{display:flex;}.q-page .stats-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.q-page .stats-grid{grid-template-columns:1fr}.q-page .section-card{padding:1rem}.q-page .sidebar{width:82vw;}}
+
 /* Questions / Appeals module visual integration with the existing IT School UI. */
 .q-page .q-actions{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
 .q-page .q-layout{display:grid;grid-template-columns:minmax(360px,460px) 1fr;gap:1.25rem;align-items:start}
