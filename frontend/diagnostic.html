@@ -385,7 +385,7 @@ async function testAdmin(){
   const users=await get('Admin','Список користувачів','/api/admin/users',t);
   await get('Admin','Групи','/api/groups',t);
   const courses=await get('Admin','Курси','/api/courses',t);
-  await get('Admin','Дисципліни','/api/disciplines',t);
+  await get('Admin','Курси','/api/disciplines',t);
   await get('Admin','Розклад','/api/schedule',t);
   // Деталі першого курсу + теми
   if(courses&&courses.length>0){

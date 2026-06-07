@@ -382,7 +382,7 @@
             try {
                 const topics = await apiGet(`/api/courses/${courseData.id}/topics`) || [];
                 const discId = topics.length ? topics[0].discipline_id : null;
-                if (!discId) { cvToast('Спочатку додайте дисципліну до курсу','error'); return; }
+                if (!discId) { cvToast('Спочатку додайте курс до курсу','error'); return; }
                 await apiPost(`/api/courses/${courseData.id}/topics`, {title:input.value.trim(), discipline_id:discId});
                 cvToast('Тему додано','success');
                 await loadMaterials();
@@ -448,9 +448,9 @@
                     <div style="font-weight:700;font-size:1rem;margin-bottom:1rem;">${courseData.title}</div>
                     <p style="color:var(--muted);line-height:1.6;margin-bottom:1.5rem;">${courseData.description||'Опис відсутній'}</p>
                     ${teacherHtml}
-                    <div class="disc-label">Дисципліни (${Object.keys(discMap).length})</div>
+                    <div class="disc-label">Курси (${Object.keys(discMap).length})</div>
                     <div style="display:grid;gap:.4rem;margin-bottom:.5rem;">
-                        ${Object.entries(discMap).map(([d,n])=>`<div style="display:flex;justify-content:space-between;padding:.6rem .9rem;background:var(--ink);border:1px solid var(--border);border-radius:8px;font-size:.88rem;"><span>${d}</span><span style="color:var(--muted);">${n} тем</span></div>`).join('')||'<div style="color:var(--muted);font-size:.85rem;">Дисциплін ще немає</div>'}
+                        ${Object.entries(discMap).map(([d,n])=>`<div style="display:flex;justify-content:space-between;padding:.6rem .9rem;background:var(--ink);border:1px solid var(--border);border-radius:8px;font-size:.88rem;"><span>${d}</span><span style="color:var(--muted);">${n} тем</span></div>`).join('')||'<div style="color:var(--muted);font-size:.85rem;">Курсів ще немає</div>'}
                     </div>
                     ${links}`;
             } catch(e) {

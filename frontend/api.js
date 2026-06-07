@@ -252,7 +252,7 @@ async function apiGet(endpoint) {
                 if (!id || byId.has(id)) return;
                 byId.set(id, {
                     id,
-                    name: row.discipline_name || `Дисципліна #${id}`,
+                    name: row.discipline_name || `Курс #${id}`,
                     course_id: null,
                     course_title: null,
                 });
@@ -340,7 +340,7 @@ async function apiPost(endpoint, body, mockResponse = null) {
                 id: Date.now(),
                 title: body?.title || 'Нова тема',
                 discipline_id: body?.discipline_id || discipline?.id || null,
-                discipline_name: discipline?.course_title || discipline?.name || 'Дисципліна',
+                discipline_name: discipline?.course_title || discipline?.name || 'Курс',
                 course_id: courseId,
             };
             topics.unshift(newTopic);
@@ -1067,64 +1067,91 @@ function initStudentChatWidget() {
     loadStudentCoursesForChat();
 }
 
-// ─── Role-aware sidebar fix for shared pages ─────────────────────────
-// On shared pages (courses, schedule, etc.) the sidebar is student-oriented.
-// For admins, repoint "Кабінет" to their own panel and hide student-only
-// links (Оцінки/Завдання/Матеріали) that would otherwise bounce them back.
-function adjustNavForRole() {
+// ─── Role-aware sidebar stability ─────────────────────────────────
+// Shared pages (profile/schedule/questions) originally contain student menu markup.
+// For staff users we rebuild the visible sidebar to match their role, so the menu
+// does not randomly change when they open shared pages.
+function roleNavIcon(name) {
+    const icons = {
+        overview: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+        users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+        course: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+        group: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+        calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+        report: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>',
+        bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+        chat: '<path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>',
+        grade: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+        task: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+        profile: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    };
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.overview}</svg>`;
+}
+
+function renderRoleSidebarNav() {
     const role = (typeof getRole === 'function') ? getRole() : null;
-    if (!role || role === 'student') return;
+    const nav = document.querySelector('.sidebar-nav');
+    if (!nav) return;
+    const current = (location.pathname.split('/').pop() || '').toLowerCase() + (location.hash || '');
 
-    const dashHref = role === 'admin' ? 'admin-dashboard.html' : 'teacher-dashboard.html';
-    const coursesHref = role === 'admin' ? 'admin-dashboard.html#courses' : 'teacher-dashboard.html#courses';
-    const scheduleHref = role === 'admin' ? 'admin-dashboard.html#overview' : 'teacher-dashboard.html#attendance';
-    const questionsHref = role === 'admin' ? 'admin-questions.html' : 'teacher-questions.html';
+    const item = (href, label, icon, activeTest) => {
+        const active = activeTest ? activeTest(current) : current.startsWith(href.toLowerCase());
+        return `<a class="nav-item ${active ? 'active' : ''}" href="${href}">${roleNavIcon(icon)}${label}</a>`;
+    };
+    const label = (text) => `<div class="nav-section-label">${text}</div>`;
 
-    // If staff lands on the student course catalog, immediately send them back
-    // to their role-specific dashboard section. This prevents sidebar switching.
-    const currentPage = (location.pathname.split('/').pop() || '').toLowerCase();
-    if (currentPage === 'courses.html') {
-        window.location.replace(coursesHref);
+    if (role === 'admin') {
+        nav.innerHTML = [
+            label('Панель адміністратора'),
+            item('admin-dashboard.html#overview', 'Огляд', 'overview', c => c.startsWith('admin-dashboard.html') && (!location.hash || location.hash === '#overview')),
+            label('Управління'),
+            item('admin-dashboard.html#users', 'Користувачі', 'users', c => location.hash === '#users'),
+            item('admin-dashboard.html#courses', 'Курси', 'course', c => location.hash === '#courses'),
+            item('admin-dashboard.html#groups', 'Групи', 'group', c => location.hash === '#groups'),
+            item('schedule.html', 'Розклад', 'calendar', c => c.startsWith('schedule.html')),
+            label('Комунікація'),
+            item('admin-questions.html', 'Звернення', 'chat', c => c.startsWith('admin-questions.html')),
+            item('admin-dashboard.html#notifications', 'Сповіщення', 'bell', c => location.hash === '#notifications'),
+            label('Аналітика'),
+            item('admin-dashboard.html#reports', 'Звіти', 'report', c => location.hash === '#reports'),
+            label('Профіль'),
+            item('profile.html', 'Профіль', 'profile', c => c.startsWith('profile.html')),
+        ].join('');
         return;
     }
 
-    document.querySelectorAll('.sidebar a, aside a, nav a').forEach(a => {
-        const href = (a.getAttribute('href') || '').toLowerCase();
-        const label = (a.textContent || '').trim().toLowerCase();
-
-        // Shared student pages should never send staff to the student cabinet.
-        if (href.endsWith('dashboard.html') && !href.includes('admin') && !href.includes('teacher')) {
-            a.setAttribute('href', dashHref);
-        }
-
-        // Staff must not open the student course catalog from their sidebars.
-        if (href.endsWith('courses.html') || label === 'каталог курсів') {
-            a.setAttribute('href', coursesHref);
-        }
-
-        // Staff schedule links should stay inside staff dashboards where possible.
-        if (href.endsWith('schedule.html') || label === 'розклад') {
-            a.setAttribute('href', scheduleHref);
-        }
-
-        // Staff questions must open the staff module, not the student questions page.
-        if (href.endsWith('questions.html') || label === 'питання' || label === 'звернення') {
-            a.setAttribute('href', questionsHref);
-        }
-
-        // Hide student-only destinations from admin/teacher sidebars on shared pages.
-        const isStudentOnly = href.endsWith('assignments.html') || href.endsWith('grades.html') || href.endsWith('materials.html')
-            || label === 'завдання' || label === 'оцінки' || label === 'матеріали';
-        if (isStudentOnly) {
-            a.style.display = 'none';
-        }
-    });
+    if (role === 'teacher') {
+        nav.innerHTML = [
+            label('Панель викладача'),
+            item('teacher-dashboard.html#overview', 'Огляд', 'overview', c => c.startsWith('teacher-dashboard.html') && (!location.hash || location.hash === '#overview')),
+            label('Навчання'),
+            item('teacher-dashboard.html#courses', 'Мої курси', 'course', c => location.hash === '#courses'),
+            item('teacher-dashboard.html#students', 'Студенти', 'users', c => location.hash === '#students'),
+            item('teacher-dashboard.html#assignments', 'Завдання', 'task', c => location.hash === '#assignments'),
+            item('teacher-dashboard.html#grades', 'Оцінки', 'grade', c => location.hash === '#grades'),
+            item('teacher-dashboard.html#attendance', 'Відвідуваність', 'calendar', c => location.hash === '#attendance'),
+            label('Комунікація'),
+            item('teacher-questions.html', 'Звернення студентів', 'chat', c => c.startsWith('teacher-questions.html')),
+            label('Профіль'),
+            item('profile.html', 'Профіль', 'profile', c => c.startsWith('profile.html')),
+        ].join('');
+    }
 }
 
-// Apply on every page that includes api.js. This keeps sidebars stable by role,
-// including shared pages such as profile/courses/schedule.
+function redirectStaffAwayFromStudentPages() {
+    const role = (typeof getRole === 'function') ? getRole() : null;
+    if (!role || role === 'student') return;
+    const page = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (page === 'courses.html') {
+        window.location.replace(role === 'admin' ? 'admin-dashboard.html#courses' : 'teacher-dashboard.html#courses');
+    }
+    if (page === 'questions.html') {
+        window.location.replace(role === 'admin' ? 'admin-questions.html' : 'teacher-questions.html');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    try { adjustNavForRole(); } catch (_) {}
+    try { renderRoleSidebarNav(); redirectStaffAwayFromStudentPages(); } catch (_) {}
 });
 
 // ─── Export Reports (Teacher) ────────────────────────────────────────
