@@ -295,3 +295,67 @@ class AdminStats(BaseModel):
     active_groups: int
     total_schedules: int
     telegram_linked: int
+
+# Question / Appeal Schemas
+class QuestionCreate(BaseModel):
+    target_type: str = Field(pattern="^(admin|teacher)$")
+    title: str = Field(min_length=3, max_length=180)
+    message: str = Field(min_length=3, max_length=3000)
+    course_id: Optional[int] = None
+    target_user_id: Optional[int] = None
+    category: Optional[str] = Field(default=None, max_length=80)
+    priority: str = Field(default="normal", pattern="^(normal|high)$")
+
+
+class QuestionReplyCreate(BaseModel):
+    message: str = Field(min_length=1, max_length=3000)
+
+
+class QuestionAssignRequest(BaseModel):
+    target_type: str = Field(pattern="^(admin|teacher)$")
+    target_user_id: Optional[int] = None
+    course_id: Optional[int] = None
+
+
+class QuestionMessageResponse(BaseModel):
+    id: int
+    sender_id: Optional[int] = None
+    sender_role: str
+    sender_name: Optional[str] = None
+    message_text: str
+    is_ai_response: bool = False
+    created_at: datetime.datetime
+
+
+class QuestionThreadResponse(BaseModel):
+    id: int
+    student_id: int
+    student_name: Optional[str] = None
+    student_email: Optional[EmailStr] = None
+    target_type: str
+    target_user_id: Optional[int] = None
+    target_name: Optional[str] = None
+    target_email: Optional[EmailStr] = None
+    course_id: Optional[int] = None
+    course_title: Optional[str] = None
+    title: str
+    category: Optional[str] = None
+    status: str
+    priority: str
+    created_at: datetime.datetime
+    updated_at: Optional[datetime.datetime] = None
+    closed_at: Optional[datetime.datetime] = None
+    last_message: Optional[str] = None
+    messages_count: int = 0
+    messages: List[QuestionMessageResponse] = []
+
+
+class NotificationResponse(BaseModel):
+    id: int
+    title: str
+    body: Optional[str] = None
+    link: Optional[str] = None
+    is_read: bool
+    created_at: datetime.datetime
+    class Config:
+        from_attributes = True

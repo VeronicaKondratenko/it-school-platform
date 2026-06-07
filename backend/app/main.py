@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from .database import get_db, engine, Base
 from . import models, schemas
-from .api.endpoints import auth, courses, groups, schedule, users, chat, reports, admin, messages, student, teacher, webhook, attendance, assignments, disciplines
+from .api.endpoints import auth, courses, groups, schedule, users, chat, reports, admin, messages, student, teacher, webhook, attendance, assignments, disciplines, questions, notifications
 from contextlib import asynccontextmanager
 from .bot import startup_bot, shutdown_bot
 from .config import settings
@@ -78,6 +78,8 @@ app.include_router(messages.router,  prefix="/api/messages",  tags=["messages"])
 app.include_router(student.router,   prefix="/api/student",   tags=["student"])
 app.include_router(teacher.router,   prefix="/api/teacher",   tags=["teacher"])
 app.include_router(webhook.router,   prefix="/api/webhook",   tags=["webhook"])
+app.include_router(questions.router, prefix="/api/questions", tags=["questions"])
+app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

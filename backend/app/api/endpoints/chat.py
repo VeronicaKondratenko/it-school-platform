@@ -12,7 +12,7 @@ from typing import Optional
 
 from ...database import get_db
 from ...services.ai_service import ai_service
-from ...models import Message, MessageStatus, User, StudyGroup, Course, UserRole
+from ...models import Message, MessageStatus, User, StudyGroup, Course, UserRole, QuestionThread, QuestionMessage
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +137,41 @@ async def ask_ai(
         logger.error(f"AI service error: {e}")
         raise HTTPException(status_code=500, detail=f"AI Service error: {str(e)}")
 
+    # Store AI questions in the structured questions journal so admins can
+    # review real student requests and students have their AI history.
+    if sender_id is not None:
+        try:
+            title = (request.message.strip()[:90] + "...") if len(request.message.strip()) > 90 else request.message.strip()
+            ai_thread = QuestionThread(
+                student_id=sender_id,
+                target_type="ai",
+                target_user_id=None,
+                course_id=request.course_id,
+                title=title or "AI-запит",
+                category=result.get("category") or "general",
+                status="answered",
+                priority="normal",
+            )
+            db.add(ai_thread)
+            await db.flush()
+            db.add(QuestionMessage(
+                thread_id=ai_thread.id,
+                sender_id=sender_id,
+                sender_role="student",
+                message_text=request.message.strip(),
+                is_ai_response=False,
+            ))
+            db.add(QuestionMessage(
+                thread_id=ai_thread.id,
+                sender_id=None,
+                sender_role="ai",
+                message_text=result.get("response", ""),
+                is_ai_response=True,
+            ))
+            await db.flush()
+        except Exception as e:
+            logger.warning(f"Could not store AI question history: {e}")
+
     # Escalate administrative questions
     if result.get("category") == "administrative":
         # BLOCK ESCALATIONS FOR GUESTS (unauthenticated users)
@@ -171,6 +206,13 @@ async def ask_ai(
                 logger.info(f"Message escalated to teacher (ID: {target_teacher_id})")
             except Exception as e:
                 logger.error(f"Escalation error: {e}")
+
+    # Commit AI-history if no escalation commit happened, or finalize pending objects.
+    try:
+        await db.commit()
+    except Exception as e:
+        logger.warning(f"Final chat commit skipped/failed: {e}")
+        await db.rollback()
 
     return {
         "category": result["category"],

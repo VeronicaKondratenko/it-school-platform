@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table, Enum, DateTime, Time, Date, func, BigInteger, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table, Enum, DateTime, Time, Date, func, BigInteger, UniqueConstraint, Text
 from sqlalchemy.orm import relationship, validates
 from .database import Base
 import enum
@@ -235,5 +235,63 @@ class TelegramLinkCode(Base):
     code_hash = Column(String, nullable=False, index=True)
     expires_at = Column(DateTime, nullable=False)
     used_at = Column(DateTime, nullable=True)
+
+    user = relationship("User")
+
+
+class QuestionThread(Base):
+    """Structured student questions / appeals.
+
+    target_type:
+      * admin   — question to administration; visible to admins.
+      * teacher — question to a specific teacher; visible to that teacher and admins.
+      * ai      — AI assistant history; visible to the student and admins.
+    """
+    __tablename__ = "question_threads"
+
+    id = Column(Integer, primary_key=True)
+    student_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    target_type = Column(String, nullable=False, index=True)
+    target_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id", ondelete="SET NULL"), nullable=True, index=True)
+    title = Column(String, nullable=False)
+    category = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="new", index=True)
+    priority = Column(String, nullable=False, default="normal", index=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    closed_at = Column(DateTime, nullable=True)
+
+    student = relationship("User", foreign_keys=[student_id])
+    target_user = relationship("User", foreign_keys=[target_user_id])
+    course = relationship("Course")
+    messages = relationship("QuestionMessage", back_populates="thread", cascade="all, delete-orphan", passive_deletes=True, order_by="QuestionMessage.created_at")
+
+
+class QuestionMessage(Base):
+    __tablename__ = "question_messages"
+
+    id = Column(Integer, primary_key=True)
+    thread_id = Column(Integer, ForeignKey("question_threads.id", ondelete="CASCADE"), nullable=False, index=True)
+    sender_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    sender_role = Column(String, nullable=False)
+    message_text = Column(Text, nullable=False)
+    is_ai_response = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    thread = relationship("QuestionThread", back_populates="messages")
+    sender = relationship("User")
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    title = Column(String, nullable=False)
+    body = Column(Text, nullable=True)
+    link = Column(String, nullable=True)
+    is_read = Column(Boolean, default=False, nullable=False, index=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     user = relationship("User")

@@ -519,6 +519,26 @@ async function apiPut(endpoint, body) {
     return resp.json();
 }
 
+
+async function apiPatch(endpoint, body = {}) {
+    if (DEMO_MODE) {
+        await mockDelay(200);
+        return { ok: true, ...body };
+    }
+    const token = getToken();
+    const resp = await fetch(`${API_BASE}${endpoint}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(body || {})
+    });
+    if (resp.status === 401) { logout(); return null; }
+    if (!resp.ok) throw await parseApiError(resp, `PATCH error ${resp.status}`);
+    return resp.json();
+}
+
 // ─── Generic DELETE ──────────────────────────────────────────────────
 
 async function apiDelete(endpoint) {
@@ -1163,5 +1183,69 @@ window.addEventListener('load', () => {
     // Only init if token exists (we use role from localStorage)
     if (getToken()) {
         setTimeout(initStudentChatWidget, 500);
+    }
+});
+
+// ─── Structured Questions + Notifications helpers ───────────────────
+async function fetchMyQuestions() { return apiGet('/api/questions/my'); }
+async function fetchTeacherQuestions() { return apiGet('/api/questions/teacher'); }
+async function fetchAdminQuestions(targetType = '') {
+    const suffix = targetType ? `?target_type=${encodeURIComponent(targetType)}` : '';
+    return apiGet(`/api/questions/admin${suffix}`);
+}
+async function createQuestion(payload) { return apiPost('/api/questions', payload); }
+async function replyQuestion(threadId, message) { return apiPost(`/api/questions/${threadId}/reply`, { message }); }
+async function closeQuestion(threadId) { return apiPatch(`/api/questions/${threadId}/close`, {}); }
+async function assignQuestion(threadId, payload) { return apiPatch(`/api/questions/${threadId}/assign`, payload); }
+async function fetchNotifications(unreadOnly = false) { return apiGet(`/api/notifications${unreadOnly ? '?unread_only=true' : ''}`); }
+async function markAllNotificationsRead() { return apiPatch('/api/notifications/read-all', {}); }
+
+function notificationDestinationForRole(role) {
+    if (role === 'admin') return 'admin-questions.html';
+    if (role === 'teacher') return 'teacher-questions.html';
+    return 'questions.html';
+}
+
+function initGlobalNotificationsBell() {
+    if (!getToken() || document.getElementById('globalNotificationBell')) return;
+    const bell = document.createElement('button');
+    bell.id = 'globalNotificationBell';
+    bell.type = 'button';
+    bell.setAttribute('aria-label', 'Сповіщення');
+    bell.innerHTML = `
+        <span style="font-size:1.05rem;line-height:1;">!</span>
+        <span id="globalNotificationCount" style="display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#ef4444;color:#fff;font-size:.7rem;font-weight:800;align-items:center;justify-content:center;"></span>
+    `;
+    bell.style.cssText = 'position:fixed;right:1rem;top:1rem;z-index:5000;width:42px;height:42px;border-radius:14px;border:1px solid rgba(37,99,235,.35);background:rgba(37,99,235,.95);color:#fff;box-shadow:0 12px 28px rgba(15,23,42,.35);cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center;';
+    bell.addEventListener('click', () => {
+        window.location.href = notificationDestinationForRole(getRole());
+    });
+    document.body.appendChild(bell);
+
+    async function refresh() {
+        try {
+            const items = await fetchNotifications(true);
+            const count = Array.isArray(items) ? items.length : 0;
+            const badge = document.getElementById('globalNotificationCount');
+            if (!badge) return;
+            if (count > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = count > 9 ? '9+' : String(count);
+            } else {
+                badge.style.display = 'none';
+                badge.textContent = '';
+            }
+        } catch (e) {
+            // Keep silent: notification polling should never break pages.
+            console.debug('Notification polling skipped:', e.message || e);
+        }
+    }
+    refresh();
+    window.__itSchoolNotificationTimer = window.__itSchoolNotificationTimer || setInterval(refresh, 30000);
+}
+
+window.addEventListener('load', () => {
+    if (getToken()) {
+        setTimeout(initGlobalNotificationsBell, 900);
     }
 });
