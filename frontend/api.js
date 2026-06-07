@@ -1071,7 +1071,7 @@ function initStudentChatWidget() {
 // Shared pages used to keep their own sidebar markup, so admin/teacher could see
 // a student menu or lose the account block. This block rebuilds staff sidebars in
 // one consistent way, keeps active menu items highlighted, and adds the account
-// avatar/name/role everywhere for staff users.
+// avatar/name/role everywhere for the current role.
 function roleNavIcon(name) {
     const icons = {
         overview: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
@@ -1154,48 +1154,53 @@ function injectRoleSidebarStyles() {
     const s = document.createElement('style');
     s.id = 'role-sidebar-consistency-style';
     s.textContent = `
-        body.role-admin .sidebar, body.role-teacher .sidebar{
+        body.role-admin .sidebar, body.role-teacher .sidebar, body.role-student .sidebar{
             background:#1a2744!important;color:#fff!important;border-right:1px solid rgba(255,255,255,.08)!important;
         }
-        body.role-admin .sidebar-logo, body.role-teacher .sidebar-logo,
-        body.role-admin .sidebar-profile, body.role-teacher .sidebar-profile,
-        body.role-admin .sidebar-bottom, body.role-teacher .sidebar-bottom{
+        body.role-admin .sidebar-logo, body.role-teacher .sidebar-logo, body.role-student .sidebar-logo,
+        body.role-admin .sidebar-profile, body.role-teacher .sidebar-profile, body.role-student .sidebar-profile,
+        body.role-admin .sidebar-bottom, body.role-teacher .sidebar-bottom, body.role-student .sidebar-bottom{
             border-color:rgba(255,255,255,.08)!important;
         }
-        body.role-admin .sidebar-logo span, body.role-teacher .sidebar-logo span,
-        body.role-admin .sidebar-pname, body.role-teacher .sidebar-pname{
+        body.role-admin .sidebar-logo span, body.role-teacher .sidebar-logo span, body.role-student .sidebar-logo span,
+        body.role-admin .sidebar-pname, body.role-teacher .sidebar-pname, body.role-student .sidebar-pname{
             color:#fff!important;-webkit-text-fill-color:#fff!important;
         }
-        body.role-admin .sidebar-profile, body.role-teacher .sidebar-profile{
+        body.role-admin .sidebar-profile, body.role-teacher .sidebar-profile, body.role-student .sidebar-profile{
             padding:1.25rem 1rem!important;text-align:center!important;border-bottom:1px solid rgba(255,255,255,.08)!important;
         }
-        body.role-admin .sidebar-avatar, body.role-teacher .sidebar-avatar{
+        body.role-admin .sidebar-avatar, body.role-teacher .sidebar-avatar, body.role-student .sidebar-avatar{
             width:64px!important;height:64px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;
             font-family:'Unbounded',sans-serif!important;font-size:1.45rem!important;font-weight:900!important;color:#fff!important;margin:0 auto .75rem!important;
             box-shadow:0 0 20px rgba(37,99,235,.22)!important;
         }
         body.role-admin .sidebar-avatar{background:linear-gradient(135deg,#8b5cf6,#7c3aed)!important;}
         body.role-teacher .sidebar-avatar{background:linear-gradient(135deg,#10b981,#059669)!important;}
-        body.role-admin .sidebar-pname, body.role-teacher .sidebar-pname{font-weight:800!important;font-size:.95rem!important;margin-bottom:.25rem!important;line-height:1.25!important;}
-        body.role-admin .sidebar-prole, body.role-teacher .sidebar-prole{display:inline-block!important;padding:.22rem .7rem!important;border-radius:999px!important;font-size:.7rem!important;font-weight:800!important;letter-spacing:.04em!important;text-transform:uppercase!important;}
+        body.role-student .sidebar-avatar{background:linear-gradient(135deg,#2563eb,#4f46e5)!important;}
+        body.role-admin .sidebar-pname, body.role-teacher .sidebar-pname, body.role-student .sidebar-pname{font-weight:800!important;font-size:.95rem!important;margin-bottom:.25rem!important;line-height:1.25!important;}
+        body.role-admin .sidebar-prole, body.role-teacher .sidebar-prole, body.role-student .sidebar-prole{display:inline-block!important;padding:.22rem .7rem!important;border-radius:999px!important;font-size:.7rem!important;font-weight:800!important;letter-spacing:.04em!important;text-transform:uppercase!important;}
         body.role-admin .sidebar-prole{background:rgba(139,92,246,.16)!important;color:#ddd6fe!important;border:1px solid rgba(167,139,250,.35)!important;}
         body.role-teacher .sidebar-prole{background:rgba(16,185,129,.16)!important;color:#bbf7d0!important;border:1px solid rgba(16,185,129,.35)!important;}
-        body.role-admin .nav-section-label, body.role-teacher .nav-section-label{color:rgba(255,255,255,.42)!important;-webkit-text-fill-color:rgba(255,255,255,.42)!important;}
+        body.role-student .sidebar-prole{background:rgba(37,99,235,.16)!important;color:#bfdbfe!important;border:1px solid rgba(96,165,250,.35)!important;}
+        body.role-admin .nav-section-label, body.role-teacher .nav-section-label, body.role-student .nav-section-label{color:rgba(255,255,255,.42)!important;-webkit-text-fill-color:rgba(255,255,255,.42)!important;}
         body.role-admin .sidebar-nav a, body.role-admin .sidebar-nav .nav-item,
         body.role-teacher .sidebar-nav a, body.role-teacher .sidebar-nav .nav-item,
-        body.role-admin .sidebar-bottom a, body.role-teacher .sidebar-bottom a{
+        body.role-student .sidebar-nav a, body.role-student .sidebar-nav .nav-item,
+        body.role-admin .sidebar-bottom a, body.role-teacher .sidebar-bottom a, body.role-student .sidebar-bottom a{
             color:rgba(255,255,255,.68)!important;-webkit-text-fill-color:rgba(255,255,255,.68)!important;background:transparent!important;border:1px solid transparent!important;
         }
         body.role-admin .sidebar-nav a:hover, body.role-admin .sidebar-nav .nav-item:hover,
         body.role-teacher .sidebar-nav a:hover, body.role-teacher .sidebar-nav .nav-item:hover,
-        body.role-admin .sidebar-bottom a:hover, body.role-teacher .sidebar-bottom a:hover{
+        body.role-student .sidebar-nav a:hover, body.role-student .sidebar-nav .nav-item:hover,
+        body.role-admin .sidebar-bottom a:hover, body.role-teacher .sidebar-bottom a:hover, body.role-student .sidebar-bottom a:hover{
             background:rgba(255,255,255,.08)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
         }
         body.role-admin .sidebar-nav a.active, body.role-admin .sidebar-nav .nav-item.active,
-        body.role-teacher .sidebar-nav a.active, body.role-teacher .sidebar-nav .nav-item.active{
+        body.role-teacher .sidebar-nav a.active, body.role-teacher .sidebar-nav .nav-item.active,
+        body.role-student .sidebar-nav a.active, body.role-student .sidebar-nav .nav-item.active{
             background:rgba(59,130,246,.20)!important;color:#93c5fd!important;-webkit-text-fill-color:#93c5fd!important;border-color:rgba(59,130,246,.35)!important;
         }
-        body.role-admin .sidebar svg, body.role-teacher .sidebar svg{color:currentColor!important;stroke:currentColor!important;}
+        body.role-admin .sidebar svg, body.role-teacher .sidebar svg, body.role-student .sidebar svg{color:currentColor!important;stroke:currentColor!important;}
     `;
     document.head.appendChild(s);
 }
@@ -1217,7 +1222,7 @@ function renderRoleSidebarNav() {
 
 async function ensureRoleSidebarProfile() {
     const role = (typeof getRole === 'function') ? getRole() : null;
-    if (role !== 'admin' && role !== 'teacher') return;
+    if (role !== 'admin' && role !== 'teacher' && role !== 'student') return;
     const sidebar = document.querySelector('.sidebar');
     const logo = document.querySelector('.sidebar-logo');
     if (!sidebar || !logo) return;
@@ -1230,9 +1235,10 @@ async function ensureRoleSidebarProfile() {
         profile.className = 'sidebar-profile';
         logo.insertAdjacentElement('afterend', profile);
     }
-    const fallbackName = role === 'admin' ? 'Адміністратор' : 'Викладач';
+    const fallbackName = role === 'admin' ? 'Адміністратор' : role === 'teacher' ? 'Викладач' : 'Студент';
+    const fallbackInitials = role === 'admin' ? 'АД' : role === 'teacher' ? 'ВК' : 'СТ';
     profile.innerHTML = `
-        <div class="sidebar-avatar" id="roleSidebarAvatar">${role === 'admin' ? 'АД' : 'ВК'}</div>
+        <div class="sidebar-avatar" id="roleSidebarAvatar">${fallbackInitials}</div>
         <div class="sidebar-pname" id="roleSidebarName">${fallbackName}</div>
         <span class="sidebar-prole role-${role}" id="roleSidebarBadge">${roleLabel(role)}</span>
     `;
@@ -1258,6 +1264,12 @@ async function ensureRoleSidebarProfile() {
             const el = document.getElementById('teacherName');
             if (el) el.textContent = name;
             const av = document.getElementById('teacherAvatar');
+            if (av) av.textContent = initials;
+        }
+        if (role === 'student') {
+            const el = document.getElementById('studentName');
+            if (el) el.textContent = name;
+            const av = document.getElementById('studentAvatar');
             if (av) av.textContent = initials;
         }
     } catch (err) {

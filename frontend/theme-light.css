@@ -966,3 +966,107 @@
     color: #475569 !important;
     border-color: rgba(15,23,42,0.12) !important;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   FINAL DEMO v19: student sidebar profile + assignments/materials
+   readability fixes
+   ═══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] body.role-student .sidebar,
+[data-theme="light"] body.role-student .sidebar * {
+    color: inherit;
+}
+[data-theme="light"] body.role-student .sidebar {
+    background: #1a2744 !important;
+    border-right-color: rgba(255,255,255,.08) !important;
+}
+[data-theme="light"] body.role-student .sidebar-logo,
+[data-theme="light"] body.role-student .sidebar-profile,
+[data-theme="light"] body.role-student .sidebar-bottom {
+    border-color: rgba(255,255,255,.08) !important;
+}
+[data-theme="light"] body.role-student .sidebar-logo span,
+[data-theme="light"] body.role-student .sidebar-logo b,
+[data-theme="light"] body.role-student .sidebar-pname {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+[data-theme="light"] body.role-student .sidebar-nav a,
+[data-theme="light"] body.role-student .sidebar-bottom a {
+    color: rgba(255,255,255,.68) !important;
+    -webkit-text-fill-color: rgba(255,255,255,.68) !important;
+}
+[data-theme="light"] body.role-student .sidebar-nav a.active {
+    background: rgba(59,130,246,.20) !important;
+    color: #93c5fd !important;
+    -webkit-text-fill-color: #93c5fd !important;
+    border-color: rgba(59,130,246,.35) !important;
+}
+
+/* Assignments: make filter buttons and action buttons readable in light theme. */
+[data-theme="light"] .filter-row .filter-btn {
+    background: #ffffff !important;
+    color: #334155 !important;
+    -webkit-text-fill-color: #334155 !important;
+    border-color: rgba(15,23,42,.16) !important;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04) !important;
+}
+[data-theme="light"] .filter-row .filter-btn.active {
+    background: rgba(37,99,235,.11) !important;
+    color: #2563eb !important;
+    -webkit-text-fill-color: #2563eb !important;
+    border-color: rgba(37,99,235,.38) !important;
+}
+[data-theme="light"] .asgn-card .btn,
+[data-theme="light"] .asgn-card button,
+[data-theme="light"] .assignment-card .btn,
+[data-theme="light"] .assignment-card button {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+[data-theme="light"] .asgn-card .btn-primary,
+[data-theme="light"] .asgn-card button.primary,
+[data-theme="light"] .assignment-card .btn-primary,
+[data-theme="light"] .assignment-card button.primary {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Materials: keep page and modal readable in light theme. */
+[data-theme="light"] .mat-search input {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+[data-theme="light"] .mat-card,
+[data-theme="light"] .mat-sidebar {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: rgba(15,23,42,.10) !important;
+}
+[data-theme="light"] .material-modal-box {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: rgba(15,23,42,.12) !important;
+}
+[data-theme="light"] .material-modal-box div,
+[data-theme="light"] .material-modal-text {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+[data-theme="light"] .material-modal-box [style*="color:var(--muted)"],
+[data-theme="light"] .material-modal-box .muted {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+}
+[data-theme="light"] .material-modal-body {
+    background: #f8fafc !important;
+    border-color: rgba(15,23,42,.12) !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+[data-theme="light"] .material-modal-body a {
+    color: #2563eb !important;
+    -webkit-text-fill-color: #2563eb !important;
+}

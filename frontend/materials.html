@@ -145,12 +145,6 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         <input type="text" id="materialSearch" placeholder="Пошук матеріалів...">
                     </div>
-                    <div class="mat-filters" id="matFilters">
-                        <button class="mat-filter active" onclick="filterMaterials('all')">Всі</button>
-                        <button class="mat-filter" onclick="filterMaterials('video')">Відео</button>
-                        <button class="mat-filter" onclick="filterMaterials('document')">Документи</button>
-                        <button class="mat-filter" onclick="filterMaterials('link')">Посилання</button>
-                    </div>
                     <div class="materials-grid" id="materialsGrid">
                         <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);">Завантаження матеріалів...</div>
                     </div>
@@ -301,12 +295,12 @@
             }
             const body = m.body || '';
             const linkify = (raw) => esc(raw).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:#3b82f6;">$1</a>');
-            modal.innerHTML = `<div style="background:var(--ink-soft);border:1px solid var(--border);border-radius:16px;width:100%;max-width:600px;padding:1.75rem;max-height:80vh;overflow-y:auto;">
+            modal.innerHTML = `<div class="material-modal-box" style="background:var(--ink-soft);border:1px solid var(--border);border-radius:16px;width:100%;max-width:600px;padding:1.75rem;max-height:80vh;overflow-y:auto;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;">
                     <div style="font-family:'Unbounded',sans-serif;font-size:1.05rem;font-weight:700;">${esc(m.title)}</div>
                     <button onclick="document.getElementById('topicModal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;">✕</button>
                 </div>
-                <div style="background:var(--ink);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:.9rem;line-height:1.6;color:rgba(255,255,255,.85);white-space:pre-wrap;word-break:break-word;">
+                <div class="material-modal-body" style="background:var(--ink);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:.9rem;line-height:1.6;color:rgba(255,255,255,.85);white-space:pre-wrap;word-break:break-word;">
                     ${body ? linkify(body) : 'Без додаткового опису.'}
                 </div>
             </div>`;
@@ -322,7 +316,7 @@
                 m.addEventListener('click', e => { if (e.target === m) m.style.display='none'; });
                 document.body.appendChild(m);
             }
-            m.innerHTML = `<div style="background:var(--ink-soft);border:1px solid var(--border);border-radius:16px;width:100%;max-width:560px;padding:1.75rem;">
+            m.innerHTML = `<div class="material-modal-box" style="background:var(--ink-soft);border:1px solid var(--border);border-radius:16px;width:100%;max-width:560px;padding:1.75rem;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;">
                     <div>
                         <div style="font-family:'Unbounded',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:.25rem;">${title}</div>
@@ -330,9 +324,9 @@
                     </div>
                     <button onclick="document.getElementById('topicModal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1;">✕</button>
                 </div>
-                <div style="background:var(--ink);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+                <div class="material-modal-body" style="background:var(--ink);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1rem;">
                     <div style="font-size:.82rem;color:var(--muted);margin-bottom:.5rem;">Тема #${id}</div>
-                    <div style="font-size:.88rem;line-height:1.6;color:rgba(255,255,255,.8);">
+                    <div class="material-modal-text" style="font-size:.88rem;line-height:1.6;color:rgba(255,255,255,.8);">
                         Детальні матеріали (лекції, методички, відео) для цієї теми доступні у розділі <strong>Курси → ${title}</strong>.
                     </div>
                 </div>
@@ -342,9 +336,7 @@
         }
 
         function filterMaterials(type) {
-            currentFilter = type;
-            document.querySelectorAll('.mat-filter').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            currentFilter = type || 'all';
             renderTopics();
         }
 
