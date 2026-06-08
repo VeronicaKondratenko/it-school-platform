@@ -772,10 +772,17 @@
         async function loadSection(id, updateHash = true) {
             id = normalizeAdminSection(id);
             adminBootSection = id;
-            showSection(id);
+
+            // Update the URL/hash BEFORE recalculating sidebar active state.
+            // showSection() calls updateRoleSidebarActive(), and that helper reads
+            // location.hash. When the hash still contained the previous section
+            // (for example #courses), the previous sidebar item stayed highlighted
+            // after opening a new section such as schedule.
             if (updateHash && window.location.hash !== `#${id}`) {
                 history.replaceState(null, '', `#${id}`);
             }
+            showSection(id);
+            if (typeof window.updateRoleSidebarActive === 'function') window.updateRoleSidebarActive();
             try {
                 if (id === 'overview')      await loadStats();
                 if (id === 'users')         await loadUsers();
