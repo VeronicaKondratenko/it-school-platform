@@ -399,35 +399,70 @@ async def get_teacher_courses(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Get list of courses that the teacher teaches"""
+    """Get courses for the teacher with reliable dashboard counters.
+
+    The teacher UI shows, for each course, how many groups, unique students and
+    assignments belong to it. Previously the endpoint returned only id/title/
+    description, so the frontend displayed fallback zeroes even when the course
+    actually had groups, students and assignments.
+
+    Important: assignments are not attached directly to Course in the database.
+    They are linked through Course -> Discipline -> Topic -> Assignment, so the
+    counter must use that real relation. Disciplines remain an internal technical
+    layer and are not shown in the UI.
+    """
     require_teacher_or_admin(current_user)
 
-    # Get teacher's groups
-    groups_result = await db.execute(
-        select(StudyGroup)
-        .where(StudyGroup.teacher_id == current_user.id)
-        .options(selectinload(StudyGroup.courses))
+    from ...models import Course
+
+    groups_query = select(StudyGroup).options(
+        selectinload(StudyGroup.courses),
+        selectinload(StudyGroup.students),
     )
+
+    # Admins can reuse this endpoint for overview/debug; teachers only see their
+    # own groups. The normal teacher dashboard uses the teacher branch.
+    if current_user.role != UserRole.admin:
+        groups_query = groups_query.where(StudyGroup.teacher_id == current_user.id)
+
+    groups_result = await db.execute(groups_query)
     groups = groups_result.scalars().all()
 
-    # Collect all unique course IDs
     course_ids = _collect_course_ids(groups)
-
     if not course_ids:
         return []
 
-    # Fetch full course details
-    from ...models import Course
     courses_result = await db.execute(
-        select(Course).where(Course.id.in_(course_ids))
+        select(Course)
+        .where(Course.id.in_(course_ids))
+        .order_by(Course.title.asc())
     )
     courses = courses_result.scalars().all()
 
-    return [
-        {
-            "id": c.id,
-            "title": c.title,
-            "description": c.description,
-        }
-        for c in courses
-    ]
+    assignments_result = await db.execute(
+        select(Discipline.course_id, func.count(Assignment.id))
+        .join(Topic, Topic.discipline_id == Discipline.id)
+        .join(Assignment, Assignment.topic_id == Topic.id)
+        .where(Discipline.course_id.in_(course_ids))
+        .group_by(Discipline.course_id)
+    )
+    assignment_counts = {course_id: int(count or 0) for course_id, count in assignments_result.all()}
+
+    rows = []
+    for course in courses:
+        course_groups = [
+            group for group in groups
+            if any(group_course.id == course.id for group_course in group.courses)
+        ]
+        student_ids = {student.id for group in course_groups for student in group.students}
+
+        rows.append({
+            "id": course.id,
+            "title": course.title,
+            "description": course.description,
+            "groups_count": len(course_groups),
+            "students_count": len(student_ids),
+            "assignments_count": assignment_counts.get(course.id, 0),
+        })
+
+    return rows
