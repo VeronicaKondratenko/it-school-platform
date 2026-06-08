@@ -657,9 +657,12 @@
 
             initReportsUI();
             bindSidebarNavigation();
-            preloadAdminData(); // non-blocking: admin page must not freeze if one API endpoint fails
+            // Load reference data before the first visible section. Previously the
+            // first screen could show zeros/empty tables until the admin clicked
+            // another menu item, especially on a cold Render start.
+            await preloadAdminData();
             const initialSection = normalizeAdminSection(window.location.hash || '#overview');
-            await loadSection(initialSection);
+            await loadSection(initialSection, false);
             checkInboxBadge();
         });
 
@@ -1080,11 +1083,35 @@
             if (!grid) return;
             grid.innerHTML = '<div class="loader">Завантаження...</div>';
             try {
-                const stats = await apiGet('/api/admin/stats');
-                if (!stats) {
-                    grid.innerHTML = '<div style="padding:2rem;color:var(--error);text-align:center;">Помилка завантаження статистики</div>';
-                    return;
-                }
+                // Fetch both the compact stats endpoint and the same datasets used by
+                // the admin tables. If the stats endpoint returns zeros during the
+                // first cold load, we calculate the visible cards from real data.
+                const [statsRes, usersRes, groupsRes, coursesRes, schedulesRes] = await Promise.allSettled([
+                    apiGet('/api/admin/stats'),
+                    refreshUsers(),
+                    refreshGroups(),
+                    refreshCourses(),
+                    apiGet('/api/schedule')
+                ]);
+                const apiStats = statsRes.status === 'fulfilled' && statsRes.value ? statsRes.value : {};
+                const schedules = schedulesRes.status === 'fulfilled' && Array.isArray(schedulesRes.value) ? schedulesRes.value : [];
+
+                const fallbackStats = {
+                    total_users: Array.isArray(allUsers) ? allUsers.length : 0,
+                    total_students: Array.isArray(allUsers) ? allUsers.filter(u => u.role === 'student').length : 0,
+                    total_teachers: Array.isArray(allUsers) ? allUsers.filter(u => u.role === 'teacher').length : 0,
+                    total_courses: Array.isArray(allCourses) ? allCourses.length : 0,
+                    total_groups: Array.isArray(allGroups) ? allGroups.length : 0,
+                    active_groups: Array.isArray(allGroups) ? allGroups.filter(g => g.is_active !== false).length : 0,
+                    total_schedules: schedules.length,
+                    telegram_linked: Array.isArray(allUsers) ? allUsers.filter(u => !!u.telegram_id).length : 0,
+                };
+
+                const stats = { ...fallbackStats, ...apiStats };
+                Object.keys(fallbackStats).forEach(key => {
+                    if ((stats[key] === 0 || stats[key] == null) && fallbackStats[key] > 0) stats[key] = fallbackStats[key];
+                });
+
                 const ic = {
                     users: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
                     student: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
@@ -1104,8 +1131,8 @@
                     {icon:ic.check, bg:'rgba(16,185,129,.12)', color:'#10b981', value: stats.active_groups, label:'Активних груп'},
                     {icon:ic.calendar, bg:'rgba(37,99,235,.12)', color:'#3b82f6', value: stats.total_schedules, label:'Занять у розкладі'},
                     {icon:ic.telegram, bg:'rgba(0,136,204,.12)', color:'#0088cc', value: stats.telegram_linked, label:'Telegram прив\'язань'},
-            ];
-            grid.innerHTML = cards.map(c=>`
+                ];
+                grid.innerHTML = cards.map(c=>`
                 <div class="stat-card" ${c.section ? `role="button" tabindex="0" onclick="loadSection('${c.section}')" onkeypress="if(event.key==='Enter'||event.key===' '){event.preventDefault();loadSection('${c.section}');}" style="cursor:pointer;"` : ''}>
                     <div class="stat-icon" style="background:${c.bg};color:${c.color};">${c.icon}</div>
                     <div class="stat-value">${c.value ?? 0}</div>

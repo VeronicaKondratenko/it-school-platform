@@ -249,6 +249,58 @@
     .status-radio { display: none; }
     .attendance-footer { display: flex; justify-content: flex-end; gap: .6rem; }
 
+    /* ── Admin schedule shell consistency ───────────────────────────
+       The same schedule page is used by students, teachers and admins. For the
+       admin role we make it visually match admin-dashboard.html: no separate
+       purple banner, one card-like work area, same spacing, same light/dark
+       surfaces. For non-admin roles the wrapper behaves like normal content. */
+    .admin-schedule-container { display: contents; }
+    .admin-schedule-header { display: none; }
+    body.admin-schedule-page .main-wrap { margin-left: 260px; padding: 1.5rem; background: var(--ink); }
+    body.admin-schedule-page .page-banner { display: none; }
+    body.admin-schedule-page .page-body { padding: 0; }
+    body.admin-schedule-page .admin-schedule-container {
+        display: block;
+        background: var(--ink-soft);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.35rem;
+        box-shadow: 0 18px 48px rgba(0,0,0,.16);
+    }
+    body.admin-schedule-page .admin-schedule-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding-bottom: 1rem;
+        margin-bottom: 1.15rem;
+        border-bottom: 1px solid var(--border);
+    }
+    body.admin-schedule-page .admin-schedule-title {
+        font-family: 'Unbounded', sans-serif;
+        font-size: 1.15rem;
+        font-weight: 800;
+        letter-spacing: -.02em;
+        color: #fff;
+    }
+    body.admin-schedule-page .admin-schedule-subtitle { margin-top: .25rem; color: var(--muted); font-size: .88rem; }
+    body.admin-schedule-page #weekView { max-height: calc(100vh - 265px); }
+    body.admin-schedule-page .admin-panel { background: rgba(37,99,235,.07); }
+    [data-theme="light"] body.admin-schedule-page .main-wrap { background: #eef2f7 !important; }
+    [data-theme="light"] body.admin-schedule-page .admin-schedule-container,
+    [data-theme="light"] body.admin-schedule-page .admin-panel {
+        background: #ffffff !important;
+        border-color: rgba(15,23,42,.10) !important;
+        color: #0f172a !important;
+        box-shadow: 0 10px 30px rgba(15,23,42,.05);
+    }
+    [data-theme="light"] body.admin-schedule-page .admin-schedule-header { border-bottom-color: rgba(15,23,42,.10) !important; }
+    [data-theme="light"] body.admin-schedule-page .admin-schedule-title,
+    [data-theme="light"] body.admin-schedule-page .admin-panel h3 { color: #0f172a !important; -webkit-text-fill-color: #0f172a !important; }
+    [data-theme="light"] body.admin-schedule-page .admin-schedule-subtitle { color: #5c6a82 !important; }
+    [data-theme="light"] body.admin-schedule-page #weekView { background: #ffffff !important; border-color: rgba(15,23,42,.10) !important; }
+
     /* ── Misc ───────────────────────────────────────────────────── */
     @keyframes modalIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -257,6 +309,7 @@
         .sidebar { transform: translateX(-100%); }
         .sidebar.active { transform: translateX(0); }
         .main-wrap { margin-left: 0; }
+        body.admin-schedule-page .main-wrap { margin-left: 0; padding: .75rem; }
         .page-body { padding: .75rem; }
         .mobile-toggle { display: flex; }
         .sched-controls { flex-direction: column; align-items: flex-start; }
@@ -330,6 +383,14 @@
             <p>Плануйте свій навчальний тиждень</p>
         </div>
         <div class="page-body">
+            <section class="admin-schedule-container">
+                <div class="admin-schedule-header">
+                    <div>
+                        <div class="admin-schedule-title">Розклад занять</div>
+                        <div class="admin-schedule-subtitle">Створення, редагування та контроль занять адміністратора</div>
+                    </div>
+                    <a class="btn btn-secondary" href="admin-dashboard.html#overview">Повернутися до огляду</a>
+                </div>
 
             <!-- Controls -->
             <div class="sched-controls">
@@ -393,6 +454,7 @@
                 <div id="calendarGrid"></div>
             </div>
 
+            </section>
         </div><!-- .page-body -->
     </div><!-- .main-wrap -->
 </div><!-- .app -->
@@ -491,13 +553,14 @@
                 studentElements.forEach(el => el.style.display = 'none');
                 adminElements.forEach(el => el.style.display = 'none');
                 // Hide page subtitle for teacher
-                const subtitle = document.querySelector('.page-header p');
+                const subtitle = document.querySelector('.page-banner p');
                 if (subtitle) subtitle.textContent = 'Перегляньте розклад занять для вашої групи';
             } else if (role === 'admin') {
+                document.body.classList.add('admin-schedule-page');
                 teacherElements.forEach(el => el.style.display = 'none');
                 studentElements.forEach(el => el.style.display = 'none');
                 adminElements.forEach(el => el.style.display = 'inline-block');
-                const subtitle = document.querySelector('.page-header p');
+                const subtitle = document.querySelector('.page-banner p');
                 if (subtitle) subtitle.textContent = 'Створюйте та редагуйте заняття з перевіркою конфліктів';
                 const panel = document.getElementById('adminSchedulePanel');
                 if (panel) panel.style.display = 'block';
@@ -592,6 +655,8 @@
                 await loadDisciplinesDirectory();
                 rebuildDisciplineOptions();
                 await loadAdminReferences();
+                renderLegend();
+                renderView();
             }
         }
 
@@ -1374,8 +1439,9 @@
         // Initialization
         // ─────────────────────────────────────────────────────────────────────
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadScheduleData();
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof requireAuth === 'function' && !requireAuth()) return;
+            await loadScheduleData();
         });
 
         // Add simple animation styles

@@ -1120,7 +1120,10 @@ function adminNavItems() {
         { href: 'admin-dashboard.html#users', label: 'Користувачі', icon: 'users', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#users' },
         { href: 'admin-dashboard.html#courses', label: 'Курси', icon: 'course', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#courses' },
         { href: 'admin-dashboard.html#groups', label: 'Групи', icon: 'group', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#groups' },
-        { href: 'admin-dashboard.html#schedule', label: 'Розклад', icon: 'calendar', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#schedule' },
+        // Calendar is a real shared page for admins, not only a short table inside the dashboard.
+        // Keeping it as schedule.html makes the active state and visual shell consistent when the
+        // admin opens the full calendar from the sidebar.
+        { href: 'schedule.html', label: 'Розклад', icon: 'calendar', active: () => currentRolePage() === 'schedule.html' || (currentRolePage() === 'admin-dashboard.html' && location.hash === '#schedule') },
         { type: 'label', text: 'Комунікація' },
         { href: 'admin-questions.html', label: 'Звернення', icon: 'chat', active: () => currentRolePage() === 'admin-questions.html' },
         { href: 'admin-dashboard.html#notifications', label: 'Сповіщення', icon: 'bell', active: () => currentRolePage() === 'admin-dashboard.html' && location.hash === '#notifications' },
