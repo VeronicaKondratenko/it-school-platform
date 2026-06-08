@@ -317,6 +317,123 @@
     [data-theme="dark"] .modal-title{color:#f1f5f9 !important;}
     [data-theme="dark"] .stat-value{color:#fff !important;}
     [data-theme="dark"] .data-table td{color:#e2e8f0;}
+
+    /* ── Final admin dashboard theme normalization ──────────────
+       Keeps Schedule / Reports / Notifications visually consistent
+       with the rest of the admin dashboard in BOTH dark and light modes. */
+    html[data-theme="dark"] body.admin-dashboard-page{
+        background:#070b16 !important;
+        color:#f8fafc !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .main{
+        background:#070b16 !important;
+        color:#f8fafc !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .section-card,
+    html[data-theme="dark"] body.admin-dashboard-page .stat-card,
+    html[data-theme="dark"] body.admin-dashboard-page .system-card,
+    html[data-theme="dark"] body.admin-dashboard-page .notif-form,
+    html[data-theme="dark"] body.admin-dashboard-page .mail-item,
+    html[data-theme="dark"] body.admin-dashboard-page .group-card,
+    html[data-theme="dark"] body.admin-dashboard-page .notification-card,
+    html[data-theme="dark"] body.admin-dashboard-page .topic-item,
+    html[data-theme="dark"] body.admin-dashboard-page .asset-item,
+    html[data-theme="dark"] body.admin-dashboard-page .selection-item{
+        background:#111827 !important;
+        border-color:rgba(148,163,184,.16) !important;
+        color:#f8fafc !important;
+        box-shadow:none !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .section-header{
+        border-bottom-color:rgba(148,163,184,.16) !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .section-title,
+    html[data-theme="dark"] body.admin-dashboard-page h1,
+    html[data-theme="dark"] body.admin-dashboard-page h2,
+    html[data-theme="dark"] body.admin-dashboard-page h3,
+    html[data-theme="dark"] body.admin-dashboard-page h4,
+    html[data-theme="dark"] body.admin-dashboard-page .modal-title,
+    html[data-theme="dark"] body.admin-dashboard-page .system-value,
+    html[data-theme="dark"] body.admin-dashboard-page .mail-from,
+    html[data-theme="dark"] body.admin-dashboard-page .user-cell-name{
+        color:#f8fafc !important;
+        -webkit-text-fill-color:#f8fafc !important;
+        text-shadow:none !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page p,
+    html[data-theme="dark"] body.admin-dashboard-page label,
+    html[data-theme="dark"] body.admin-dashboard-page .stat-label,
+    html[data-theme="dark"] body.admin-dashboard-page .system-label,
+    html[data-theme="dark"] body.admin-dashboard-page .mail-question,
+    html[data-theme="dark"] body.admin-dashboard-page .mail-time,
+    html[data-theme="dark"] body.admin-dashboard-page .loading,
+    html[data-theme="dark"] body.admin-dashboard-page .loading p,
+    html[data-theme="dark"] body.admin-dashboard-page .admin-empty{
+        color:#94a3b8 !important;
+        -webkit-text-fill-color:#94a3b8 !important;
+        text-shadow:none !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .table-wrap,
+    html[data-theme="dark"] body.admin-dashboard-page table,
+    html[data-theme="dark"] body.admin-dashboard-page .data-table,
+    html[data-theme="dark"] body.admin-dashboard-page #reportsContent table,
+    html[data-theme="dark"] body.admin-dashboard-page #section-schedule .table-wrap,
+    html[data-theme="dark"] body.admin-dashboard-page #section-schedule table{
+        background:#0b1020 !important;
+        border-color:rgba(148,163,184,.16) !important;
+        color:#f8fafc !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .data-table th,
+    html[data-theme="dark"] body.admin-dashboard-page table th,
+    html[data-theme="dark"] body.admin-dashboard-page #reportsContent th,
+    html[data-theme="dark"] body.admin-dashboard-page #section-schedule th{
+        background:#111827 !important;
+        color:#94a3b8 !important;
+        -webkit-text-fill-color:#94a3b8 !important;
+        border-color:rgba(148,163,184,.16) !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .data-table td,
+    html[data-theme="dark"] body.admin-dashboard-page table td,
+    html[data-theme="dark"] body.admin-dashboard-page #reportsContent td,
+    html[data-theme="dark"] body.admin-dashboard-page #section-schedule td{
+        background:transparent !important;
+        color:#f8fafc !important;
+        -webkit-text-fill-color:#f8fafc !important;
+        border-color:rgba(148,163,184,.08) !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .data-table tr:hover td,
+    html[data-theme="dark"] body.admin-dashboard-page table tr:hover td{
+        background:rgba(37,99,235,.06) !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page input,
+    html[data-theme="dark"] body.admin-dashboard-page select,
+    html[data-theme="dark"] body.admin-dashboard-page textarea,
+    html[data-theme="dark"] body.admin-dashboard-page .form-input,
+    html[data-theme="dark"] body.admin-dashboard-page .form-select,
+    html[data-theme="dark"] body.admin-dashboard-page .form-textarea,
+    html[data-theme="dark"] body.admin-dashboard-page .grade-input{
+        background:#151b2e !important;
+        color:#f8fafc !important;
+        -webkit-text-fill-color:#f8fafc !important;
+        border-color:rgba(148,163,184,.18) !important;
+        caret-color:#3b82f6 !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page input::placeholder,
+    html[data-theme="dark"] body.admin-dashboard-page textarea::placeholder{
+        color:rgba(226,232,240,.42) !important;
+        -webkit-text-fill-color:rgba(226,232,240,.42) !important;
+    }
+    html[data-theme="dark"] body.admin-dashboard-page .sidebar{
+        background:#1a2744 !important;
+        color:#ffffff !important;
+        border-right-color:rgba(148,163,184,.14) !important;
+    }
+    html[data-theme="light"] body.admin-dashboard-page .section-card,
+    html[data-theme="light"] body.admin-dashboard-page .table-wrap,
+    html[data-theme="light"] body.admin-dashboard-page .data-table,
+    html[data-theme="light"] body.admin-dashboard-page #section-schedule table{
+        border-color:rgba(15,23,42,.10) !important;
+    }
     </style>
     <script defer src="professional-ui.js"></script>
     <link rel="stylesheet" href="ui-system.css">
