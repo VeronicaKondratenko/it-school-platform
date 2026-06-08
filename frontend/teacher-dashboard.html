@@ -439,16 +439,26 @@
         });
 
         // ── Nav ─────────────────────────────────────────────────────
-        document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
-            link.addEventListener('click', e => {
-                const href = link.getAttribute('href');
-                // Buttons already use onclick=showSection(...). Real links should navigate normally.
-                if (!href || !href.startsWith('#')) return;
-                e.preventDefault();
-                const id = href.substring(1);
-                showSection(id);
+        let teacherNavigationBound = false;
+        function bindTeacherNavigation() {
+            if (teacherNavigationBound) return;
+            teacherNavigationBound = true;
+            document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
+                link.addEventListener('click', e => {
+                    const href = link.getAttribute('href') || '';
+                    const onclick = link.getAttribute('onclick') || '';
+                    if (href && !href.startsWith('#')) return;
+                    const id = href.startsWith('#')
+                        ? href.substring(1)
+                        : ((onclick.match(/showSection\(['"]([^'"]+)['"]\)/) || [])[1] || '');
+                    if (!id) return;
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    showSection(id);
+                }, true);
             });
-        });
+        }
+        bindTeacherNavigation();
 
         // ── Overview Stats ──────────────────────────────────────────
         // ── Section Navigation ──────────────────────────────────────────

@@ -1333,6 +1333,8 @@ function updateRoleSidebarActive() {
 window.updateRoleSidebarActive = updateRoleSidebarActive;
 
 function bindRoleSidebarNavigation() {
+    if (window.__roleSidebarNavigationBound) return;
+    window.__roleSidebarNavigationBound = true;
     document.addEventListener('click', async (e) => {
         const link = e.target.closest && e.target.closest('.role-nav-link');
         if (!link) return;
@@ -1345,14 +1347,13 @@ function bindRoleSidebarNavigation() {
         const samePage = targetPage === currentPage;
         if (samePage && sectionId) {
             e.preventDefault();
+            e.stopImmediatePropagation();
             history.replaceState(null, '', `${targetPage}#${sectionId}`);
             // Admin dashboard exposes loadSection(); teacher dashboard exposes
-            // showSection(). The previous handler called only loadSection(), so
-            // teacher menu items changed the URL/hash but left the page stuck on
-            // “Огляд”. Support both APIs and fall back to a hashchange event.
+            // showSection(). Support both APIs and fall back to a hashchange event.
             try {
                 if (typeof window.loadSection === 'function') {
-                    await window.loadSection(sectionId);
+                    await window.loadSection(sectionId, false);
                 } else if (typeof window.showSection === 'function') {
                     window.showSection(sectionId, false);
                 } else {
@@ -1365,7 +1366,7 @@ function bindRoleSidebarNavigation() {
             }
             updateRoleSidebarActive();
         }
-    });
+    }, true);
 }
 
 function redirectStaffAwayFromStudentPages() {

@@ -642,9 +642,23 @@
         let currentStatusFilter = 'all';
         let currentSearchFilter = '';
 
+        let adminNavigationBound = false;
+        let adminBootFinished = false;
+        let adminBootSection = null;
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (!requireAuth()) return;
             showDemoBanner();
+
+            // Bind navigation before waiting for profile/API requests. Otherwise a
+            // quick first click could be overwritten by the startup loader and the
+            // user had to click the same sidebar item twice.
+            initReportsUI();
+            bindSidebarNavigation();
+
+            const firstSection = normalizeAdminSection(window.location.hash || '#overview');
+            adminBootSection = firstSection;
+            showSection(firstSection);
 
             const user = await fetchCurrentUser();
             if (!user || user.role !== 'admin') {
@@ -655,14 +669,13 @@
             currentAdminUser = user;
             document.getElementById('adminName').textContent = user.full_name;
 
-            initReportsUI();
-            bindSidebarNavigation();
-            // Load reference data before the first visible section. Previously the
-            // first screen could show zeros/empty tables until the admin clicked
-            // another menu item, especially on a cold Render start.
-            await preloadAdminData();
-            const initialSection = normalizeAdminSection(window.location.hash || '#overview');
-            await loadSection(initialSection, false);
+            // Start preloading, but do not block the first visible section. The
+            // section itself fetches the data it needs, so navigation reacts from
+            // the first click.
+            preloadAdminData();
+            const targetSection = normalizeAdminSection(window.location.hash || adminBootSection || '#overview');
+            await loadSection(targetSection, false);
+            adminBootFinished = true;
             checkInboxBadge();
         });
 
@@ -683,8 +696,10 @@
         }
 
         function bindSidebarNavigation() {
+            if (adminNavigationBound) return;
+            adminNavigationBound = true;
             document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
-                link.addEventListener('click', async e => {
+                link.addEventListener('click', e => {
                     const href = link.getAttribute('href') || '';
                     const onclick = link.getAttribute('onclick') || '';
                     if (href && !href.startsWith('#')) return;
@@ -692,9 +707,15 @@
                         ? href.substring(1)
                         : ((onclick.match(/loadSection\(['"]([^'"]+)['"]\)/) || [])[1] || '');
                     if (!id) return;
+
+                    // Handle sidebar section switching in one place. The native
+                    // markup also has inline onclick fallbacks; capture +
+                    // stopImmediatePropagation prevents a double async call and
+                    // makes the first click switch the tab immediately.
                     e.preventDefault();
-                    await loadSection(id, true);
-                });
+                    e.stopImmediatePropagation();
+                    loadSection(id, true);
+                }, true);
             });
         }
 
@@ -750,6 +771,7 @@
 
         async function loadSection(id, updateHash = true) {
             id = normalizeAdminSection(id);
+            adminBootSection = id;
             showSection(id);
             if (updateHash && window.location.hash !== `#${id}`) {
                 history.replaceState(null, '', `#${id}`);
