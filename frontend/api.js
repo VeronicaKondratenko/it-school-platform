@@ -1311,19 +1311,23 @@ function updateRoleSidebarActive() {
     const links = [...nav.querySelectorAll('.nav-item')];
     links.forEach(link => link.classList.remove('active'));
 
-    // Native dashboard sidebars use onclick="loadSection('...')" buttons.
+    // Native dashboard sidebars use data-section/onclick buttons.
     // Generated/shared sidebars use href links. Support both shapes.
     links.forEach(link => {
         const href = (link.getAttribute('href') || '').toLowerCase();
         const onclick = link.getAttribute('onclick') || '';
+        const dataSection = (link.getAttribute('data-section') || '').trim();
         let active = false;
-        if (href) {
+        if (dataSection) {
+            const sectionHash = `#${dataSection}`;
+            active = hash === sectionHash || (!location.hash && dataSection === 'overview');
+        } else if (href) {
             const [targetPage, targetHashRaw=''] = href.split('#');
             const targetHash = targetHashRaw ? `#${targetHashRaw}` : '';
             active = (targetPage === page || (!targetPage && page)) && (!targetHash || targetHash === hash);
         }
         const m = onclick.match(/(?:loadSection|showSection)\(['"]([^'"]+)['"]\)/);
-        if (m) {
+        if (!dataSection && m) {
             const sectionHash = `#${m[1]}`;
             active = hash === sectionHash || (!location.hash && m[1] === 'overview');
         }
