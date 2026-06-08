@@ -122,6 +122,154 @@
     .admin-search svg{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--muted);}
     .notif-form{background:var(--ink);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;}
     .notif-form h4{font-weight:700;font-size:.9rem;margin-bottom:.85rem;}
+    
+
+    /* ═══════════════════════════════════════════════════════════════
+       FINAL v23 — Admin dashboard light theme consistency
+       Admin dashboard has large inline styles, so these role-scoped
+       overrides live here and win over older dark card rules.
+       ═══════════════════════════════════════════════════════════════ */
+    [data-theme="light"] body.admin-dashboard-page{
+        background:#eef2f7 !important;
+        color:#0f172a !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .main{
+        background:#eef2f7 !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .section-card,
+    [data-theme="light"] body.admin-dashboard-page .stat-card,
+    [data-theme="light"] body.admin-dashboard-page .system-card,
+    [data-theme="light"] body.admin-dashboard-page .notif-form,
+    [data-theme="light"] body.admin-dashboard-page .mail-item,
+    [data-theme="light"] body.admin-dashboard-page .group-card,
+    [data-theme="light"] body.admin-dashboard-page .notification-card,
+    [data-theme="light"] body.admin-dashboard-page .topic-item,
+    [data-theme="light"] body.admin-dashboard-page .asset-item,
+    [data-theme="light"] body.admin-dashboard-page .selection-item{
+        background:#ffffff !important;
+        border-color:rgba(15,23,42,.10) !important;
+        color:#0f172a !important;
+        box-shadow:0 10px 30px rgba(15,23,42,.05);
+    }
+    [data-theme="light"] body.admin-dashboard-page .section-header{
+        border-bottom-color:rgba(15,23,42,.10) !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .section-title,
+    [data-theme="light"] body.admin-dashboard-page h1,
+    [data-theme="light"] body.admin-dashboard-page h2,
+    [data-theme="light"] body.admin-dashboard-page h3,
+    [data-theme="light"] body.admin-dashboard-page h4,
+    [data-theme="light"] body.admin-dashboard-page .modal-title,
+    [data-theme="light"] body.admin-dashboard-page .system-value,
+    [data-theme="light"] body.admin-dashboard-page .mail-from,
+    [data-theme="light"] body.admin-dashboard-page .user-cell-name{
+        color:#0f172a !important;
+        -webkit-text-fill-color:#0f172a !important;
+        text-shadow:none !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page p,
+    [data-theme="light"] body.admin-dashboard-page label,
+    [data-theme="light"] body.admin-dashboard-page .stat-label,
+    [data-theme="light"] body.admin-dashboard-page .system-label,
+    [data-theme="light"] body.admin-dashboard-page .mail-question,
+    [data-theme="light"] body.admin-dashboard-page .mail-time,
+    [data-theme="light"] body.admin-dashboard-page .loading,
+    [data-theme="light"] body.admin-dashboard-page .loading p,
+    [data-theme="light"] body.admin-dashboard-page .admin-empty{
+        color:#5c6a82 !important;
+        -webkit-text-fill-color:#5c6a82 !important;
+        text-shadow:none !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .stat-value{
+        color:#2563eb !important;
+        -webkit-text-fill-color:#2563eb !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .table-wrap,
+    [data-theme="light"] body.admin-dashboard-page table,
+    [data-theme="light"] body.admin-dashboard-page .data-table,
+    [data-theme="light"] body.admin-dashboard-page #reportsContent table{
+        background:#ffffff !important;
+        border-color:rgba(15,23,42,.10) !important;
+        color:#0f172a !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .data-table th,
+    [data-theme="light"] body.admin-dashboard-page table th,
+    [data-theme="light"] body.admin-dashboard-page #reportsContent th{
+        background:#f8fafc !important;
+        color:#5c6a82 !important;
+        -webkit-text-fill-color:#5c6a82 !important;
+        border-color:rgba(15,23,42,.10) !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .data-table td,
+    [data-theme="light"] body.admin-dashboard-page table td,
+    [data-theme="light"] body.admin-dashboard-page #reportsContent td{
+        background:transparent !important;
+        color:#0f172a !important;
+        -webkit-text-fill-color:#0f172a !important;
+        border-color:rgba(15,23,42,.06) !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .data-table tr:hover td,
+    [data-theme="light"] body.admin-dashboard-page table tr:hover td{
+        background:rgba(37,99,235,.035) !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page input,
+    [data-theme="light"] body.admin-dashboard-page select,
+    [data-theme="light"] body.admin-dashboard-page textarea,
+    [data-theme="light"] body.admin-dashboard-page .form-input,
+    [data-theme="light"] body.admin-dashboard-page .form-select,
+    [data-theme="light"] body.admin-dashboard-page .form-textarea,
+    [data-theme="light"] body.admin-dashboard-page .grade-input{
+        background:#f8fafc !important;
+        color:#0f172a !important;
+        -webkit-text-fill-color:#0f172a !important;
+        border-color:rgba(15,23,42,.16) !important;
+        caret-color:#2563eb !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page input::placeholder,
+    [data-theme="light"] body.admin-dashboard-page textarea::placeholder{
+        color:rgba(15,23,42,.35) !important;
+        -webkit-text-fill-color:rgba(15,23,42,.35) !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .modal-box{
+        background:#ffffff !important;
+        color:#0f172a !important;
+        border-color:rgba(15,23,42,.12) !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .btn-primary,
+    [data-theme="light"] body.admin-dashboard-page .btn-submit,
+    [data-theme="light"] body.admin-dashboard-page button.btn-primary,
+    [data-theme="light"] body.admin-dashboard-page button.btn-submit{
+        background:linear-gradient(135deg,#2563eb,#1d4ed8) !important;
+        color:#ffffff !important;
+        -webkit-text-fill-color:#ffffff !important;
+        border-color:transparent !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .btn-secondary,
+    [data-theme="light"] body.admin-dashboard-page .btn-sm,
+    [data-theme="light"] body.admin-dashboard-page button:not(.btn-primary):not(.btn-submit):not(.modal-close):not(.nav-item){
+        background:#f8fafc !important;
+        color:#2563eb !important;
+        -webkit-text-fill-color:#2563eb !important;
+        border-color:rgba(37,99,235,.22) !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page a{
+        color:#2563eb;
+    }
+    [data-theme="light"] body.admin-dashboard-page .admin-error{
+        color:#dc2626 !important;
+        -webkit-text-fill-color:#dc2626 !important;
+        background:rgba(239,68,68,.08) !important;
+        border-color:rgba(239,68,68,.18) !important;
+    }
+    [data-theme="light"] body.admin-dashboard-page .sidebar,
+    [data-theme="light"] body.admin-dashboard-page .sidebar *{
+        -webkit-text-fill-color:initial;
+    }
+    [data-theme="light"] body.admin-dashboard-page .sidebar{
+        background:#1a2744 !important;
+        color:#fff !important;
+    }
+
     </style>
     <link rel="stylesheet" href="professional-ui.css">
     <link rel="stylesheet" href="theme-light.css">
@@ -173,7 +321,7 @@
     <script defer src="professional-ui.js"></script>
     <link rel="stylesheet" href="ui-system.css">
 </head>
-<body>
+<body class="admin-dashboard-page">
 <button class="mobile-toggle" id="mobileToggle">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </button>
