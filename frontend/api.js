@@ -1107,6 +1107,11 @@ function currentRolePage() {
     return (location.pathname.split('/').pop() || 'index.html').toLowerCase();
 }
 
+function isNativeDashboardPage() {
+    const page = currentRolePage();
+    return page === 'admin-dashboard.html' || page === 'teacher-dashboard.html';
+}
+
 function adminNavItems() {
     return [
         { type: 'label', text: 'Панель адміністратора' },
@@ -1210,8 +1215,22 @@ function renderRoleSidebarNav() {
     const nav = document.querySelector('.sidebar-nav');
     const items = roleNavItemsFor(role);
     if (!nav || !items) return;
+
     document.body.classList.add(`role-${role}`);
     injectRoleSidebarStyles();
+
+    // IMPORTANT: admin-dashboard.html and teacher-dashboard.html have their own
+    // section switchers (loadSection/showSection) wired to native buttons.
+    // Replacing their sidebar with generated <a> links caused hash changes,
+    // broken active states and sections stuck on “Огляд”. On native dashboards
+    // we keep the original markup and only refresh profile/styles. Shared pages
+    // such as profile.html, schedule.html and questions pages still get the
+    // role-aware sidebar.
+    if (isNativeDashboardPage()) {
+        updateRoleSidebarActive();
+        return;
+    }
+
     const html = items.map(it => {
         if (it.type === 'label') return `<div class="nav-section-label">${escapeHtml(it.text)}</div>`;
         return `<a class="nav-item role-nav-link" href="${it.href}">${roleNavIcon(it.icon)}<span>${escapeHtml(it.label)}</span></a>`;
@@ -1283,11 +1302,29 @@ function updateRoleSidebarActive() {
     const items = roleNavItemsFor(role);
     const nav = document.querySelector('.sidebar-nav');
     if (!nav || !items) return;
+
+    const page = currentRolePage();
+    const hash = location.hash || '#overview';
     const links = [...nav.querySelectorAll('.nav-item')];
     links.forEach(link => link.classList.remove('active'));
-    items.filter(i => !i.type).forEach((it, idx) => {
-        const link = links[idx];
-        if (link && typeof it.active === 'function' && it.active()) link.classList.add('active');
+
+    // Native dashboard sidebars use onclick="loadSection('...')" buttons.
+    // Generated/shared sidebars use href links. Support both shapes.
+    links.forEach(link => {
+        const href = (link.getAttribute('href') || '').toLowerCase();
+        const onclick = link.getAttribute('onclick') || '';
+        let active = false;
+        if (href) {
+            const [targetPage, targetHashRaw=''] = href.split('#');
+            const targetHash = targetHashRaw ? `#${targetHashRaw}` : '';
+            active = (targetPage === page || (!targetPage && page)) && (!targetHash || targetHash === hash);
+        }
+        const m = onclick.match(/(?:loadSection|showSection)\(['"]([^'"]+)['"]\)/);
+        if (m) {
+            const sectionHash = `#${m[1]}`;
+            active = hash === sectionHash || (!location.hash && m[1] === 'overview');
+        }
+        if (active) link.classList.add('active');
     });
 }
 window.updateRoleSidebarActive = updateRoleSidebarActive;

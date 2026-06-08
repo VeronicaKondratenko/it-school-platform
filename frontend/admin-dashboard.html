@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="assets/logo-code-mark-128.png">
     <title>Адмін-панель — IT School</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="theme-light.css">
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
     [data-theme='dark'] select{color-scheme:dark;}
@@ -106,6 +107,13 @@
     .mobile-toggle{display:none;position:fixed;top:1rem;left:1rem;z-index:300;background:var(--blue);border:none;border-radius:10px;padding:.65rem;cursor:pointer;color:#fff;}
     @media(max-width:1024px){.main{margin-left:0;padding:1rem;padding-top:4.5rem;}.sidebar{transform:translateX(-100%);}.sidebar.active{transform:translateX(0);}.mobile-toggle{display:flex;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
     @media(max-width:480px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+
+    /* Final admin stability/readability patch */
+    .section-card .loader{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:2rem;color:var(--muted);}
+    .section-card .loader::before{content:'';width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.12);border-top-color:#3b82f6;animation:spin .8s linear infinite;display:inline-block;}
+    .admin-empty,.admin-error{padding:1.25rem;text-align:center;border:1px dashed var(--border);border-radius:12px;color:var(--muted);}
+    .admin-error{color:#ef4444;border-color:rgba(239,68,68,.28);}
+
 
     .admin-search-row{display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;}
     .admin-search{position:relative;flex:1;min-width:200px;}
@@ -384,10 +392,10 @@
 
             initReportsUI();
             bindSidebarNavigation();
-            await preloadAdminData();
-            const initialSection = (window.location.hash || '#overview').replace('#', '') || 'overview';
+            preloadAdminData(); // non-blocking: admin page must not freeze if one API endpoint fails
+            const initialSection = normalizeAdminSection(window.location.hash || '#overview');
             await loadSection(initialSection);
-            await checkInboxBadge();
+            checkInboxBadge();
         });
 
         function initReportsUI() {
@@ -410,63 +418,92 @@
             document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
                 link.addEventListener('click', async e => {
                     const href = link.getAttribute('href') || '';
-                    if (!href.startsWith('#')) return;
-
+                    const onclick = link.getAttribute('onclick') || '';
+                    if (href && !href.startsWith('#')) return;
+                    const id = href.startsWith('#')
+                        ? href.substring(1)
+                        : ((onclick.match(/loadSection\(['"]([^'"]+)['"]\)/) || [])[1] || '');
+                    if (!id) return;
                     e.preventDefault();
-                    const id = href.substring(1);
-                    document.querySelectorAll('.sidebar-nav .nav-item').forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
-                    await loadSection(id);
+                    await loadSection(id, true);
                 });
             });
         }
 
+        function normalizeAdminSection(raw) {
+            const allowed = ['overview','users','courses','groups','schedule','reports','notifications'];
+            const id = String(raw || '#overview').replace('#','').trim();
+            return allowed.includes(id) ? id : 'overview';
+        }
+
         async function preloadAdminData() {
-            await Promise.all([refreshUsers(), refreshGroups(), refreshCourses()]);
-        }
-
-        async function refreshUsers() {
-            allUsers = await apiGet('/api/admin/users') || [];
-        }
-
-        async function refreshGroups() {
-            allGroups = await apiGet('/api/groups') || [];
-        }
-
-        async function refreshCourses() {
-            allCourses = await apiGet('/api/courses') || [];
-        }
-
-        function showSection(id) {
-            document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
-            const el = document.getElementById('section-' + id);
-            if (el) el.classList.add('active');
-            document.querySelectorAll('.sidebar-nav .nav-item, .sidebar .nav-item').forEach(b => {
-                const oc = b.getAttribute('onclick') || '';
-                b.classList.toggle('active', oc.includes(`'${id}'`));
+            const results = await Promise.allSettled([refreshUsers(), refreshGroups(), refreshCourses()]);
+            results.forEach((r, idx) => {
+                if (r.status === 'rejected') console.warn('Admin preload failed', idx, r.reason);
             });
         }
 
+        async function refreshUsers() {
+            try { allUsers = await apiGet('/api/admin/users') || []; }
+            catch (err) { console.warn('Users refresh failed:', err); allUsers = allUsers || []; throw err; }
+        }
+
+        async function refreshGroups() {
+            try { allGroups = await apiGet('/api/groups') || []; }
+            catch (err) { console.warn('Groups refresh failed:', err); allGroups = allGroups || []; throw err; }
+        }
+
+        async function refreshCourses() {
+            try { allCourses = await apiGet('/api/courses') || []; }
+            catch (err) { console.warn('Courses refresh failed:', err); allCourses = allCourses || []; throw err; }
+        }
+
+        function showSection(id) {
+            const normalized = normalizeAdminSection(id);
+            document.querySelectorAll('.section-card').forEach(s => s.classList.remove('active'));
+            const el = document.getElementById('section-' + normalized);
+            if (el) el.classList.add('active');
+
+            document.querySelectorAll('.sidebar-nav .nav-item, .sidebar .nav-item').forEach(b => {
+                const oc = b.getAttribute('onclick') || '';
+                const href = b.getAttribute('href') || '';
+                const byOnclick = oc.includes(`'${normalized}'`) || oc.includes(`"${normalized}"`);
+                const byHref = href === `#${normalized}` || href.endsWith(`#${normalized}`);
+                b.classList.toggle('active', byOnclick || byHref);
+            });
+            if (typeof window.updateRoleSidebarActive === 'function') window.updateRoleSidebarActive();
+        }
 
         function applyInitialAdminHash() {
-            const allowed = ['overview','users','courses','groups','schedule','reports','notifications'];
-            const id = (window.location.hash || '#overview').replace('#','');
-            loadSection(allowed.includes(id) ? id : 'overview');
+            const id = normalizeAdminSection(window.location.hash || '#overview');
+            loadSection(id, false);
         }
         window.addEventListener('hashchange', applyInitialAdminHash);
 
-        async function loadSection(id) {
+        async function loadSection(id, updateHash = true) {
+            id = normalizeAdminSection(id);
             showSection(id);
-            if (id === 'overview')     await loadStats();
-            if (id === 'users')        await loadUsers();
-            if (id === 'groups')       await loadGroups();
-            if (id === 'courses')      await loadCourses();
-            if (id === 'schedule')     await loadAdminSchedule();
-            if (id === 'reports')      await loadReport('attendance');
-            if (id === 'notifications') await loadNotificationsHistory();
-            if (id === 'inbox')        await loadInbox();
-            if (id === 'stats')        await loadStats();
+            if (updateHash && window.location.hash !== `#${id}`) {
+                history.replaceState(null, '', `#${id}`);
+            }
+            try {
+                if (id === 'overview')      await loadStats();
+                if (id === 'users')         await loadUsers();
+                if (id === 'groups')        await loadGroups();
+                if (id === 'courses')       await loadCourses();
+                if (id === 'schedule')      await loadAdminSchedule();
+                if (id === 'reports')       await loadReport('attendance');
+                if (id === 'notifications') await loadNotificationsHistory();
+            } catch (err) {
+                console.error('Admin section failed:', id, err);
+                const active = document.getElementById('section-' + id);
+                if (active) {
+                    const target = active.querySelector('tbody') || active.querySelector('[id$="Content"]') || active.querySelector('[id$="History"]') || active;
+                    target.innerHTML = `<div class="admin-error">Помилка завантаження розділу: ${escapeHtml(err.message || err)}</div>`;
+                }
+            }
         }
+        window.loadSection = loadSection;
 
         const REPORT_TITLES_UA = {
             attendance: 'Звіт відвідуваності',
@@ -944,20 +981,32 @@
             if (!host) return;
             host.innerHTML = '<div class="loading"><div class="spinner"></div><p>Завантаження...</p></div>';
             try {
-                const items = await apiGet('/api/messages/public') || [];
+                let items = [];
+                try {
+                    items = await apiGet('/api/messages/public') || [];
+                } catch (legacyErr) {
+                    console.warn('Legacy public notifications unavailable, falling back to /api/notifications', legacyErr);
+                    items = await apiGet('/api/notifications') || [];
+                }
                 if (!items.length) {
-                    host.innerHTML = '<div style="padding:1rem;color:var(--muted);">Немає надісланих сповіщень</div>';
+                    host.innerHTML = '<div class="admin-empty">Немає надісланих або отриманих сповіщень</div>';
                     return;
                 }
                 const esc = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                host.innerHTML = '<h4 style="margin:1rem 0 .5rem;">Історія сповіщень</h4>' + items.map(n => `
-                    <div style="border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;margin-bottom:.5rem;">
-                        <div style="font-weight:600;">${esc(n.title)}</div>
-                        <div style="font-size:.85rem;color:var(--muted);margin-top:.25rem;white-space:pre-wrap;">${esc(n.message)}</div>
-                        <div style="font-size:.72rem;color:var(--muted);margin-top:.35rem;">${n.sender_name ? esc(n.sender_name) + ' • ' : ''}${n.timestamp ? new Date(n.timestamp).toLocaleString('uk-UA') : ''}</div>
-                    </div>`).join('');
+                host.innerHTML = '<h4 style="margin:1rem 0 .5rem;">Історія сповіщень</h4>' + items.map(n => {
+                    const title = n.title || 'Сповіщення';
+                    const msg = n.message || n.body || n.content || '';
+                    const date = n.timestamp || n.created_at;
+                    return `
+                    <div style="border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;margin-bottom:.5rem;background:var(--ink);">
+                        <div style="font-weight:700;">${esc(title)}</div>
+                        <div style="font-size:.9rem;color:var(--muted);margin-top:.25rem;white-space:pre-wrap;">${esc(msg)}</div>
+                        <div style="font-size:.72rem;color:var(--muted);margin-top:.35rem;">${n.sender_name ? esc(n.sender_name) + ' • ' : ''}${date ? new Date(date).toLocaleString('uk-UA') : ''}</div>
+                    </div>`;
+                }).join('');
             } catch (err) {
-                host.innerHTML = `<div style="padding:1rem;color:var(--error);">Помилка: ${err.message}</div>`;
+                console.error('Notifications history failed:', err);
+                host.innerHTML = `<div class="admin-error">Помилка завантаження сповіщень: ${escapeHtml(err.message || err)}</div>`;
             }
         }
 
@@ -972,7 +1021,8 @@
             const message = (document.getElementById('notifMessage')?.value || '').trim();
             if (!message) { showToast('Введіть текст сповіщення', 'warning'); return; }
             try {
-                await apiPost('/api/messages/public', { title: title || 'Сповіщення', message });
+                const target = document.getElementById('notifTarget')?.value || 'all';
+                await apiPost('/api/messages/public', { title: title || 'Сповіщення', message, target_role: target === 'all' ? null : target.replace('students','student').replace('teachers','teacher') });
                 showToast('Сповіщення надіслано', 'success');
                 const t = document.getElementById('notifTitle'); if (t) t.value = '';
                 const m = document.getElementById('notifMessage'); if (m) m.value = '';
@@ -1072,8 +1122,13 @@
         }
 
         async function checkInboxBadge() {
-            const messages = await apiGet('/api/messages/inbox');
-            pendingCount = Array.isArray(messages) ? messages.filter(m => m.status === 'pending').length : 0;
+            try {
+                const messages = await apiGet('/api/messages/inbox');
+                pendingCount = Array.isArray(messages) ? messages.filter(m => m.status === 'pending').length : 0;
+            } catch (err) {
+                pendingCount = 0;
+                console.warn('Inbox badge unavailable:', err);
+            }
             updateInboxBadge();
         }
 
